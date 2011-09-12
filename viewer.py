@@ -87,25 +87,45 @@ class Gcode(object):
 
         return is_new_layer
 
+class Platform(object):
 
-def draw_platform():
-    glColor(0xaf / 255, 0xdf / 255, 0x5f / 255)
+    def __init__(self):
+        self.color_guides = (0xaf / 255, 0xdf / 255, 0x5f / 255)
+        self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
 
-    glBegin(GL_LINES)
-    for i in xrange(-5, 6):
-        glVertex3f(float(i), -5.0, 0.0)
-        glVertex3f(float(i),  5.0, 0.0)
+        self.width = 10
+        self.depth = 10
+        self.grid  = 1
 
-        glVertex3f(-5.0, float(i), 0.0)
-        glVertex3f( 5.0, float(i), 0.0)
-    glEnd()
+        self.display_list = glGenLists(1)
+        glNewList(self.display_list, GL_COMPILE)
+        self.init()
+        glEndList()
 
-    # simulate translucency by blending colors
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    def init(self):
+        glColor(*self.color_guides)
 
-    glColor4f(0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
-    glRectf(-5.0, -5.0, 5.0, 5.0)
+        # draw the grid
+        glBegin(GL_LINES)
+        for i in range(0, self.width + self.grid, self.grid):
+            glVertex3f(float(i), 0.0,        0.0)
+            glVertex3f(float(i), self.depth, 0.0)
+
+            glVertex3f(0,          float(i), 0.0)
+            glVertex3f(self.width, float(i), 0.0)
+        glEnd()
+
+        # simulate translucency by blending colors
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        # draw fill
+        glColor(*self.color_fill)
+        glRectf(0.0, 0.0, float(self.width), float(self.depth))
+
+    def display(self):
+        glCallList(self.display_list)
+
 
 class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
 
@@ -142,20 +162,11 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
         glutInit()
         glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 
-    def display(self, width, height):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        self.display_list = glGenLists(1)
+        glNewList(self.display_list, GL_COMPILE)
 
-        glLoadIdentity()
-        glTranslatef(*self.obj_pos)
-        glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
-        glRotatef(self.__sphi, 0.0, 0.0, 1.0)
-
-        draw_platform()
-
-        glColor3f(1.0, 0.0, 0.0)
-
-        glDisable(GL_LINE_SMOOTH)
-        glLineWidth(1)
+        #glDisable(GL_LINE_SMOOTH)
+        #glLineWidth(1)
         glBegin(GL_LINES)
         for layer_no, layer in enumerate(self.locations[:self.max_layers]):
             for location in layer:
@@ -173,6 +184,20 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
                 glVertex3f(v2.x, v2.y, v2.z)
         glEnd()
 
+        glEndList()
+
+    def display(self, width, height):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        glLoadIdentity()
+        glTranslatef(*self.obj_pos)
+        glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
+        glRotatef(self.__sphi, 0.0, 0.0, 1.0)
+
+        platform = Platform()
+        platform.display()
+
+        glCallList(self.display_list)
         #glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST)
         #glEnable(GL_LINE_SMOOTH)
         #glLineWidth(5)
