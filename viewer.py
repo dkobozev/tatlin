@@ -97,12 +97,13 @@ class Platform(object):
         self.depth = 10
         self.grid  = 1
 
+    def init(self):
         self.display_list = glGenLists(1)
         glNewList(self.display_list, GL_COMPILE)
-        self.init()
+        self.draw()
         glEndList()
 
-    def init(self):
+    def draw(self):
         glColor(*self.color_guides)
 
         # draw the grid
@@ -127,10 +128,60 @@ class Platform(object):
         glCallList(self.display_list)
 
 
+class Model(object):
+
+    def __init__(self, locations):
+        self.locations = locations
+        self.max_layers = len(self.locations)
+        self.draw_layers = self.max_layers
+
+        self.color_top_layer    = (1.0, 0.0, 0.0, 1.0)
+        self.color_extruder_on  = (1.0, 0.0, 0.0, 0.6)
+        self.color_extruder_off = (0.5, 0.5, 0.5, 0.5)
+
+        line_count = 0
+        for layer in self.locations:
+            line_count += len(layer)
+        print '!!! line count:', line_count
+
+    def init(self):
+        self.display_list = glGenLists(1)
+        glNewList(self.display_list, GL_COMPILE)
+        self.draw()
+        glEndList()
+
+    def draw(self):
+        #glDisable(GL_LINE_SMOOTH)
+        #glLineWidth(1)
+        glBegin(GL_LINES)
+        for layer_no, layer in enumerate(self.locations[:self.draw_layers]):
+            for location in layer:
+                v1, v2, extruder_on = location
+
+                if extruder_on:
+                    if layer_no == self.max_layers - 1:
+                        glColor(*self.color_top_layer)
+                    else:
+                        glColor(*self.color_extruder_on)
+                else:
+                    glColor(*self.color_extruder_off)
+
+                glVertex3f(v1.x, v1.y, v1.z)
+                glVertex3f(v2.x, v2.y, v2.z)
+        glEnd()
+
+    def display(self):
+        glCallList(self.display_list)
+
+    def clear_display_list(self):
+        glDeleteLists(self.display_list, 1)
+
 class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
 
     def __init__(self):
         GLScene.__init__(self, gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
+
+        self.actors = []
 
         self.begin_x = 0
         self.begin_y = 0
@@ -139,16 +190,6 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.__stheta = 80.0
 
         self.obj_pos = [0.0, 0.0, -5.0]
-
-        gcode = Gcode(sys.argv[1])
-        self.locations = gcode.locations()
-
-        self.max_layers = len(self.locations)
-
-        line_count = 0
-        for layer in self.locations:
-            line_count += len(layer)
-        print '!!! line count:', line_count
 
     def init(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -162,29 +203,8 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
         glutInit()
         glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 
-        self.display_list = glGenLists(1)
-        glNewList(self.display_list, GL_COMPILE)
-
-        #glDisable(GL_LINE_SMOOTH)
-        #glLineWidth(1)
-        glBegin(GL_LINES)
-        for layer_no, layer in enumerate(self.locations[:self.max_layers]):
-            for location in layer:
-                v1, v2, extruder_on = location
-
-                if extruder_on:
-                    if layer_no == self.max_layers - 1:
-                        glColor4f(1.0, 0.0, 0.0, 1.0)
-                    else:
-                        glColor4f(1.0, 0.0, 0.0, 0.6)
-                else:
-                    glColor4f(0.5, 0.5, 0.5, 0.5)
-
-                glVertex3f(v1.x, v1.y, v1.z)
-                glVertex3f(v2.x, v2.y, v2.z)
-        glEnd()
-
-        glEndList()
+        for actor in self.actors:
+            actor.init()
 
     def display(self, width, height):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -194,10 +214,9 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
         glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
         glRotatef(self.__sphi, 0.0, 0.0, 1.0)
 
-        platform = Platform()
-        platform.display()
+        for actor in self.actors:
+            actor.display()
 
-        glCallList(self.display_list)
         #glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST)
         #glEnable(GL_LINE_SMOOTH)
         #glLineWidth(5)
@@ -254,13 +273,20 @@ class ViewerWindow(gtk.Window):
         self.set_title('viewer')
         self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 
+        gcode = Gcode(sys.argv[1])
+
+        platform = Platform()
+        self.model = Model(gcode.locations())
+
         self.canvas = Canvas()
+        self.canvas.actors.append(platform)
+        self.canvas.actors.append(self.model)
         self.glarea = GLArea(self.canvas)
 
         label_layers = gtk.Label('Layers')
         self.scale_layers = gtk.HScale()
-        self.scale_layers.set_range(0, self.canvas.max_layers)
-        self.scale_layers.set_value(self.canvas.max_layers)
+        self.scale_layers.set_range(0, self.model.max_layers)
+        self.scale_layers.set_value(self.model.max_layers)
         self.scale_layers.set_increments(1, 10)
         self.scale_layers.set_digits(0)
         self.scale_layers.set_size_request(200, 35)
@@ -292,7 +318,9 @@ class ViewerWindow(gtk.Window):
 
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
-        self.canvas.max_layers = value
+        self.model.draw_layers = value
+        self.model.clear_display_list()
+        self.model.init()
         self.canvas.invalidate()
 
 
