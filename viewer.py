@@ -145,36 +145,35 @@ class Model(object):
         print '!!! line count:', line_count
 
     def init(self):
-        self.display_list = glGenLists(1)
-        glNewList(self.display_list, GL_COMPILE)
-        self.draw()
-        glEndList()
+        self.display_lists = []
+        for layer_no, layer in enumerate(self.locations):
+            layer_list = glGenLists(1)
+            glNewList(layer_list, GL_COMPILE)
+            self.draw_layer(layer, layer_no)
+            glEndList()
+            self.display_lists.append(layer_list)
 
-    def draw(self):
-        #glDisable(GL_LINE_SMOOTH)
-        #glLineWidth(1)
+    def draw_layer(self, layer, layer_no):
         glBegin(GL_LINES)
-        for layer_no, layer in enumerate(self.locations[:self.draw_layers]):
-            for location in layer:
-                v1, v2, extruder_on = location
+        for location in layer:
+            v1, v2, extruder_on = location
 
-                if extruder_on:
-                    if layer_no == self.max_layers - 1:
-                        glColor(*self.color_top_layer)
-                    else:
-                        glColor(*self.color_extruder_on)
+            if extruder_on:
+                if layer_no == self.max_layers - 1:
+                    glColor(*self.color_top_layer)
                 else:
-                    glColor(*self.color_extruder_off)
+                    glColor(*self.color_extruder_on)
+            else:
+                glColor(*self.color_extruder_off)
 
-                glVertex3f(v1.x, v1.y, v1.z)
-                glVertex3f(v2.x, v2.y, v2.z)
+            glVertex3f(v1.x, v1.y, v1.z)
+            glVertex3f(v2.x, v2.y, v2.z)
         glEnd()
 
     def display(self):
-        glCallList(self.display_list)
+        for layer in self.display_lists[:self.draw_layers]:
+            glCallList(layer)
 
-    def clear_display_list(self):
-        glDeleteLists(self.display_list, 1)
 
 class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
 
@@ -319,8 +318,6 @@ class ViewerWindow(gtk.Window):
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
         self.model.draw_layers = value
-        self.model.clear_display_list()
-        self.model.init()
         self.canvas.invalidate()
 
 
