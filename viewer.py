@@ -14,9 +14,26 @@ from skein import gcodec
 from skein.vector3 import Vector3
 
 
+class Movement(object):
+    def __init__(self, point_a, point_b, extruder_on=False, is_perimeter=False,
+            is_loop=False, is_perimeter_outer=False, is_surrounding_loop=False):
+        self.point_a = point_a
+        self.point_b = point_b
+        self.extruder_on = extruder_on
+        self.is_perimeter = is_perimeter
+        self.is_loop = is_loop
+        self.is_perimeter_outer = is_perimeter_outer
+        self.is_surrounding_loop = is_surrounding_loop
+
 class Gcode(object):
 
-    layer_marker = '(<layer>'
+    marker_layer                  = '(<layer>'
+    marker_perimeter_start        = '(<perimeter>'
+    marker_perimeter_end          = '(</perimeter>)'
+    marker_loop_start             = '(<loop>'
+    marker_loop_end               = '(</loop>)'
+    marker_surrounding_loop_start = '(<surroundingLoop>)'
+    marker_surrounding_loop_end   = '(</surroundingLoop>)'
 
     def __init__(self, fname):
         self.fname = fname
@@ -25,7 +42,12 @@ class Gcode(object):
         self.is_new_layer = self.is_new_layer_from_marker if self.file_has_layer_markers() else self.is_new_layer_from_gcode
 
         self.prev_location = Vector3(0.0, 0.0, 0.0)
-        self.extruder_on = False
+
+        self.extruder_on         = False
+        self.is_perimeter        = False
+        self.is_perimeter_outer  = False
+        self.is_loop             = False
+        self.is_surrounding_loop = False
 
     def split(self, s):
         lines = s.replace('\r', '\n').replace('\n\n', '\n').split('\n')
@@ -52,7 +74,14 @@ class Gcode(object):
 
             location = self.parse_location(split_line)
             if location != self.prev_location:
-                layer.append((self.prev_location, location, self.extruder_on))
+                movement = Movement(point_a=self.prev_location, point_b=location,
+                    extruder_on=self.extruder_on,
+                    is_perimeter=self.is_perimeter,
+                    is_perimeter_outer=self.is_perimeter_outer,
+                    is_loop=self.is_loop,
+                    is_surrounding_loop=self.is_surrounding_loop
+                )
+                layer.append(movement)
                 self.prev_location = location
 
         locations.append(layer)
@@ -67,15 +96,30 @@ class Gcode(object):
             self.extruder_on = True
         elif first_word == 'M103': # turn extruder off
             self.extruder_on = False
+            self.is_loop = False
+            self.is_perimeter = False
+        elif first_word == self.marker_loop_start:
+            self.is_loop = True
+        elif first_word == self.marker_loop_end:
+            self.is_loop = False
+        elif first_word == self.marker_perimeter_start:
+            self.is_perimeter = True
+            self.is_perimeter_outer = (split_line[1] == 'outer')
+        elif first_word == self.marker_perimeter_end:
+            self.is_perimeter = False
+        elif first_word == self.marker_surrounding_loop_start:
+            self.is_surrounding_loop = True
+        elif first_word == self.marker_surrounding_loop_end:
+            self.is_surrounding_loop = False
 
         return location
 
     def file_has_layer_markers(self):
-        has_markers = gcodec.isThereAFirstWord(self.layer_marker, self.gcode_lines, 1)
+        has_markers = gcodec.isThereAFirstWord(self.marker_layer, self.gcode_lines, 1)
         return has_markers
 
     def is_new_layer_from_marker(self, split_line):
-        return split_line[0] == self.layer_marker
+        return split_line[0] == self.marker_layer
 
     def is_new_layer_from_gcode(self, split_line):
         is_new_layer = False
@@ -88,7 +132,6 @@ class Gcode(object):
         return is_new_layer
 
 class Platform(object):
-
     def __init__(self):
         self.color_guides = (0xaf / 255, 0xdf / 255, 0x5f / 255)
         self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
@@ -129,22 +172,30 @@ class Platform(object):
 
 
 class Model(object):
-
     def __init__(self, locations):
         self.locations = locations
         self.max_layers = len(self.locations)
         self.draw_layers = self.max_layers
 
-        self.color_top_layer    = (1.0, 0.0, 0.0, 1.0)
-        self.color_extruder_on  = (1.0, 0.0, 0.0, 0.6)
-        self.color_extruder_off = (0.5, 0.5, 0.5, 0.5)
+        self.colors = {
+            'red':    (1.0, 0.0, 0.0, 0.6),
+            'yellow': (1.0, 0.875, 0.0, 0.6),
+            'orange': (1.0, 0.373, 0.0, 0.6),
+            'green':  (0.0, 1.0, 0.0, 0.6),
+            'cyan':   (0.0, 0.875, 0.875, 0.6),
+            'gray':   (0.5, 0.5, 0.5, 0.5),
+        }
 
         line_count = 0
         for layer in self.locations:
             line_count += len(layer)
-        print '!!! line count:', line_count
+        print '!!! line count:     ', line_count
+        print '!!! lines per layer:', round(line_count / self.max_layers)
 
     def init(self):
+        """
+        Create a display list for each model layer.
+        """
         self.display_lists = []
         for layer_no, layer in enumerate(self.locations):
             layer_list = glGenLists(1)
@@ -155,20 +206,25 @@ class Model(object):
 
     def draw_layer(self, layer, layer_no):
         glBegin(GL_LINES)
-        for location in layer:
-            v1, v2, extruder_on = location
-
-            if extruder_on:
-                if layer_no == self.max_layers - 1:
-                    glColor(*self.color_top_layer)
-                else:
-                    glColor(*self.color_extruder_on)
+        for movement in layer:
+            if not movement.extruder_on:
+                glColor(*self.colors['gray'])
+            elif movement.is_loop:
+                glColor(*self.colors['yellow'])
+            elif movement.is_perimeter and movement.is_perimeter_outer:
+                glColor(*self.colors['cyan'])
+            elif movement.is_perimeter:
+                glColor(*self.colors['green'])
             else:
-                glColor(*self.color_extruder_off)
+                glColor(*self.colors['red'])
 
-            glVertex3f(v1.x, v1.y, v1.z)
-            glVertex3f(v2.x, v2.y, v2.z)
+            point_a = movement.point_a
+            point_b = movement.point_b
+            glVertex3f(point_a.x, point_a.y, point_a.z)
+            glVertex3f(point_b.x, point_b.y, point_b.z)
         glEnd()
+
+        self.color_extrusion = 0 # reset extrusion color for next layer
 
     def display(self):
         for layer in self.display_lists[:self.draw_layers]:
@@ -176,7 +232,6 @@ class Model(object):
 
 
 class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
-
     def __init__(self):
         GLScene.__init__(self, gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
