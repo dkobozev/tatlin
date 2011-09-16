@@ -13,6 +13,13 @@ from OpenGL.GLUT import *
 from skein import gcodec
 from skein.vector3 import Vector3
 
+import math
+
+
+def line_slope(a, b):
+    slope = (b.y - a.y) / (b.x - a.x)
+    return slope
+
 
 class Movement(object):
     def __init__(self, point_a, point_b, extruder_on=False, is_perimeter=False,
@@ -200,31 +207,76 @@ class Model(object):
         for layer_no, layer in enumerate(self.locations):
             layer_list = glGenLists(1)
             glNewList(layer_list, GL_COMPILE)
-            self.draw_layer(layer, layer_no)
+            self.draw_layer(layer, (layer_no == self.draw_layers - 1))
             glEndList()
             self.display_lists.append(layer_list)
 
-    def draw_layer(self, layer, layer_no):
-        glBegin(GL_LINES)
+    def draw_layer(self, layer, last=False):
         for movement in layer:
             if not movement.extruder_on:
-                glColor(*self.colors['gray'])
+                color = self.colors['gray']
             elif movement.is_loop:
-                glColor(*self.colors['yellow'])
+                color = self.colors['yellow']
             elif movement.is_perimeter and movement.is_perimeter_outer:
-                glColor(*self.colors['cyan'])
+                color = self.colors['cyan']
             elif movement.is_perimeter:
-                glColor(*self.colors['green'])
+                color = self.colors['green']
             else:
-                glColor(*self.colors['red'])
+                color = self.colors['red']
+
+            glColor(*color)
 
             point_a = movement.point_a
             point_b = movement.point_b
+
+            glBegin(GL_LINES)
             glVertex3f(point_a.x, point_a.y, point_a.z)
             glVertex3f(point_b.x, point_b.y, point_b.z)
+            glEnd()
+
+            if last:
+                self.draw_arrow(movement, color)
+
+    def redraw_last_layer(self):
+        layer_idx = self.draw_layers - 1
+        glDeleteLists(self.display_lists[layer_idx], 1)
+
+        layer = self.locations[layer_idx]
+
+        layer_list = glGenLists(1)
+        glNewList(layer_list, GL_COMPILE)
+        self.draw_layer(layer, True)
+        glEndList()
+
+        self.display_lists[layer_idx] = layer_list
+
+    def draw_arrow(self, movement, color):
+        a = movement.point_a
+        b = movement.point_b
+
+        try:
+            slope = line_slope(a, b)
+            angle = math.degrees(math.atan(slope))
+            if b.x > a.x:
+                angle = 180 + angle
+        except ZeroDivisionError:
+            angle = 90
+            if b.y > a.y:
+                angle = 180 + angle
+
+        glPushMatrix()
+
+        glTranslate(b.x, b.y, b.z)
+        glRotate(angle, 0.0, 0.0, 1.0)
+        glColor(*color)
+
+        glBegin(GL_TRIANGLES)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.4, -0.2, 0.0)
+        glVertex3f(0.4, 0.2, 0.0)
         glEnd()
 
-        self.color_extrusion = 0 # reset extrusion color for next layer
+        glPopMatrix()
 
     def display(self):
         for layer in self.display_lists[:self.draw_layers]:
@@ -373,6 +425,7 @@ class ViewerWindow(gtk.Window):
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
         self.model.draw_layers = value
+        self.model.redraw_last_layer()
         self.canvas.invalidate()
 
 
