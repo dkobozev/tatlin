@@ -183,6 +183,7 @@ class Model(object):
         self.locations = locations
         self.max_layers = len(self.locations)
         self.draw_layers = self.max_layers
+        self.arrows_enabled = True
 
         self.colors = {
             'red':    (1.0, 0.0, 0.0, 0.6),
@@ -211,20 +212,14 @@ class Model(object):
             glEndList()
             self.display_lists.append(layer_list)
 
+        self.arrow_lists = []
+        if self.arrows_enabled:
+            for layer in self.locations:
+                self.draw_arrows(layer)
+
     def draw_layer(self, layer, last=False):
         for movement in layer:
-            if not movement.extruder_on:
-                color = self.colors['gray']
-            elif movement.is_loop:
-                color = self.colors['yellow']
-            elif movement.is_perimeter and movement.is_perimeter_outer:
-                color = self.colors['cyan']
-            elif movement.is_perimeter:
-                color = self.colors['green']
-            else:
-                color = self.colors['red']
-
-            glColor(*color)
+            glColor(*self.movement_color(movement))
 
             point_a = movement.point_a
             point_b = movement.point_b
@@ -234,23 +229,19 @@ class Model(object):
             glVertex3f(point_b.x, point_b.y, point_b.z)
             glEnd()
 
-            if last:
-                self.draw_arrow(movement, color)
+    def draw_arrows(self, layer):
+        layer_arrow_list = glGenLists(1)
+        glNewList(layer_arrow_list, GL_COMPILE)
 
-    def redraw_last_layer(self):
-        layer_idx = self.draw_layers - 1
-        glDeleteLists(self.display_lists[layer_idx], 1)
+        for movement in layer:
+            color = self.movement_color(movement)
+            glColor(*color)
+            self.draw_arrow(movement)
 
-        layer = self.locations[layer_idx]
-
-        layer_list = glGenLists(1)
-        glNewList(layer_list, GL_COMPILE)
-        self.draw_layer(layer, True)
         glEndList()
+        self.arrow_lists.append(layer_arrow_list)
 
-        self.display_lists[layer_idx] = layer_list
-
-    def draw_arrow(self, movement, color):
+    def draw_arrow(self, movement):
         a = movement.point_a
         b = movement.point_b
 
@@ -268,7 +259,7 @@ class Model(object):
 
         glTranslate(b.x, b.y, b.z)
         glRotate(angle, 0.0, 0.0, 1.0)
-        glColor(*color)
+        glColor(*self.movement_color(movement))
 
         glBegin(GL_TRIANGLES)
         glVertex3f(0.0, 0.0, 0.0)
@@ -278,9 +269,26 @@ class Model(object):
 
         glPopMatrix()
 
+    def movement_color(self, movement):
+        if not movement.extruder_on:
+            color = self.colors['gray']
+        elif movement.is_loop:
+            color = self.colors['yellow']
+        elif movement.is_perimeter and movement.is_perimeter_outer:
+            color = self.colors['cyan']
+        elif movement.is_perimeter:
+            color = self.colors['green']
+        else:
+            color = self.colors['red']
+
+        return color
+
     def display(self):
         for layer in self.display_lists[:self.draw_layers]:
             glCallList(layer)
+
+        if self.arrows_enabled:
+            glCallList(self.arrow_lists[self.draw_layers - 1])
 
 
 class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
@@ -425,7 +433,6 @@ class ViewerWindow(gtk.Window):
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
         self.model.draw_layers = value
-        self.model.redraw_last_layer()
         self.canvas.invalidate()
 
 
