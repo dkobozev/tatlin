@@ -140,12 +140,13 @@ class Gcode(object):
 
 class Platform(object):
     def __init__(self):
-        self.color_guides = (0xaf / 255, 0xdf / 255, 0x5f / 255)
-        self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
+        self.color_guides = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.4)
+        self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
 
-        self.width = 10
-        self.depth = 10
-        self.grid  = 1
+        # makerbot platform size
+        self.width = 120
+        self.depth = 100
+        self.grid  = 10
 
     def init(self):
         self.display_list = glGenLists(1)
@@ -154,6 +155,9 @@ class Platform(object):
         glEndList()
 
     def draw(self):
+        glPushMatrix()
+
+        glTranslate(-self.width / 2, -self.depth / 2, 0)
         glColor(*self.color_guides)
 
         # draw the grid
@@ -162,6 +166,7 @@ class Platform(object):
             glVertex3f(float(i), 0.0,        0.0)
             glVertex3f(float(i), self.depth, 0.0)
 
+        for i in range(0, self.depth + self.grid, self.grid):
             glVertex3f(0,          float(i), 0.0)
             glVertex3f(self.width, float(i), 0.0)
         glEnd()
@@ -174,15 +179,17 @@ class Platform(object):
         glColor(*self.color_fill)
         glRectf(0.0, 0.0, float(self.width), float(self.depth))
 
+        glPopMatrix()
+
     def display(self):
         glCallList(self.display_list)
 
 
 class Model(object):
     def __init__(self, locations):
-        self.locations = locations
-        self.max_layers = len(self.locations)
-        self.draw_layers = self.max_layers
+        self.layers = locations
+        self.max_layers = len(self.layers)
+        self.num_layers_to_draw = self.max_layers
         self.arrows_enabled = True
 
         self.colors = {
@@ -195,7 +202,7 @@ class Model(object):
         }
 
         line_count = 0
-        for layer in self.locations:
+        for layer in self.layers:
             line_count += len(layer)
         print '!!! line count:     ', line_count
         print '!!! lines per layer:', round(line_count / self.max_layers)
@@ -204,18 +211,33 @@ class Model(object):
         """
         Create a display list for each model layer.
         """
-        self.display_lists = []
-        for layer_no, layer in enumerate(self.locations):
-            layer_list = glGenLists(1)
-            glNewList(layer_list, GL_COMPILE)
-            self.draw_layer(layer, (layer_no == self.draw_layers - 1))
-            glEndList()
-            self.display_lists.append(layer_list)
+        self.display_lists = self.draw_layers()
 
         self.arrow_lists = []
         if self.arrows_enabled:
-            for layer in self.locations:
-                self.draw_arrows(layer)
+            for layer in self.layers:
+                self.draw_arrows(layer, self.arrow_lists)
+
+    def draw_layers(self, list_container=None):
+        if list_container is None:
+            list_container = []
+
+        glPushMatrix()
+
+        # simulate translucency by blending colors
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        for layer_no, layer in enumerate(self.layers):
+            layer_list = glGenLists(1)
+            glNewList(layer_list, GL_COMPILE)
+            self.draw_layer(layer, (layer_no == self.num_layers_to_draw - 1))
+            glEndList()
+            list_container.append(layer_list)
+
+        glPopMatrix()
+
+        return list_container
 
     def draw_layer(self, layer, last=False):
         for movement in layer:
@@ -229,7 +251,10 @@ class Model(object):
             glVertex3f(point_b.x, point_b.y, point_b.z)
             glEnd()
 
-    def draw_arrows(self, layer):
+    def draw_arrows(self, layer, list_container=None):
+        if list_container is None:
+            list_container = []
+
         layer_arrow_list = glGenLists(1)
         glNewList(layer_arrow_list, GL_COMPILE)
 
@@ -239,7 +264,9 @@ class Model(object):
             self.draw_arrow(movement)
 
         glEndList()
-        self.arrow_lists.append(layer_arrow_list)
+        list_container.append(layer_arrow_list)
+
+        return list_container
 
     def draw_arrow(self, movement):
         a = movement.point_a
@@ -284,11 +311,11 @@ class Model(object):
         return color
 
     def display(self):
-        for layer in self.display_lists[:self.draw_layers]:
+        for layer in self.display_lists[:self.num_layers_to_draw]:
             glCallList(layer)
 
         if self.arrows_enabled:
-            glCallList(self.arrow_lists[self.draw_layers - 1])
+            glCallList(self.arrow_lists[self.num_layers_to_draw - 1])
 
 
 class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
@@ -330,23 +357,6 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         for actor in self.actors:
             actor.display()
-
-        #glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST)
-        #glEnable(GL_LINE_SMOOTH)
-        #glLineWidth(5)
-        #glBegin(GL_LINES)
-        #for layer_no, layer in enumerate(self.locations[:self.max_layers]):
-        #    for location in layer:
-        #        v1, v2, extruder_on = location
-
-        #        if extruder_on:
-        #            glColor4f(1.0, 0.0, 0.0, 0.1)
-        #        else:
-        #            glColor4f(0.5, 0.5, 0.5, 0.1)
-
-        #        glVertex3f(v1.x, v1.y, v1.z)
-        #        glVertex3f(v2.x, v2.y, v2.z)
-        #glEnd()
 
         glFlush()
 
@@ -399,7 +409,7 @@ class ViewerWindow(gtk.Window):
 
         label_layers = gtk.Label('Layers')
         self.scale_layers = gtk.HScale()
-        self.scale_layers.set_range(0, self.model.max_layers)
+        self.scale_layers.set_range(1, self.model.max_layers)
         self.scale_layers.set_value(self.model.max_layers)
         self.scale_layers.set_increments(1, 10)
         self.scale_layers.set_digits(0)
@@ -432,7 +442,7 @@ class ViewerWindow(gtk.Window):
 
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
-        self.model.draw_layers = value
+        self.model.num_layers_to_draw = value
         self.canvas.invalidate()
 
 
