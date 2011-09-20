@@ -48,7 +48,7 @@ class Gcode(object):
 
         self.is_new_layer = self.is_new_layer_from_marker if self.file_has_layer_markers() else self.is_new_layer_from_gcode
 
-        self.prev_location = Vector3(0.0, 0.0, 0.0)
+        self.prev_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
 
         self.extruder_on         = False
         self.is_perimeter        = False
@@ -66,8 +66,8 @@ class Gcode(object):
         f.close()
         return content
 
-    def locations(self):
-        locations = []
+    def parse_layers(self):
+        layers = []
         layer = []
         for line in self.gcode_lines:
             split_line = gcodec.getSplitLineBeforeBracketSemicolon(line)
@@ -76,7 +76,7 @@ class Gcode(object):
                 continue
 
             if self.is_new_layer(split_line): # start new layer if necessary
-                locations.append(layer)
+                layers.append(layer)
                 layer = []
 
             location = self.parse_location(split_line)
@@ -91,8 +91,8 @@ class Gcode(object):
                 layer.append(movement)
                 self.prev_location = location
 
-        locations.append(layer)
-        return locations
+        layers.append(layer)
+        return layers
 
     def parse_location(self, split_line):
         first_word = split_line[0]
@@ -139,14 +139,14 @@ class Gcode(object):
         return is_new_layer
 
 class Platform(object):
+    # makerbot platform size
+    width = 120
+    depth = 100
+    grid  = 10
+
     def __init__(self):
         self.color_guides = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.4)
         self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
-
-        # makerbot platform size
-        self.width = 120
-        self.depth = 100
-        self.grid  = 10
 
     def init(self):
         self.display_list = glGenLists(1)
@@ -171,10 +171,6 @@ class Platform(object):
             glVertex3f(self.width, float(i), 0.0)
         glEnd()
 
-        # simulate translucency by blending colors
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
         # draw fill
         glColor(*self.color_fill)
         glRectf(0.0, 0.0, float(self.width), float(self.depth))
@@ -186,8 +182,8 @@ class Platform(object):
 
 
 class Model(object):
-    def __init__(self, locations):
-        self.layers = locations
+    def __init__(self, layers):
+        self.layers = layers
         self.max_layers = len(self.layers)
         self.num_layers_to_draw = self.max_layers
         self.arrows_enabled = True
@@ -222,20 +218,18 @@ class Model(object):
         if list_container is None:
             list_container = []
 
-        glPushMatrix()
-
-        # simulate translucency by blending colors
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         for layer_no, layer in enumerate(self.layers):
             layer_list = glGenLists(1)
             glNewList(layer_list, GL_COMPILE)
+
+            glPushMatrix()
+            glRotate(180, 0.0, 0.0, 1.0)
             self.draw_layer(layer, (layer_no == self.num_layers_to_draw - 1))
+            glPopMatrix()
+
             glEndList()
             list_container.append(layer_list)
-
-        glPopMatrix()
 
         return list_container
 
@@ -341,6 +335,10 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
         glEnable(GL_COLOR_MATERIAL)
         glEnable(GL_LIGHT0)
 
+        # simulate translucency by blending colors
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
         glutInit()
         glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 
@@ -400,7 +398,7 @@ class ViewerWindow(gtk.Window):
         gcode = Gcode(sys.argv[1])
 
         platform = Platform()
-        self.model = Model(gcode.locations())
+        self.model = Model(gcode.parse_layers())
 
         self.canvas = Canvas()
         self.canvas.actors.append(platform)
