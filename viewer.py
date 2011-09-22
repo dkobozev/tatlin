@@ -224,7 +224,6 @@ class Model(object):
             glNewList(layer_list, GL_COMPILE)
 
             glPushMatrix()
-            glRotate(180, 0.0, 0.0, 1.0)
             self.draw_layer(layer, (layer_no == self.num_layers_to_draw - 1))
             glPopMatrix()
 
@@ -312,7 +311,7 @@ class Model(object):
             glCallList(self.arrow_lists[self.num_layers_to_draw - 1])
 
 
-class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
+class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     def __init__(self):
         GLScene.__init__(self, gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
@@ -321,10 +320,10 @@ class Canvas(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.begin_x = 0
         self.begin_y = 0
 
-        self.__sphi = 180.0
+        self.__sphi = 0.0
         self.__stheta = 80.0
 
-        self.obj_pos = [0.0, 0.0, -5.0]
+        self.obj_pos = [0.0, -20.0, -180.0]
 
     def init(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -400,10 +399,10 @@ class ViewerWindow(gtk.Window):
         platform = Platform()
         self.model = Model(gcode.parse_layers())
 
-        self.canvas = Canvas()
-        self.canvas.actors.append(platform)
-        self.canvas.actors.append(self.model)
-        self.glarea = GLArea(self.canvas)
+        self.scene = Scene()
+        self.scene.actors.append(platform)
+        self.scene.actors.append(self.model)
+        self.glarea = GLArea(self.scene)
 
         label_layers = gtk.Label('Layers')
         self.scale_layers = gtk.HScale()
@@ -441,7 +440,7 @@ class ViewerWindow(gtk.Window):
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
         self.model.num_layers_to_draw = value
-        self.canvas.invalidate()
+        self.scene.invalidate()
 
 
 if __name__ == '__main__':
