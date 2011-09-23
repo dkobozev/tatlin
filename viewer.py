@@ -322,8 +322,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.__sphi = 0.0
         self.__stheta = 80.0
+        self.fovy = 80.0
+        self.z_near = 0.0
+        self.z_far = 20.0
 
-        self.obj_pos = [0.0, -20.0, -180.0]
+        self.obj_pos = Vector3(0.0, -20.0, -180.0)
 
     def init(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -348,7 +351,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glLoadIdentity()
-        glTranslatef(*self.obj_pos)
+        glTranslatef(self.obj_pos.x, self.obj_pos.y, self.obj_pos.z)
         glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
         glRotatef(self.__sphi, 0.0, 0.0, 1.0)
 
@@ -361,7 +364,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(80.0, width / height, 0, 20.0)
+        gluPerspective(self.fovy, width / height, self.z_near, self.z_far)
         glMatrixMode(GL_MODELVIEW)
 
     def button_press(self, width, height, event):
@@ -372,19 +375,49 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         pass
 
     def button_motion(self, width, height, event):
+        delta_x = event.x - self.begin_x
+        delta_y = event.y - self.begin_y
+
         if event.state & gtk.gdk.BUTTON1_MASK: # left mouse button
-            self.__sphi += (event.x - self.begin_x) / 4.0
-            self.__stheta += (self.begin_y - event.y) / 4.0
+            self.rotate(delta_x, delta_y)
         elif event.state & gtk.gdk.BUTTON2_MASK: # middle mouse button
-            self.obj_pos[2] += (self.begin_y - event.y) / 10.0
+            self.zoom(delta_x, delta_y)
         elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
-            self.obj_pos[0] -= (self.begin_x - event.x) / 50.0
-            self.obj_pos[1] += (self.begin_y - event.y) / 50.0
+            self.pan(delta_x, delta_y, width, height)
 
         self.begin_x = event.x
         self.begin_y = event.y
 
         self.invalidate()
+
+    def rotate(self, delta_x, delta_y):
+        self.__sphi   += delta_x / 4.0
+        self.__stheta -= delta_y / 4.0
+
+    def zoom(self, delta_x, delta_y):
+        self.obj_pos.z -= delta_y / 10.0
+
+    def pan(self, delta_x, delta_y, width, height):
+        """
+        Pan the model.
+
+        Pannings works by translating relating mouse movements to movements in object space,
+        using program window dimensions and field of view angle. A factor is applied to avoid
+        speeding up on rapid mouse movements.
+        """
+        window_h = 2 * abs(self.obj_pos) * math.tan(self.fovy / 2) # height of window in object space
+
+        magnitude_x = abs(delta_x)
+        if magnitude_x > 0.0:
+            x_scale = magnitude_x / width
+            x_slow = 1 / magnitude_x
+            self.obj_pos.x -= delta_x * x_scale * window_h * x_slow
+
+        magnitude_y = abs(delta_y)
+        if magnitude_y > 0.0:
+            y_scale = magnitude_y / width
+            y_slow = 1 / magnitude_y
+            self.obj_pos.y += delta_y * y_scale * window_h * y_slow
 
 
 class ViewerWindow(gtk.Window):
