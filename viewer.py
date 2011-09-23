@@ -20,6 +20,19 @@ def line_slope(a, b):
     slope = (b.y - a.y) / (b.x - a.x)
     return slope
 
+def paginate(sequence, n):
+    """
+    Yield n-sized pieces of sequence.
+    """
+    for i in range(0, len(sequence), n):
+        yield sequence[i:i+n]
+
+def html_color(color):
+    if color.startswith('#'):
+        color = color[1:]
+    parsed = [int(c, 16) / 255 for c in paginate(color, 2)]
+    return parsed
+
 
 class Movement(object):
     def __init__(self, point_a, point_b, extruder_on=False, is_perimeter=False,
@@ -448,7 +461,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             y_slow = 1 / magnitude_y
             self.obj_pos.z += delta_y * y_scale * window_h * y_slow
 
-    def draw_axes(self, length=100.0):
+    def draw_axes(self, length=50.0):
         glPushMatrix()
 
         glRotate(-90, 1.0, 0.0, 0.0) # make z point up
@@ -456,15 +469,16 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
         glRotatef(self.__sphi, 0.0, 0.0, 1.0)
 
-        glColor(1.0, 0.0, 0.0)
-
         glBegin(GL_LINES)
+        glColor(1.0, 0.0, 0.0)
         glVertex3f(0.0, 0.0, 0.0)
         glVertex3f(-length, 0.0, 0.0)
 
+        glColor(0.0, 1.0, 0.0)
         glVertex3f(0.0, 0.0, 0.0)
         glVertex3f(0.0, -length, 0.0)
 
+        glColor(*html_color('008aff'))
         glVertex3f(0.0, 0.0, 0.0)
         glVertex3f(0.0, 0.0, length)
         glEnd()
