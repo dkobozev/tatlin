@@ -320,14 +320,13 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.begin_x = 0
         self.begin_y = 0
 
-        self.obj_pos = Vector3(0.0, -20.0, -180.0)
+        self.obj_pos = Vector3(0.0, 180.0, -20.0)
 
-        self.__sphi = 0.0
-        self.__stheta = 80.0
-        self.fovy = 80.0
-        self.z_near = 1.0
-        self.z_far = 9000.0
-
+        self.__sphi   = 0.0
+        self.__stheta = -20.0
+        self.fovy     = 80.0
+        self.z_near   = 1.0
+        self.z_far    = 9000.0 # very far
 
     def init(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -352,6 +351,20 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glLoadIdentity()
+        glRotate(-90, 1.0, 0.0, 0.0) # make z point up
+
+        glDisable(GL_CULL_FACE)
+        glDisable(GL_DEPTH_TEST)
+        glDepthMask(GL_FALSE)
+        self.view_ortho(width, height)
+
+        self.draw_axes()
+
+        self.view_perspective()
+        glDepthMask(GL_TRUE)
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_CULL_FACE)
+
         glTranslatef(self.obj_pos.x, self.obj_pos.y, self.obj_pos.z)
         glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
         glRotatef(self.__sphi, 0.0, 0.0, 1.0)
@@ -360,6 +373,21 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             actor.display()
 
         glFlush()
+
+    def view_ortho(self, width, height):
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        glOrtho(0, width, 0, height, -100.0, 100.0)
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+
+    def view_perspective(self):
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix()
 
     def reshape(self, width, height):
         glViewport(0, 0, width, height)
@@ -396,7 +424,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.__stheta -= delta_y / 4.0
 
     def zoom(self, delta_x, delta_y):
-        self.obj_pos.z -= delta_y / 10.0
+        self.obj_pos.y += delta_y / 10.0
 
     def pan(self, delta_x, delta_y, width, height):
         """
@@ -418,7 +446,30 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         if magnitude_y > 0.0:
             y_scale = magnitude_y / width
             y_slow = 1 / magnitude_y
-            self.obj_pos.y += delta_y * y_scale * window_h * y_slow
+            self.obj_pos.z += delta_y * y_scale * window_h * y_slow
+
+    def draw_axes(self, length=100.0):
+        glPushMatrix()
+
+        glRotate(-90, 1.0, 0.0, 0.0) # make z point up
+        glTranslatef(length + 20.0, 0.0, length + 20.0)
+        glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
+        glRotatef(self.__sphi, 0.0, 0.0, 1.0)
+
+        glColor(1.0, 0.0, 0.0)
+
+        glBegin(GL_LINES)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(-length, 0.0, 0.0)
+
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.0, -length, 0.0)
+
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.0, 0.0, length)
+        glEnd()
+
+        glPopMatrix()
 
 
 class ViewerWindow(gtk.Window):
