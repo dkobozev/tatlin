@@ -320,13 +320,14 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.begin_x = 0
         self.begin_y = 0
 
+        self.obj_pos = Vector3(0.0, -20.0, -180.0)
+
         self.__sphi = 0.0
         self.__stheta = 80.0
         self.fovy = 80.0
-        self.z_near = 0.0
-        self.z_far = 20.0
+        self.z_near = 1.0
+        self.z_far = 9000.0
 
-        self.obj_pos = Vector3(0.0, -20.0, -180.0)
 
     def init(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -433,8 +434,9 @@ class ViewerWindow(gtk.Window):
         self.model = Model(gcode.parse_layers())
 
         self.scene = Scene()
-        self.scene.actors.append(platform)
         self.scene.actors.append(self.model)
+        # platform has to be added last to be translucent
+        self.scene.actors.append(platform)
         self.glarea = GLArea(self.scene)
 
         label_layers = gtk.Label('Layers')

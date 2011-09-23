@@ -3,9 +3,9 @@ Gcode viewer
 * axes to display direction
 * 2D view
 * quick view buttons
+* menu
 * multi-threading for better responsiveness & speed
 * scale markings?
-* menu + other ui things
 
 STL viewer
 
