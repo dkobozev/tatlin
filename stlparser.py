@@ -102,7 +102,7 @@ class StlAsciiParser(object):
             raise ParseError(self.line_no, 'expected "%s", got "%s"' % ('facet', line[0]))
 
         if line[1] == 'normal':
-            self.facet_normal = Vector3(line[2], line[3], line[4])
+            self.facet_normal = Vector3(float(line[2]), float(line[3]), float(line[4]))
         else:
             raise ParseError(self.line_no, 'expected "%s", got "%s"' % ('normal', line[1]))
 
@@ -141,7 +141,7 @@ class StlAsciiParser(object):
         line = self.next_line()
         if line[0] != 'vertex':
             raise ParseError(self.line_no, 'expected "%s", got "%s"' % ('vertex', line[0]))
-        vertex = Vector3(line[1], line[2], line[3])
+        vertex = Vector3(float(line[1]), float(line[2]), float(line[3]))
         self.vertex_list.append(vertex)
 
 
