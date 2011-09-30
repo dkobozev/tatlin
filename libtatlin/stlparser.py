@@ -1,7 +1,7 @@
 """
 Parser for STL (stereolithography) files.
 """
-from skein.vector3 import Vector3
+from .vector3 import Vector3
 
 
 class Facet(object):

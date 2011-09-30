@@ -184,3 +184,54 @@ class GcodeModel(object):
         if self.arrows_enabled:
             glCallList(self.arrow_lists[self.num_layers_to_draw - 1])
 
+
+class StlModel(object):
+    def __init__(self, facets):
+        self.facets = facets
+
+        self.mat_specular = (1.0, 1.0, 1.0, 1.0)
+        self.mat_shininess = 50.0
+
+        self.max_layers = 42
+
+    def init(self):
+        """
+        Create a display list.
+        """
+        self.draw_facets()
+
+    def draw_facets(self):
+        display_list = glGenLists(1)
+        glNewList(display_list, GL_COMPILE)
+
+        glMaterial(GL_FRONT, GL_AMBIENT, (0.0, 0.0, 0.0, 1.0))
+        glMaterial(GL_FRONT, GL_DIFFUSE, (0.55, 0.55, 0.55, 1.0))
+        glMaterial(GL_FRONT, GL_SPECULAR, (0.7, 0.7, 0.7, 1.0))
+        glMaterial(GL_FRONT, GL_SHININESS, 32.0)
+
+        glLight(GL_LIGHT0, GL_AMBIENT, (0.3, 0.3, 0.3, 1.0))
+        glLight(GL_LIGHT0, GL_DIFFUSE, (0.3, 0.3, 0.3, 1.0))
+
+        glLight(GL_LIGHT1, GL_DIFFUSE, (0.3, 0.3, 0.3, 1.0))
+
+        glColor(1.0, 1.0, 1.0)
+        for facet in self.facets:
+            self.draw_facet(facet)
+
+        glEndList()
+        self.display_list = display_list
+
+    def draw_facet(self, facet):
+        normal = facet.normal
+        v1, v2, v3 = facet.vertices[0], facet.vertices[1], facet.vertices[2]
+
+        glBegin(GL_POLYGON)
+        glNormal3f(normal.x, normal.y, normal.z)
+        glVertex3f(v1.x, v1.y, v1.z)
+        glVertex3f(v2.x, v2.y, v2.z)
+        glVertex3f(v3.x, v3.y, v3.z)
+        glEnd()
+
+    def display(self):
+        glCallList(self.display_list)
+

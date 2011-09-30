@@ -3,6 +3,7 @@
 from __future__ import division
 
 import sys
+import os
 
 import pygtk
 pygtk.require('2.0')
@@ -10,8 +11,9 @@ import gtk
 from gtk.gtkgl.apputils import GLArea
 
 from libtatlin.gcodeparser import GcodeParser
+from libtatlin.stlparser import StlAsciiParser
 from libtatlin.vector3 import Vector3
-from libtatlin.actors import Platform, GcodeModel
+from libtatlin.actors import Platform, GcodeModel, StlModel
 from libtatlin.scene import Scene
 
 
@@ -22,11 +24,8 @@ class ViewerWindow(gtk.Window):
         self.set_title('viewer')
         self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
 
-        start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
-        gcode = GcodeParser(sys.argv[1], start_location)
-
         platform = Platform()
-        self.model = GcodeModel(gcode.parse_layers())
+        self.model = self.call_model()
 
         self.scene = Scene()
         self.scene.actors.append(self.model)
@@ -71,6 +70,31 @@ class ViewerWindow(gtk.Window):
         value = int(widget.get_value())
         self.model.num_layers_to_draw = value
         self.scene.invalidate()
+
+    def call_model(self):
+        fpath = sys.argv[1]
+        fname = os.path.basename(fpath)
+        extension = os.path.splitext(fname)[-1]
+
+        if extension == '.gcode':
+            model = self.gcode_model(fpath)
+        elif extension == '.stl':
+            model = self.stl_model(fpath)
+        else:
+            raise Exception('Unknown file extension: %s' % extension)
+
+        return model
+
+    def gcode_model(self, fpath):
+        start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
+        parser = GcodeParser(fpath, start_location)
+        model = GcodeModel(parser.parse_layers())
+        return model
+
+    def stl_model(self, fpath):
+        parser = StlAsciiParser(fpath)
+        model = StlModel(parser.parse())
+        return model
 
 
 if __name__ == '__main__':
