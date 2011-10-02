@@ -11,6 +11,12 @@ def line_slope(a, b):
     slope = (b.y - a.y) / (b.x - a.x)
     return slope
 
+def compile_display_list(func):
+    display_list = glGenLists(1)
+    glNewList(display_list, GL_COMPILE)
+    func()
+    glEndList()
+    return display_list
 
 class Platform(object):
     # makerbot platform size
@@ -191,6 +197,7 @@ class StlModel(object):
 
         self.mat_specular = (1.0, 1.0, 1.0, 1.0)
         self.mat_shininess = 50.0
+        self.light_position = (20.0, 20.0, 20.0)
 
         self.max_layers = 42
 
@@ -198,28 +205,38 @@ class StlModel(object):
         """
         Create a display list.
         """
-        self.draw_facets()
+        self.display_list = compile_display_list(self.draw_facets)
 
     def draw_facets(self):
-        display_list = glGenLists(1)
-        glNewList(display_list, GL_COMPILE)
+        glPushMatrix()
 
+        glEnable(GL_LIGHT0)
+        glEnable(GL_LIGHT1)
+        glShadeModel(GL_SMOOTH)
+
+        # material properties (white plastic)
         glMaterial(GL_FRONT, GL_AMBIENT, (0.0, 0.0, 0.0, 1.0))
         glMaterial(GL_FRONT, GL_DIFFUSE, (0.55, 0.55, 0.55, 1.0))
         glMaterial(GL_FRONT, GL_SPECULAR, (0.7, 0.7, 0.7, 1.0))
         glMaterial(GL_FRONT, GL_SHININESS, 32.0)
 
+        # lights properties
         glLight(GL_LIGHT0, GL_AMBIENT, (0.3, 0.3, 0.3, 1.0))
         glLight(GL_LIGHT0, GL_DIFFUSE, (0.3, 0.3, 0.3, 1.0))
-
         glLight(GL_LIGHT1, GL_DIFFUSE, (0.3, 0.3, 0.3, 1.0))
+
+        # lights position
+        glLightfv(GL_LIGHT0, GL_POSITION, self.light_position)
+        glLightfv(GL_LIGHT1, GL_POSITION, (-20.0, -20.0, 20.0))
 
         glColor(1.0, 1.0, 1.0)
         for facet in self.facets:
             self.draw_facet(facet)
 
-        glEndList()
-        self.display_list = display_list
+        glDisable(GL_LIGHT1)
+        glDisable(GL_LIGHT0)
+
+        glPopMatrix()
 
     def draw_facet(self, facet):
         normal = facet.normal
@@ -233,5 +250,7 @@ class StlModel(object):
         glEnd()
 
     def display(self):
+        glEnable(GL_LIGHTING)
         glCallList(self.display_list)
+        glDisable(GL_LIGHTING)
 

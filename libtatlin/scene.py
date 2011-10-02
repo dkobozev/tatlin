@@ -53,7 +53,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_COLOR_MATERIAL)
-        glEnable(GL_LIGHT0)
 
         # simulate translucency by blending colors
         glEnable(GL_BLEND)
