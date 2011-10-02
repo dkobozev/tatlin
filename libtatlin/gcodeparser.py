@@ -15,6 +15,9 @@ class Movement(object):
         self.is_perimeter_outer = is_perimeter_outer
         self.is_surrounding_loop = is_surrounding_loop
 
+    def points(self):
+        return (self.point_a, self.point_b)
+
 
 class GcodeParser(object):
 

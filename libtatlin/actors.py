@@ -105,18 +105,16 @@ class GcodeModel(object):
 
     def draw_layer(self, layer, last=False):
         glPushMatrix()
+        glBegin(GL_LINES)
 
         for movement in layer:
+            point_a, point_b = movement.points()
+
             glColor(*self.movement_color(movement))
-
-            point_a = movement.point_a
-            point_b = movement.point_b
-
-            glBegin(GL_LINES)
             glVertex3f(point_a.x, point_a.y, point_a.z)
             glVertex3f(point_b.x, point_b.y, point_b.z)
-            glEnd()
 
+        glEnd()
         glPopMatrix()
 
     def draw_arrows(self, layer, list_container=None):
@@ -133,21 +131,8 @@ class GcodeModel(object):
             self.draw_arrow(movement)
 
     def draw_arrow(self, movement):
-        color = self.movement_color(movement)
-        glColor(*color)
-
-        a = movement.point_a
-        b = movement.point_b
-
-        try:
-            slope = line_slope(a, b)
-            angle = math.degrees(math.atan(slope))
-            if b.x > a.x:
-                angle = 180 + angle
-        except ZeroDivisionError:
-            angle = 90
-            if b.y > a.y:
-                angle = 180 + angle
+        a, b = movement.points()
+        angle = self.points_angle(a, b)
 
         glPushMatrix()
 
@@ -176,6 +161,19 @@ class GcodeModel(object):
             color = self.colors['red']
 
         return color
+
+    def points_angle(self, a, b):
+        try:
+            slope = line_slope(a, b)
+            angle = math.degrees(math.atan(slope))
+            if b.x > a.x:
+                angle = 180 + angle
+        except ZeroDivisionError:
+            angle = 90
+            if b.y > a.y:
+                angle = 180 + angle
+
+        return angle
 
     def display(self):
         for layer in self.display_lists[:self.num_layers_to_draw]:

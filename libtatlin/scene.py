@@ -61,8 +61,14 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glutInit()
         glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 
+        import time
+        t_start = time.time()
+
         for actor in self.actors:
             actor.init()
+
+        t_end = time.time()
+        print '--- actor init took %.2f seconds' % (t_end - t_start)
 
     def display(self, width, height):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
