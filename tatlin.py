@@ -51,8 +51,25 @@ class ViewerWindow(gtk.Window):
         frame_layers = gtk.Frame()
         frame_layers.add(table_layers)
 
+        label_scale = gtk.Label('Factor')
+        self.entry_scale = gtk.Entry()
+        self.entry_scale.set_text('1.0')
+        self.button_scale = gtk.Button('Scale')
+        self.button_scale.connect('clicked', self.on_button_scale_clicked)
+
+        table_dimensions = gtk.Table(rows=1, columns=3)
+        table_dimensions.set_border_width(5)
+        table_dimensions.set_row_spacings(5)
+        table_dimensions.attach(label_scale,      0, 1, 0, 1, yoptions=0)
+        table_dimensions.attach(self.entry_scale, 1, 2, 0, 1, yoptions=0)
+        table_dimensions.attach(self.button_scale, 2, 3, 0, 1, yoptions=0)
+
+        frame_dimensions = gtk.Frame('Dimensions')
+        frame_dimensions.add(table_dimensions)
+
         vbox = gtk.VBox()
         vbox.pack_start(frame_layers)
+        vbox.pack_start(frame_dimensions)
 
         hbox = gtk.HBox()
         hbox.pack_start(self.glarea, expand=True,  fill=True)
@@ -69,6 +86,13 @@ class ViewerWindow(gtk.Window):
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
         self.model.num_layers_to_draw = value
+        self.scene.invalidate()
+
+    def on_button_scale_clicked(self, widget):
+        factor = float(self.entry_scale.get_text())
+        print 'factor: %.2f' % factor
+        self.model.scale(factor)
+        self.model.init()
         self.scene.invalidate()
 
     def call_model(self):

@@ -4,6 +4,18 @@ Parser for STL (stereolithography) files.
 from .vector3 import Vector3
 
 
+class StlFile(object):
+    def __init__(self, facets):
+        self.facets = facets
+
+    def write(self, fpath):
+        f = open(fpath, 'w')
+        print >>f, 'solid'
+        print >>f, ''.join([facet.to_stl() for facet in self.facets])
+        print >>f, 'endsolid'
+        f.close()
+
+
 class Facet(object):
 
     def __init__(self, normal, vertices):
@@ -13,6 +25,23 @@ class Facet(object):
     def __repr__(self):
         s = 'Facet(%s, %s)' % (self.normal, self.vertices)
         return s
+
+    def scale(self, factor):
+        vertices = [v * factor for v in self.vertices]
+        return Facet(self.normal, vertices)
+
+    def to_stl(self):
+        template = """facet normal %.6f %.6f %.6f
+  outer loop
+    %s
+  endloop
+endfacet
+"""
+        stl_facet = template % (
+            self.normal.x, self.normal.y, self.normal.z,
+            '\n'.join(['vertex %.6f %.6f %.6f' % (v.x, v.y, v.z) for v in self.vertices])
+        )
+        return stl_facet
 
 
 class ParseError(Exception):
