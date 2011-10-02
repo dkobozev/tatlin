@@ -11,12 +11,13 @@ def line_slope(a, b):
     slope = (b.y - a.y) / (b.x - a.x)
     return slope
 
-def compile_display_list(func):
+def compile_display_list(func, *options):
     display_list = glGenLists(1)
     glNewList(display_list, GL_COMPILE)
-    func()
+    func(*options)
     glEndList()
     return display_list
+
 
 class Platform(object):
     # makerbot platform size
@@ -29,10 +30,7 @@ class Platform(object):
         self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
 
     def init(self):
-        self.display_list = glGenLists(1)
-        glNewList(self.display_list, GL_COMPILE)
-        self.draw()
-        glEndList()
+        self.display_list = compile_display_list(self.draw)
 
     def draw(self):
         glPushMatrix()
@@ -98,21 +96,16 @@ class GcodeModel(object):
         if list_container is None:
             list_container = []
 
-
         for layer_no, layer in enumerate(self.layers):
-            layer_list = glGenLists(1)
-            glNewList(layer_list, GL_COMPILE)
-
-            glPushMatrix()
-            self.draw_layer(layer, (layer_no == self.num_layers_to_draw - 1))
-            glPopMatrix()
-
-            glEndList()
+            layer_list = compile_display_list(self.draw_layer,
+                layer, (layer_no == self.num_layers_to_draw - 1))
             list_container.append(layer_list)
 
         return list_container
 
     def draw_layer(self, layer, last=False):
+        glPushMatrix()
+
         for movement in layer:
             glColor(*self.movement_color(movement))
 
@@ -124,24 +117,25 @@ class GcodeModel(object):
             glVertex3f(point_b.x, point_b.y, point_b.z)
             glEnd()
 
+        glPopMatrix()
+
     def draw_arrows(self, layer, list_container=None):
         if list_container is None:
             list_container = []
 
-        layer_arrow_list = glGenLists(1)
-        glNewList(layer_arrow_list, GL_COMPILE)
-
-        for movement in layer:
-            color = self.movement_color(movement)
-            glColor(*color)
-            self.draw_arrow(movement)
-
-        glEndList()
+        layer_arrow_list = compile_display_list(self._draw_arrows, layer)
         list_container.append(layer_arrow_list)
 
         return list_container
 
+    def _draw_arrows(self, layer):
+        for movement in layer:
+            self.draw_arrow(movement)
+
     def draw_arrow(self, movement):
+        color = self.movement_color(movement)
+        glColor(*color)
+
         a = movement.point_a
         b = movement.point_b
 
