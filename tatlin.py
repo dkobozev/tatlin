@@ -17,6 +17,15 @@ from libtatlin.actors import Platform, GcodeModel, StlModel
 from libtatlin.scene import Scene
 
 
+class ActionGroup(gtk.ActionGroup):
+    def __init__(self, *args, **kwargs):
+        gtk.ActionGroup.__init__(self, *args, **kwargs)
+
+    def menu_item(self, action_name):
+        item = self.get_action(action_name).create_menu_item()
+        return item
+
+
 class ViewerWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
@@ -67,6 +76,9 @@ class ViewerWindow(gtk.Window):
         frame_dimensions = gtk.Frame('Dimensions')
         frame_dimensions.add(table_dimensions)
 
+        self.actiongroup = self.set_up_actions()
+        menu = self.create_menu(self.actiongroup)
+
         vbox = gtk.VBox()
         vbox.pack_start(frame_layers)
         vbox.pack_start(frame_dimensions)
@@ -74,14 +86,19 @@ class ViewerWindow(gtk.Window):
         hbox = gtk.HBox()
         hbox.pack_start(self.glarea, expand=True,  fill=True)
         hbox.pack_start(vbox,        expand=False, fill=False)
-        self.add(hbox)
+
+        main_vbox = gtk.VBox()
+        main_vbox.pack_start(menu, False)
+        main_vbox.pack_start(hbox)
+
+        self.add(main_vbox)
 
         self.connect('destroy', lambda quit: gtk.main_quit())
         self.connect('key-press-event', self.on_keypress)
 
     def on_keypress(self, widget, event):
         if event.keyval == gtk.keysyms.Escape:
-            gtk.main_quit()
+            self.on_quit()
 
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
@@ -119,6 +136,52 @@ class ViewerWindow(gtk.Window):
         parser = StlAsciiParser(fpath)
         model = StlModel(parser.parse())
         return model
+
+    def set_up_actions(self):
+        actiongroup = ActionGroup('main')
+        actiongroup.add_action(gtk.Action('file', '_File', 'File', None))
+
+        action_open = gtk.Action('open', 'Open', 'Open', gtk.STOCK_OPEN)
+        action_open.connect('activate', self.on_open)
+        actiongroup.add_action_with_accel(action_open, '<Control>o')
+
+        save_as = gtk.Action('save-as', 'Save As...', 'Save As...', gtk.STOCK_SAVE_AS)
+        save_as.connect('activate', self.on_save_as)
+        actiongroup.add_action_with_accel(save_as, '<Control><Shift>s')
+
+        action_quit = gtk.Action('quit', 'Quit', 'Quit', gtk.STOCK_QUIT)
+        action_quit.connect('activate', self.on_quit)
+        actiongroup.add_action(action_quit)
+
+        accelgroup = gtk.AccelGroup()
+        for action in actiongroup.list_actions():
+            action.set_accel_group(accelgroup)
+
+        self.add_accel_group(accelgroup)
+
+        return actiongroup
+
+    def create_menu(self, actiongroup):
+        file_menu = gtk.Menu()
+        file_menu.append(actiongroup.menu_item('open'))
+        file_menu.append(actiongroup.menu_item('save-as'))
+        file_menu.append(actiongroup.menu_item('quit'))
+
+        menubar = gtk.MenuBar()
+        item_file = actiongroup.menu_item('file')
+        item_file.set_submenu(file_menu)
+        menubar.append(item_file)
+
+        return menubar
+
+    def on_save_as(self, action):
+        print '+++ save as'
+
+    def on_open(self, action):
+        print '+++ open'
+
+    def on_quit(self, action=None):
+        gtk.main_quit()
 
 
 if __name__ == '__main__':
