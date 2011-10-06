@@ -175,7 +175,17 @@ class ViewerWindow(gtk.Window):
         return menubar
 
     def on_save_as(self, action):
-        print '+++ save as'
+        dialog = gtk.FileChooserDialog('Save As', None,
+            action=gtk.FILE_CHOOSER_ACTION_SAVE,
+            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT))
+        dialog.set_do_overwrite_confirmation(True)
+
+        if dialog.run() == gtk.RESPONSE_ACCEPT:
+            from libtatlin.stlparser import StlFile
+            stl_file = StlFile(self.model.transformed_facets())
+            stl_file.write(dialog.get_filename())
+
+        dialog.destroy()
 
     def on_open(self, action):
         print '+++ open'

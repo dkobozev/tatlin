@@ -249,12 +249,12 @@ class StlModel(object):
 
     def scale(self, factor):
         self.scaling_factor = factor
-        from libtatlin.stlparser import StlFile
-        stl_file = StlFile([facet.scale(factor) for facet in self.facets])
-        stl_file.write('/tmp/scaled.stl')
 
     def display(self):
         glEnable(GL_LIGHTING)
         glCallList(self.display_list)
         glDisable(GL_LIGHTING)
 
+    def transformed_facets(self):
+        transformed = [facet.scale(self.scaling_factor) for facet in self.facets]
+        return transformed
