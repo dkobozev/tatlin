@@ -26,30 +26,19 @@ class ActionGroup(gtk.ActionGroup):
         return item
 
 
-class ViewerWindow(gtk.Window):
-    def __init__(self):
-        gtk.Window.__init__(self)
+class Panel(gtk.VBox):
+    supported_types = ['stl', 'gcode']
 
-        self.set_title('viewer')
-        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
-
-        platform = Platform()
-        self.model = self.call_model()
-
-        self.scene = Scene()
-        self.scene.actors.append(self.model)
-        # platform has to be added last to be translucent
-        self.scene.actors.append(platform)
-        self.glarea = GLArea(self.scene)
+    def __init__(self, model):
+        gtk.VBox.__init__(self)
 
         label_layers = gtk.Label('Layers')
         self.scale_layers = gtk.HScale()
-        self.scale_layers.set_range(1, self.model.max_layers)
-        self.scale_layers.set_value(self.model.max_layers)
+        self.scale_layers.set_range(1, model.max_layers)
+        self.scale_layers.set_value(model.max_layers)
         self.scale_layers.set_increments(1, 10)
         self.scale_layers.set_digits(0)
         self.scale_layers.set_size_request(200, 35)
-        self.scale_layers.connect('value-changed', self.on_scale_value_changed)
 
         table_layers = gtk.Table(rows=2, columns=1)
         table_layers.set_border_width(5)
@@ -64,7 +53,6 @@ class ViewerWindow(gtk.Window):
         self.entry_scale = gtk.Entry()
         self.entry_scale.set_text('1.0')
         self.button_scale = gtk.Button('Scale')
-        self.button_scale.connect('clicked', self.on_button_scale_clicked)
 
         table_dimensions = gtk.Table(rows=1, columns=3)
         table_dimensions.set_border_width(5)
@@ -76,25 +64,33 @@ class ViewerWindow(gtk.Window):
         frame_dimensions = gtk.Frame('Dimensions')
         frame_dimensions.add(table_dimensions)
 
+        self.pack_start(frame_layers)
+        self.pack_start(frame_dimensions)
+
+
+class ViewerWindow(gtk.Window):
+    def __init__(self):
+        gtk.Window.__init__(self)
+
+        self.set_title('viewer')
+        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+
         self.actiongroup = self.set_up_actions()
         menu = self.create_menu(self.actiongroup)
 
-        vbox = gtk.VBox()
-        vbox.pack_start(frame_layers)
-        vbox.pack_start(frame_dimensions)
-
-        hbox = gtk.HBox()
-        hbox.pack_start(self.glarea, expand=True,  fill=True)
-        hbox.pack_start(vbox,        expand=False, fill=False)
+        self.hbox_model = gtk.HBox()
 
         main_vbox = gtk.VBox()
         main_vbox.pack_start(menu, False)
-        main_vbox.pack_start(hbox)
+        main_vbox.pack_start(self.hbox_model)
 
         self.add(main_vbox)
 
         self.connect('destroy', lambda quit: gtk.main_quit())
         self.connect('key-press-event', self.on_keypress)
+
+        self.panel = None
+        self.scene = None
 
     def on_keypress(self, widget, event):
         if event.keyval == gtk.keysyms.Escape:
@@ -106,25 +102,59 @@ class ViewerWindow(gtk.Window):
         self.scene.invalidate()
 
     def on_button_scale_clicked(self, widget):
-        factor = float(self.entry_scale.get_text())
-        print 'factor: %.2f' % factor
+        factor = float(self.panel.entry_scale.get_text())
         self.model.scale(factor)
         self.model.init()
         self.scene.invalidate()
 
-    def call_model(self):
-        fpath = sys.argv[1]
-        fname = os.path.basename(fpath)
-        extension = os.path.splitext(fname)[-1]
+    def open_and_display_file(self, fpath):
+        ftype = self.determine_model_type(fpath)
 
-        if extension == '.gcode':
+        if ftype == 'gcode':
             model = self.gcode_model(fpath)
-        elif extension == '.stl':
+            #Panel = GcodePanel
+        elif ftype == 'stl':
             model = self.stl_model(fpath)
-        else:
+            #Panel = StlPanel
+
+        if self.panel is None or ftype not in self.panel.supported_types:
+            self.panel = Panel(model)
+            self.panel.scale_layers.connect('value-changed', self.on_scale_value_changed)
+            self.panel.button_scale.connect('clicked', self.on_button_scale_clicked)
+
+        if self.scene is None:
+            self.init_scene()
+
+        self.display_scene()
+        self.add_model_to_scene(model)
+
+    def init_scene(self):
+        self.platform = Platform()
+        self.scene = Scene()
+        self.scene.actors.append(self.platform)
+        self.glarea = GLArea(self.scene)
+
+    def display_scene(self):
+        for child in self.hbox_model.children():
+            self.hbox_model.remove(child)
+
+        self.hbox_model.pack_start(self.glarea, expand=True,  fill=True)
+        self.hbox_model.pack_start(self.panel,  expand=False, fill=False)
+
+    def add_model_to_scene(self, model):
+        self.model = model
+        self.scene.actors = []
+        self.scene.actors.append(self.model)
+        self.scene.actors.append(self.platform) # platform needs to be added last to be translucent
+
+    def determine_model_type(self, fpath):
+        fname = os.path.basename(fpath)
+        extension = os.path.splitext(fname)[-1].lower()
+
+        if extension not in ['.gcode', '.stl']:
             raise Exception('Unknown file extension: %s' % extension)
 
-        return model
+        return extension[1:]
 
     def gcode_model(self, fpath):
         start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
@@ -196,5 +226,6 @@ class ViewerWindow(gtk.Window):
 
 if __name__ == '__main__':
     window = ViewerWindow()
+    window.open_and_display_file(sys.argv[1])
     window.show_all()
     gtk.main()
