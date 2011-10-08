@@ -28,9 +28,11 @@ class Platform(object):
     def __init__(self):
         self.color_guides = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.4)
         self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
+        self.initialized = False
 
     def init(self):
         self.display_list = compile_display_list(self.draw)
+        self.initialized = True
 
     def draw(self):
         glPushMatrix()
@@ -65,6 +67,7 @@ class GcodeModel(object):
         self.max_layers = len(self.layers)
         self.num_layers_to_draw = self.max_layers
         self.arrows_enabled = True
+        self.initialized = False
 
         self.colors = {
             'red':    (1.0, 0.0, 0.0, 0.6),
@@ -91,6 +94,8 @@ class GcodeModel(object):
         if self.arrows_enabled:
             for layer in self.layers:
                 self.draw_arrows(layer, self.arrow_lists)
+
+        self.initialized = True
 
     def draw_layers(self, list_container=None):
         if list_container is None:
@@ -196,6 +201,8 @@ class StlModel(object):
 
         self.max_layers = 42
 
+        self.initialized = False
+
     def init(self):
         """
         Create a display list.
@@ -204,6 +211,7 @@ class StlModel(object):
             glDeleteLists(self.display_list, 1)
 
         self.display_list = compile_display_list(self.draw_facets)
+        self.initialized = True
 
     def draw_facets(self):
         glPushMatrix()

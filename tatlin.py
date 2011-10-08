@@ -123,15 +123,13 @@ class ViewerWindow(gtk.Window):
             self.panel.button_scale.connect('clicked', self.on_button_scale_clicked)
 
         if self.scene is None:
-            self.init_scene()
+            self.set_up_scene()
 
-        self.display_scene()
         self.add_model_to_scene(model)
+        self.display_scene()
 
-    def init_scene(self):
-        self.platform = Platform()
+    def set_up_scene(self):
         self.scene = Scene()
-        self.scene.actors.append(self.platform)
         self.glarea = GLArea(self.scene)
 
     def display_scene(self):
@@ -145,7 +143,7 @@ class ViewerWindow(gtk.Window):
         self.model = model
         self.scene.actors = []
         self.scene.actors.append(self.model)
-        self.scene.actors.append(self.platform) # platform needs to be added last to be translucent
+        self.scene.actors.append(Platform()) # platform needs to be added last to be translucent
 
     def determine_model_type(self, fpath):
         fname = os.path.basename(fpath)
@@ -218,7 +216,13 @@ class ViewerWindow(gtk.Window):
         dialog.destroy()
 
     def on_open(self, action):
-        print '+++ open'
+        dialog = gtk.FileChooserDialog('Open', None, gtk.FILE_CHOOSER_ACTION_OPEN,
+            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
+
+        if dialog.run() == gtk.RESPONSE_ACCEPT:
+            self.open_and_display_file(dialog.get_filename())
+
+        dialog.destroy()
 
     def on_quit(self, action=None):
         gtk.main_quit()
