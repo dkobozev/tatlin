@@ -133,6 +133,10 @@ class ViewerWindow(gtk.Window):
         self.glarea = GLArea(self.scene)
 
     def display_scene(self):
+        # NOTE: Removing glarea from parent widget causes it to invalidate
+        # previously created display lists, so they have to be recreated. There
+        # doesn't seem to be anything about it in the docs, should this be
+        # self-evident? It does save the trouble of cleaning up, though.
         for child in self.hbox_model.children():
             self.hbox_model.remove(child)
 
