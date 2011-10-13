@@ -1,10 +1,12 @@
 from __future__ import division
 
 import math
+import numpy
 
 from OpenGL.GL import *
 from OpenGL.GLE import *
 from OpenGL.GLUT import *
+from OpenGL.arrays.vbo import VBO
 
 
 def line_slope(a, b):
@@ -189,8 +191,11 @@ class GcodeModel(object):
 
 
 class StlModel(object):
-    def __init__(self, facets):
-        self.facets = facets
+    def __init__(self, data):
+        vertices, normals = data
+        # convert python lists to numpy arrays for constructing vbos
+        self.vertices = numpy.require(vertices, 'f')
+        self.normals  = numpy.require(normals, 'f')
 
         self.display_list = None
 
@@ -205,12 +210,10 @@ class StlModel(object):
 
     def init(self):
         """
-        Create a display list.
+        Create vertex buffer objects (VBOs).
         """
-        if self.display_list is not None: # if init called more than once, cleanup previous list
-            glDeleteLists(self.display_list, 1)
-
-        self.display_list = compile_display_list(self.draw_facets)
+        self.vertex_buffer = VBO(self.vertices, 'GL_STATIC_DRAW')
+        self.normal_buffer = VBO(self.normals, 'GL_STATIC_DRAW')
         self.initialized = True
 
     def draw_facets(self):
@@ -236,31 +239,38 @@ class StlModel(object):
         glLightfv(GL_LIGHT1, GL_POSITION, (-20.0, -20.0, 20.0))
 
         glColor(1.0, 1.0, 1.0)
-        for facet in self.facets:
-            self.draw_facet(facet)
+
+        ### VBO stuff
+
+        self.vertex_buffer.bind()
+        glVertexPointer(3, GL_FLOAT, 0, None)
+        self.normal_buffer.bind()
+        glNormalPointer(GL_FLOAT, 0, None)
+
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_NORMAL_ARRAY)
+
+        glDrawArrays(GL_TRIANGLES, 0, len(self.vertices))
+
+        glDisableClientState(GL_NORMAL_ARRAY)
+        glDisableClientState(GL_VERTEX_ARRAY)
+
+        self.normal_buffer.unbind()
+        self.vertex_buffer.unbind()
+
+        ### end VBO stuff
 
         glDisable(GL_LIGHT1)
         glDisable(GL_LIGHT0)
 
         glPopMatrix()
 
-    def draw_facet(self, facet):
-        normal = facet.normal
-        v1, v2, v3 = facet.scale(self.scaling_factor).vertices
-
-        glBegin(GL_POLYGON)
-        glNormal3f(normal.x, normal.y, normal.z)
-        glVertex3f(v1.x, v1.y, v1.z)
-        glVertex3f(v2.x, v2.y, v2.z)
-        glVertex3f(v3.x, v3.y, v3.z)
-        glEnd()
-
     def scale(self, factor):
         self.scaling_factor = factor
 
     def display(self):
         glEnable(GL_LIGHTING)
-        glCallList(self.display_list)
+        self.draw_facets()
         glDisable(GL_LIGHTING)
 
     def transformed_facets(self):

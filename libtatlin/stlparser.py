@@ -111,7 +111,7 @@ class StlAsciiParser(object):
         finally:
             self.finput.close()
 
-        return self.facet_list
+        return self.facet_list, self.normal_list
 
     def _solid(self):
         line = self.next_line()
@@ -128,6 +128,7 @@ class StlAsciiParser(object):
 
     def _facets(self):
         self.facet_list = []
+        self.normal_list = []
         peek = self.peek_line()
         while peek[0] != 'endsolid':
             self._facet()
@@ -139,7 +140,7 @@ class StlAsciiParser(object):
             raise InvalidTokenError(self.line_no, 'expected "%s", got "%s"' % ('facet', line[0]))
 
         if line[1] == 'normal':
-            self.facet_normal = Vector3(float(line[2]), float(line[3]), float(line[4]))
+            self.facet_normal = [float(line[2]), float(line[3]), float(line[4])]
         else:
             raise InvalidTokenError(self.line_no, 'expected "%s", got "%s"' % ('normal', line[1]))
 
@@ -151,8 +152,8 @@ class StlAsciiParser(object):
         if line[0] != 'endfacet':
             raise InvalidTokenError(self.line_no, 'expected "%s", got "%s"' % ('endfacet', line[0]))
 
-        facet = Facet(self.facet_normal, self.vertex_list)
-        self.facet_list.append(facet)
+        self.facet_list.extend(self.vertex_list)
+        self.normal_list.extend([self.facet_normal] * len(self.vertex_list))
 
     def _outer_loop(self):
         line = self.next_line()
@@ -178,16 +179,19 @@ class StlAsciiParser(object):
         line = self.next_line()
         if line[0] != 'vertex':
             raise InvalidTokenError(self.line_no, 'expected "%s", got "%s"' % ('vertex', line[0]))
-        vertex = Vector3(float(line[1]), float(line[2]), float(line[3]))
+        vertex = [float(line[1]), float(line[2]), float(line[3])]
         self.vertex_list.append(vertex)
 
 
 if __name__ == '__main__':
     import sys
     parser = StlAsciiParser(sys.argv[1])
-    facets = parser.parse()
-    print '[ OK ] Parsed %d facets.' % len(facets)
-    print 'First 5 facets:'
-    for facet in facets[:5]:
-        print facet
+    vertices, normals = parser.parse()
+    print '[ OK ] Parsed %d vertices.' % len(vertices)
+    print 'First 5 vertices:'
+    for vertex in vertices[:15]:
+        print vertex
+    print 'First 5 normals:'
+    for normal in normals[:5]:
+        print normal
 
