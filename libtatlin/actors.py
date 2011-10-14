@@ -64,65 +64,53 @@ class Platform(object):
 
 
 class GcodeModel(object):
-    def __init__(self, layers):
-        self.layers = layers
-        self.max_layers = len(self.layers)
+    color_map = {
+        'red':    [1.0, 0.0, 0.0, 0.6],
+        'yellow': [1.0, 0.875, 0.0, 0.6],
+        'orange': [1.0, 0.373, 0.0, 0.6],
+        'green':  [0.0, 1.0, 0.0, 0.6],
+        'cyan':   [0.0, 0.875, 0.875, 0.6],
+        'gray':   [0.5, 0.5, 0.5, 0.5],
+    }
+
+    def __init__(self, model_data):
+        self.create_vertex_arrays(model_data)
+
+        self.max_layers = len(self.layer_stops)
         self.num_layers_to_draw = self.max_layers
         self.arrows_enabled = True
         self.initialized = False
 
-        self.colors = {
-            'red':    (1.0, 0.0, 0.0, 0.6),
-            'yellow': (1.0, 0.875, 0.0, 0.6),
-            'orange': (1.0, 0.373, 0.0, 0.6),
-            'green':  (0.0, 1.0, 0.0, 0.6),
-            'cyan':   (0.0, 0.875, 0.875, 0.6),
-            'gray':   (0.5, 0.5, 0.5, 0.5),
-        }
+        print '!!! Gcode model, vertex count:', len(self.vertices)
 
-        line_count = 0
-        for layer in self.layers:
-            line_count += len(layer)
-        print '!!! line count:     ', line_count
-        print '!!! lines per layer:', round(line_count / self.max_layers)
+    def create_vertex_arrays(self, model_data):
+        vertex_list = []
+        color_list = []
+        self.layer_stops = [] # indexes at which layers end
+
+        for layer in model_data:
+            for movement in layer:
+                a, b = movement.point_a, movement.point_b
+                vertex_list.append([a.x, a.y, a.z])
+                vertex_list.append([b.x, b.y, b.z])
+
+                vertex_color = self.movement_color(movement)
+                # twice for each vertex
+                color_list.append(vertex_color)
+                color_list.append(vertex_color)
+
+            self.layer_stops.append(len(vertex_list))
+
+        self.vertices = numpy.require(vertex_list, 'f')
+        self.colors = numpy.require(color_list, 'f')
 
     def init(self):
         """
         Create a display list for each model layer.
         """
-        self.display_lists = self.draw_layers()
-
-        self.arrow_lists = []
-        if self.arrows_enabled:
-            for layer in self.layers:
-                self.draw_arrows(layer, self.arrow_lists)
-
+        self.vertex_buffer = VBO(self.vertices, 'GL_STATIC_DRAW')
+        self.color_buffer = VBO(self.colors, 'GL_STATIC_DRAW')
         self.initialized = True
-
-    def draw_layers(self, list_container=None):
-        if list_container is None:
-            list_container = []
-
-        for layer_no, layer in enumerate(self.layers):
-            layer_list = compile_display_list(self.draw_layer,
-                layer, (layer_no == self.num_layers_to_draw - 1))
-            list_container.append(layer_list)
-
-        return list_container
-
-    def draw_layer(self, layer, last=False):
-        glPushMatrix()
-        glBegin(GL_LINES)
-
-        for movement in layer:
-            point_a, point_b = movement.points()
-
-            glColor(*self.movement_color(movement))
-            glVertex3f(point_a.x, point_a.y, point_a.z)
-            glVertex3f(point_b.x, point_b.y, point_b.z)
-
-        glEnd()
-        glPopMatrix()
 
     def draw_arrows(self, layer, list_container=None):
         if list_container is None:
@@ -157,15 +145,15 @@ class GcodeModel(object):
 
     def movement_color(self, movement):
         if not movement.extruder_on:
-            color = self.colors['gray']
+            color = self.color_map['gray']
         elif movement.is_loop:
-            color = self.colors['yellow']
+            color = self.color_map['yellow']
         elif movement.is_perimeter and movement.is_perimeter_outer:
-            color = self.colors['cyan']
+            color = self.color_map['cyan']
         elif movement.is_perimeter:
-            color = self.colors['green']
+            color = self.color_map['green']
         else:
-            color = self.colors['red']
+            color = self.color_map['red']
 
         return color
 
@@ -183,16 +171,27 @@ class GcodeModel(object):
         return angle
 
     def display(self):
-        for layer in self.display_lists[:self.num_layers_to_draw]:
-            glCallList(layer)
+        self.vertex_buffer.bind()
+        glVertexPointer(3, GL_FLOAT, 0, None)
 
-        if self.arrows_enabled:
-            glCallList(self.arrow_lists[self.num_layers_to_draw - 1])
+        self.color_buffer.bind()
+        glColorPointer(4, GL_FLOAT, 0, None)
+
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_COLOR_ARRAY)
+
+        glDrawArrays(GL_LINES, 0, self.layer_stops[self.num_layers_to_draw - 1])
+
+        glDisableClientState(GL_COLOR_ARRAY)
+        glDisableClientState(GL_VERTEX_ARRAY)
+
+        self.vertex_buffer.unbind()
+        self.color_buffer.unbind()
 
 
 class StlModel(object):
-    def __init__(self, data):
-        vertices, normals = data
+    def __init__(self, model_data):
+        vertices, normals = model_data
         # convert python lists to numpy arrays for constructing vbos
         self.vertices = numpy.require(vertices, 'f')
         self.normals  = numpy.require(normals, 'f')
