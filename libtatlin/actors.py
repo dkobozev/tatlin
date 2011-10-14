@@ -266,13 +266,10 @@ class StlModel(object):
         glPopMatrix()
 
     def scale(self, factor):
-        self.scaling_factor = factor
+        self.vertices *= factor
 
     def display(self):
         glEnable(GL_LIGHTING)
         self.draw_facets()
         glDisable(GL_LIGHTING)
 
-    def transformed_facets(self):
-        transformed = [facet.scale(self.scaling_factor) for facet in self.facets]
-        return transformed

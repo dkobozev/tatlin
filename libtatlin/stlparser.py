@@ -5,41 +5,25 @@ from vector3 import Vector3
 
 
 class StlFile(object):
-    def __init__(self, facets):
-        self.facets = facets
+    def __init__(self, model):
+        self.vertices, self.normals = model.vertices, model.normals
 
     def write(self, fpath):
         f = open(fpath, 'w')
         print >>f, 'solid'
-        print >>f, ''.join([facet.to_stl() for facet in self.facets])
+        print >>f, ''.join([self.facet(self.vertices[i:i+3], self.normals[i]) for i in xrange(0, len(self.vertices), 3)])
         print >>f, 'endsolid'
         f.close()
 
-
-class Facet(object):
-
-    def __init__(self, normal, vertices):
-        self.normal = normal
-        self.vertices = vertices
-
-    def __repr__(self):
-        s = 'Facet(%s, %s)' % (self.normal, self.vertices)
-        return s
-
-    def scale(self, factor):
-        vertices = [v * factor for v in self.vertices]
-        return Facet(self.normal, vertices)
-
-    def to_stl(self):
+    def facet(self, vertices, normal):
         template = """facet normal %.6f %.6f %.6f
   outer loop
     %s
   endloop
 endfacet
 """
-        stl_facet = template % (
-            self.normal.x, self.normal.y, self.normal.z,
-            '\n'.join(['vertex %.6f %.6f %.6f' % (v.x, v.y, v.z) for v in self.vertices])
+        stl_facet = template % ( normal[0], normal[1], normal[2],
+            '\n'.join(['vertex %.6f %.6f %.6f' % (v[0], v[1], v[2]) for v in vertices])
         )
         return stl_facet
 

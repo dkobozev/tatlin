@@ -214,7 +214,7 @@ class ViewerWindow(gtk.Window):
 
         if dialog.run() == gtk.RESPONSE_ACCEPT:
             from libtatlin.stlparser import StlFile
-            stl_file = StlFile(self.model.transformed_facets())
+            stl_file = StlFile(self.model)
             stl_file.write(dialog.get_filename())
 
         dialog.destroy()
