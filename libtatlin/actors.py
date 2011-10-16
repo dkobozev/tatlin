@@ -8,10 +8,8 @@ from OpenGL.GLE import *
 from OpenGL.GLUT import *
 from OpenGL.arrays.vbo import VBO
 
+import vector
 
-def line_slope(a, b):
-    slope = (b.y - a.y) / (b.x - a.x)
-    return slope
 
 def compile_display_list(func, *options):
     display_list = glGenLists(1)
@@ -73,6 +71,12 @@ class GcodeModel(object):
         'gray':   [0.5, 0.5, 0.5, 0.5],
     }
 
+    arrow = numpy.require([
+        [0.0, 0.0, 0.0],
+        [0.4, -0.2, 0.0],
+        [0.4, 0.2, 0.0],
+    ], 'f')
+
     def __init__(self, model_data):
         self.create_vertex_arrays(model_data)
 
@@ -87,6 +91,7 @@ class GcodeModel(object):
         vertex_list = []
         color_list = []
         self.layer_stops = [] # indexes at which layers end
+        arrow_list = []
 
         for layer in model_data:
             for movement in layer:
@@ -94,22 +99,30 @@ class GcodeModel(object):
                 vertex_list.append([a.x, a.y, a.z])
                 vertex_list.append([b.x, b.y, b.z])
 
+                arrow = vector.rotate(self.arrow, movement.angle(), 0.0, 0.0, 1.0)
+                arrow = vector.translate(arrow, b.x, b.y, b.z)
+                arrow_list.extend(arrow)
+
                 vertex_color = self.movement_color(movement)
-                # twice for each vertex
-                color_list.append(vertex_color)
                 color_list.append(vertex_color)
 
             self.layer_stops.append(len(vertex_list))
 
         self.vertices = numpy.require(vertex_list, 'f')
         self.colors = numpy.require(color_list, 'f')
+        self.arrows = numpy.require(arrow_list, 'f')
+
+        # for every pair of vertices of the model, there are 3 vertices for the arrow
+        assert len(self.arrows) == ((len(self.vertices) // 2) * 3)
 
     def init(self):
         """
         Create a display list for each model layer.
         """
-        self.vertex_buffer = VBO(self.vertices, 'GL_STATIC_DRAW')
-        self.color_buffer = VBO(self.colors, 'GL_STATIC_DRAW')
+        self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
+        self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
+        self.arrow_buffer        = VBO(self.arrows, 'GL_STATIC_DRAW')
+        self.arrow_color_buffer  = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
         self.initialized = True
 
     def draw_arrows(self, layer, list_container=None):
@@ -157,36 +170,46 @@ class GcodeModel(object):
 
         return color
 
-    def points_angle(self, a, b):
-        try:
-            slope = line_slope(a, b)
-            angle = math.degrees(math.atan(slope))
-            if b.x > a.x:
-                angle = 180 + angle
-        except ZeroDivisionError:
-            angle = 90
-            if b.y > a.y:
-                angle = 180 + angle
-
-        return angle
-
     def display(self):
-        self.vertex_buffer.bind()
-        glVertexPointer(3, GL_FLOAT, 0, None)
-
-        self.color_buffer.bind()
-        glColorPointer(4, GL_FLOAT, 0, None)
-
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
 
-        glDrawArrays(GL_LINES, 0, self.layer_stops[self.num_layers_to_draw - 1])
+        self._display_movements()
+        self._display_arrows()
 
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
 
+    def _display_movements(self):
+        self.vertex_buffer.bind()
+        glVertexPointer(3, GL_FLOAT, 0, None)
+
+        self.vertex_color_buffer.bind()
+        glColorPointer(4, GL_FLOAT, 0, None)
+
+        glDrawArrays(GL_LINES, 0, self.layer_stops[self.num_layers_to_draw - 1])
+
         self.vertex_buffer.unbind()
-        self.color_buffer.unbind()
+        self.vertex_color_buffer.unbind()
+
+    def _display_arrows(self):
+        self.arrow_buffer.bind()
+        glVertexPointer(3, GL_FLOAT, 0, None)
+
+        self.arrow_color_buffer.bind()
+        glColorPointer(4, GL_FLOAT, 0, None)
+
+        layer_idx = self.num_layers_to_draw - 1
+        if layer_idx > 0:
+            start = (self.layer_stops[layer_idx - 1] // 2) * 3
+        else:
+            start = 0
+        end = (self.layer_stops[layer_idx] // 2) * 3
+
+        glDrawArrays(GL_TRIANGLES, start, end - start)
+
+        self.arrow_buffer.unbind()
+        self.arrow_color_buffer.unbind()
 
 
 class StlModel(object):

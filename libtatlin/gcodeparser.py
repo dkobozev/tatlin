@@ -2,6 +2,7 @@ from __future__ import division
 
 from . import gcodec
 from .vector3 import Vector3
+import geometry
 
 
 class Movement(object):
@@ -17,6 +18,11 @@ class Movement(object):
 
     def points(self):
         return (self.point_a, self.point_b)
+
+    def angle(self):
+        angle = geometry.points_angle(self.point_a.x, self.point_a.y,
+                self.point_b.x, self.point_b.y)
+        return angle
 
 
 class GcodeParser(object):
