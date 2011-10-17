@@ -18,8 +18,30 @@ def compile_display_list(func, *options):
     glEndList()
     return display_list
 
+class BoundingBox(object):
+    """
+    A rectangular box (cuboid) enclosing a 3D model, defined by lower and upper corners.
+    """
+    def __init__(self, upper_corner, lower_corner):
+        self.upper_corner = upper_corner
+        self.lower_corner = lower_corner
+
+    def combine(self, point):
+        """
+        Combine bounding box with a point so that the resulting bounding box encloses the original bounding box and the point.
+        """
+        for i in range(3):
+            if point[i] < self.lower_corner[i]:
+                self.lower_corner[i] = point[i]
+
+            if point[i] > self.upper_corner[i]:
+                self.upper_corner[i] = point[i]
+
 
 class Platform(object):
+    """
+    Platform on which models are placed.
+    """
     # makerbot platform size
     width = 120
     depth = 100
@@ -62,6 +84,10 @@ class Platform(object):
 
 
 class GcodeModel(object):
+    """
+    Model for displaying Gcode data.
+    """
+    # define color names for different types of extruder movements
     color_map = {
         'red':    [1.0, 0.0, 0.0, 0.6],
         'yellow': [1.0, 0.875, 0.0, 0.6],
@@ -71,6 +97,7 @@ class GcodeModel(object):
         'gray':   [0.6, 0.6, 0.6, 0.6],
     }
 
+    # vertices for arrow to display the direction of movement
     arrow = numpy.require([
         [0.0, 0.0, 0.0],
         [0.4, -0.1, 0.0],
@@ -88,6 +115,9 @@ class GcodeModel(object):
         print '!!! Gcode model, vertex count:', len(self.vertices)
 
     def create_vertex_arrays(self, model_data):
+        """
+        Construct vertex lists from gcode data.
+        """
         vertex_list = []
         color_list = []
         self.layer_stops = [] # indexes at which layers end
@@ -100,6 +130,7 @@ class GcodeModel(object):
                 vertex_list.append([b.x, b.y, b.z])
 
                 arrow = self.arrow
+                # position the arrow with respect to movement
                 arrow = vector.rotate(arrow, movement.angle(), 0.0, 0.0, 1.0)
                 arrow = vector.translate(arrow, b.x, b.y, b.z)
                 arrow_list.extend(arrow)
@@ -114,50 +145,13 @@ class GcodeModel(object):
         self.arrows = numpy.require(arrow_list, 'f')
 
         # for every pair of vertices of the model, there are 3 vertices for the arrow
-        assert len(self.arrows) == ((len(self.vertices) // 2) * 3)
-
-    def init(self):
-        """
-        Create a display list for each model layer.
-        """
-        self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
-        self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
-        self.arrow_buffer        = VBO(self.arrows, 'GL_STATIC_DRAW')
-        self.arrow_color_buffer  = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
-        self.initialized = True
-
-    def draw_arrows(self, layer, list_container=None):
-        if list_container is None:
-            list_container = []
-
-        layer_arrow_list = compile_display_list(self._draw_arrows, layer)
-        list_container.append(layer_arrow_list)
-
-        return list_container
-
-    def _draw_arrows(self, layer):
-        for movement in layer:
-            self.draw_arrow(movement)
-
-    def draw_arrow(self, movement):
-        a, b = movement.points()
-        angle = self.points_angle(a, b)
-
-        glPushMatrix()
-
-        glTranslate(b.x, b.y, b.z)
-        glRotate(angle, 0.0, 0.0, 1.0)
-        glColor(*self.movement_color(movement))
-
-        glBegin(GL_TRIANGLES)
-        glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(0.4, -0.2, 0.0)
-        glVertex3f(0.4, 0.2, 0.0)
-        glEnd()
-
-        glPopMatrix()
+        assert len(self.arrows) == ((len(self.vertices) // 2) * 3), \
+            'The 2:3 ratio of model vertices to arrow vertices does not hold.'
 
     def movement_color(self, movement):
+        """
+        Return the color to use for particular type of movement.
+        """
         if not movement.extruder_on:
             color = self.color_map['gray']
         elif movement.is_loop:
@@ -170,6 +164,20 @@ class GcodeModel(object):
             color = self.color_map['red']
 
         return color
+
+    # ------------------------------------------------------------------------
+    # DRAWING
+    # ------------------------------------------------------------------------
+
+    def init(self):
+        """
+        Create a display list for each model layer.
+        """
+        self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
+        self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
+        self.arrow_buffer        = VBO(self.arrows, 'GL_STATIC_DRAW')
+        self.arrow_color_buffer  = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
+        self.initialized = True
 
     def display(self):
         glEnableClientState(GL_VERTEX_ARRAY)
@@ -214,6 +222,9 @@ class GcodeModel(object):
 
 
 class StlModel(object):
+    """
+    Model for displaying and manipulating STL data.
+    """
     def __init__(self, model_data):
         vertices, normals = model_data
         # convert python lists to numpy arrays for constructing vbos
@@ -230,6 +241,10 @@ class StlModel(object):
         self.max_layers = 42
 
         self.initialized = False
+
+    # ------------------------------------------------------------------------
+    # DRAWING
+    # ------------------------------------------------------------------------
 
     def init(self):
         """
@@ -288,11 +303,29 @@ class StlModel(object):
 
         glPopMatrix()
 
-    def scale(self, factor):
-        self.vertices *= factor
-
     def display(self):
         glEnable(GL_LIGHTING)
         self.draw_facets()
         glDisable(GL_LIGHTING)
+
+    # ------------------------------------------------------------------------
+    # TRANSFORMATIONS
+    # ------------------------------------------------------------------------
+
+    def get_bounding_box(self):
+        """
+        Get a bounding box for the model.
+        """
+        bounding_box = None
+        for vertex in self.vertices:
+            if bounding_box is None:
+                bounding_box = BoundingBox(vertex.copy(), vertex.copy())
+            bounding_box.combine(vertex)
+        return bounding_box
+
+    def scale(self, factor):
+        self.vertices *= factor
+
+    def translate(self, x, y, z):
+        self.vertices = vector.translate(self.vertices, x, y, z)
 

@@ -64,8 +64,11 @@ class Panel(gtk.VBox):
         frame_dimensions = gtk.Frame('Dimensions')
         frame_dimensions.add(table_dimensions)
 
+        self.button_center = gtk.Button('Center model')
+
         self.pack_start(frame_layers)
         self.pack_start(frame_dimensions)
+        self.pack_start(self.button_center)
 
 
 class ViewerWindow(gtk.Window):
@@ -107,6 +110,10 @@ class ViewerWindow(gtk.Window):
         self.model.init()
         self.scene.invalidate()
 
+    def on_button_center_clicked(self, widget):
+        self.scene.center_model()
+        self.scene.invalidate()
+
     def open_and_display_file(self, fpath):
         ftype = self.determine_model_type(fpath)
 
@@ -121,6 +128,7 @@ class ViewerWindow(gtk.Window):
             self.panel = Panel(model)
             self.panel.scale_layers.connect('value-changed', self.on_scale_value_changed)
             self.panel.button_scale.connect('clicked', self.on_button_scale_clicked)
+            self.panel.button_center.connect('clicked', self.on_button_center_clicked)
 
         if self.scene is None:
             self.set_up_scene()
@@ -133,10 +141,10 @@ class ViewerWindow(gtk.Window):
         self.glarea = GLArea(self.scene)
 
     def display_scene(self):
-        # NOTE: Removing glarea from parent widget causes it to invalidate
-        # previously created display lists, so they have to be recreated. There
-        # doesn't seem to be anything about it in the docs, should this be
-        # self-evident? It does save the trouble of cleaning up, though.
+        # NOTE: Removing glarea from parent widget causes it to free previously
+        # allocated resources. There doesn't seem to be anything about it in
+        # the docs, should this be self-evident? It does save the trouble of
+        # cleaning up, though.
         for child in self.hbox_model.children():
             self.hbox_model.remove(child)
 
@@ -145,9 +153,10 @@ class ViewerWindow(gtk.Window):
 
     def add_model_to_scene(self, model):
         self.model = model
-        self.scene.actors = []
-        self.scene.actors.append(self.model)
-        self.scene.actors.append(Platform()) # platform needs to be added last to be translucent
+
+        self.scene.clear()
+        self.scene.set_model(model)
+        self.scene.add_supporting_actor(Platform()) # platform needs to be added last to be translucent
 
     def determine_model_type(self, fpath):
         fname = os.path.basename(fpath)

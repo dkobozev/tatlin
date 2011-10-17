@@ -30,6 +30,13 @@ def html_color(color):
 
 
 class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
+    """
+    A scene is responsible for displaying a model and accompanying objects (actors).
+
+    In addition to calling display functions on its actors, the scene is also
+    responsible for viewing transformations such as zooming, panning and
+    rotation, as well as being the interface for the actors.
+    """
     def __init__(self):
         GLScene.__init__(self, gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
@@ -47,6 +54,20 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.z_far    = 9000.0 # very far
 
         self.initialized = False
+
+    def set_model(self, model):
+        self.model = model
+        self.actors.append(model)
+
+    def add_supporting_actor(self, actor):
+        self.actors.append(actor)
+
+    def clear(self):
+        self.actors = []
+
+    # ------------------------------------------------------------------------
+    # DRAWING
+    # ------------------------------------------------------------------------
 
     def init(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -105,6 +126,13 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         glFlush()
 
+    def reshape(self, width, height):
+        glViewport(0, 0, width, height)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        gluPerspective(self.fovy, width / height, self.z_near, self.z_far)
+        glMatrixMode(GL_MODELVIEW)
+
     def view_ortho(self, width, height):
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
@@ -120,12 +148,33 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glMatrixMode(GL_MODELVIEW)
         glPopMatrix()
 
-    def reshape(self, width, height):
-        glViewport(0, 0, width, height)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        gluPerspective(self.fovy, width / height, self.z_near, self.z_far)
-        glMatrixMode(GL_MODELVIEW)
+    def draw_axes(self, length=50.0):
+        glPushMatrix()
+
+        glRotate(-90, 1.0, 0.0, 0.0) # make z point up
+        glTranslatef(length + 20.0, 0.0, length + 20.0)
+        glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
+        glRotatef(self.__sphi, 0.0, 0.0, 1.0)
+
+        glBegin(GL_LINES)
+        glColor(1.0, 0.0, 0.0)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(-length, 0.0, 0.0)
+
+        glColor(0.0, 1.0, 0.0)
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.0, -length, 0.0)
+
+        glColor(*html_color('008aff'))
+        glVertex3f(0.0, 0.0, 0.0)
+        glVertex3f(0.0, 0.0, length)
+        glEnd()
+
+        glPopMatrix()
+
+    # ------------------------------------------------------------------------
+    # VIEWING TRANSFORMATIONS
+    # ------------------------------------------------------------------------
 
     def button_press(self, width, height, event):
         self.begin_x = event.x
@@ -161,9 +210,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         """
         Pan the model.
 
-        Pannings works by translating relating mouse movements to movements in object space,
-        using program window dimensions and field of view angle. A factor is applied to avoid
-        speeding up on rapid mouse movements.
+        Pannings works by relating mouse movements to movements in object
+        space, using program window dimensions and field of view angle. A
+        factor is applied to avoid speeding up on rapid mouse movements.
         """
         window_h = 2 * abs(self.obj_pos) * math.tan(self.fovy / 2) # height of window in object space
 
@@ -179,28 +228,20 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             y_slow = 1 / magnitude_y
             self.obj_pos.z += delta_y * y_scale * window_h * y_slow
 
-    def draw_axes(self, length=50.0):
-        glPushMatrix()
+    # ------------------------------------------------------------------------
+    # MODEL MANIPULATION
+    # ------------------------------------------------------------------------
 
-        glRotate(-90, 1.0, 0.0, 0.0) # make z point up
-        glTranslatef(length + 20.0, 0.0, length + 20.0)
-        glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
-        glRotatef(self.__sphi, 0.0, 0.0, 1.0)
-
-        glBegin(GL_LINES)
-        glColor(1.0, 0.0, 0.0)
-        glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(-length, 0.0, 0.0)
-
-        glColor(0.0, 1.0, 0.0)
-        glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(0.0, -length, 0.0)
-
-        glColor(*html_color('008aff'))
-        glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(0.0, 0.0, length)
-        glEnd()
-
-        glPopMatrix()
-
+    def center_model(self):
+        """
+        Center the model on platform and raise its lowest point to z=0.
+        """
+        bounding_box = self.model.get_bounding_box()
+        lower_corner = bounding_box.lower_corner
+        upper_corner = bounding_box.upper_corner
+        offset_x = -(upper_corner[0] + lower_corner[0]) / 2
+        offset_y = -(upper_corner[1] + lower_corner[1]) / 2
+        offset_z = -lower_corner[2]
+        self.model.translate(offset_x, offset_y, offset_z)
+        self.model.init()
 
