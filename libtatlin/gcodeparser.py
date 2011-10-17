@@ -1,8 +1,9 @@
 from __future__ import division
 
+import math
+
 from . import gcodec
 from .vector3 import Vector3
-import geometry
 
 
 class Movement(object):
@@ -20,8 +21,9 @@ class Movement(object):
         return (self.point_a, self.point_b)
 
     def angle(self):
-        angle = geometry.points_angle(self.point_a.x, self.point_a.y,
-                self.point_b.x, self.point_b.y)
+        x = self.point_b.x - self.point_a.x
+        y = self.point_b.y - self.point_a.y
+        angle = math.degrees(math.atan2(y, -x)) # negate x for clockwise rotation angle
         return angle
 
 

@@ -68,13 +68,13 @@ class GcodeModel(object):
         'orange': [1.0, 0.373, 0.0, 0.6],
         'green':  [0.0, 1.0, 0.0, 0.6],
         'cyan':   [0.0, 0.875, 0.875, 0.6],
-        'gray':   [0.5, 0.5, 0.5, 0.5],
+        'gray':   [0.6, 0.6, 0.6, 0.6],
     }
 
     arrow = numpy.require([
         [0.0, 0.0, 0.0],
-        [0.4, -0.2, 0.0],
-        [0.4, 0.2, 0.0],
+        [0.4, -0.1, 0.0],
+        [0.4, 0.1, 0.0],
     ], 'f')
 
     def __init__(self, model_data):
@@ -99,7 +99,8 @@ class GcodeModel(object):
                 vertex_list.append([a.x, a.y, a.z])
                 vertex_list.append([b.x, b.y, b.z])
 
-                arrow = vector.rotate(self.arrow, movement.angle(), 0.0, 0.0, 1.0)
+                arrow = self.arrow
+                arrow = vector.rotate(arrow, movement.angle(), 0.0, 0.0, 1.0)
                 arrow = vector.translate(arrow, b.x, b.y, b.z)
                 arrow_list.extend(arrow)
 
