@@ -1,14 +1,16 @@
-Gcode viewer
-
-* axes to display direction
-* 2D view
+general:
+* stl and gcode panels
 * quick view buttons
-* menu
+* axis labels
+* platform grid
+
+gcode:
+* 2D view
+
+stl:
+* put on platform
+* rotate
+* center
+
+long-term:
 * multi-threading for better responsiveness & speed
-* scale markings?
-
-STL viewer
-
-scaling
-centering
-rotation
