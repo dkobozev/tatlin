@@ -13,7 +13,12 @@ class GcodePanel(gtk.VBox):
 
         self.app = app
 
+        # --------------------------------------------------------------------
+        # DISPLAY
+        # --------------------------------------------------------------------
+
         label_layers = gtk.Label('Layers')
+        label_layers.set_alignment(-1, 0) # align text to the left
         self.hscale_layers = gtk.HScale()
         self.hscale_layers.set_range(1, self.app.get_property('layers_range_max'))
         self.hscale_layers.set_value(self.app.get_property('layers_value'))
@@ -21,16 +26,55 @@ class GcodePanel(gtk.VBox):
         self.hscale_layers.set_digits(0)
         self.hscale_layers.set_size_request(200, 35)
 
-        table_layers = gtk.Table(rows=2, columns=1)
-        table_layers.set_border_width(5)
-        table_layers.set_row_spacings(5)
-        table_layers.attach(label_layers,       0, 1, 0, 1, yoptions=0)
-        table_layers.attach(self.hscale_layers, 0, 1, 1, 2, yoptions=0)
+        self.check_arrows = gtk.CheckButton('Show arrows')
+        self.check_2d = gtk.CheckButton('2D view')
+        self.btn_reset_perspective = gtk.Button('Reset perspective')
 
-        frame_layers = gtk.Frame()
-        frame_layers.add(table_layers)
+        table_display = gtk.Table(rows=2, columns=1)
+        table_display.set_border_width(5)
+        table_display.set_row_spacings(5)
+        table_display.attach(label_layers,               0, 1, 0, 1, yoptions=0)
+        table_display.attach(self.hscale_layers,         0, 1, 1, 2, yoptions=0)
+        table_display.attach(self.check_arrows,          0, 1, 2, 3, yoptions=0)
+        table_display.attach(self.check_2d,              0, 1, 3, 4, yoptions=0)
+        table_display.attach(self.btn_reset_perspective, 0, 1, 4, 5, yoptions=0)
 
-        self.pack_start(frame_layers)
+        frame_display = gtk.Frame('Display')
+        frame_display.add(table_display)
+        frame_display.set_border_width(5)
+
+        # --------------------------------------------------------------------
+        # DIMENSIONS
+        # --------------------------------------------------------------------
+
+        label_width = gtk.Label('Width (x):')
+        label_width.set_alignment(-1, 0)
+        self.label_width_value = gtk.Label('43 mm')
+
+        label_depth = gtk.Label('Depth (y):')
+        label_depth.set_alignment(-1, 0)
+        self.label_depth_value = gtk.Label('43 mm')
+
+        label_height = gtk.Label('Height (z):')
+        label_height.set_alignment(-1, 0)
+        self.label_height_value = gtk.Label('43 mm')
+
+        table_dimensions = gtk.Table(rows=3, columns=2)
+        table_dimensions.set_border_width(5)
+        table_dimensions.set_row_spacings(5)
+        table_dimensions.attach(label_width,             0, 1, 0, 1, yoptions=0)
+        table_dimensions.attach(self.label_width_value,  1, 2, 0, 1, yoptions=0)
+        table_dimensions.attach(label_depth,             0, 1, 1, 2, yoptions=0)
+        table_dimensions.attach(self.label_depth_value,  1, 2, 1, 2, yoptions=0)
+        table_dimensions.attach(label_height,            0, 1, 2, 3, yoptions=0)
+        table_dimensions.attach(self.label_height_value, 1, 2, 2, 3, yoptions=0)
+
+        frame_dimensions = gtk.Frame('Dimensions')
+        frame_dimensions.add(table_dimensions)
+        frame_dimensions.set_border_width(5)
+
+        self.pack_start(frame_display, False)
+        self.pack_start(frame_dimensions, False)
 
         self.connect_handlers()
 
