@@ -2,15 +2,15 @@ general:
 * stl and gcode panels
 * quick view buttons
 * axis labels
-* platform grid
+* add more divisions to platform grid
 
 gcode:
 * 2D view
 
 stl:
-* put on platform
+* lay flat on platform
 * rotate
-* center
 
 long-term:
 * multi-threading for better responsiveness & speed
+* undo/redo

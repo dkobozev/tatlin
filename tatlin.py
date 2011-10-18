@@ -15,6 +15,7 @@ from libtatlin.stlparser import StlAsciiParser
 from libtatlin.vector3 import Vector3
 from libtatlin.actors import Platform, GcodeModel, StlModel
 from libtatlin.scene import Scene
+from libtatlin.ui import StlPanel, GcodePanel
 
 
 class ActionGroup(gtk.ActionGroup):
@@ -24,51 +25,6 @@ class ActionGroup(gtk.ActionGroup):
     def menu_item(self, action_name):
         item = self.get_action(action_name).create_menu_item()
         return item
-
-
-class Panel(gtk.VBox):
-    supported_types = ['stl', 'gcode']
-
-    def __init__(self, model):
-        gtk.VBox.__init__(self)
-
-        label_layers = gtk.Label('Layers')
-        self.scale_layers = gtk.HScale()
-        self.scale_layers.set_range(1, model.max_layers)
-        self.scale_layers.set_value(model.max_layers)
-        self.scale_layers.set_increments(1, 10)
-        self.scale_layers.set_digits(0)
-        self.scale_layers.set_size_request(200, 35)
-
-        table_layers = gtk.Table(rows=2, columns=1)
-        table_layers.set_border_width(5)
-        table_layers.set_row_spacings(5)
-        table_layers.attach(label_layers,      0, 1, 0, 1, yoptions=0)
-        table_layers.attach(self.scale_layers, 0, 1, 1, 2, yoptions=0)
-
-        frame_layers = gtk.Frame()
-        frame_layers.add(table_layers)
-
-        label_scale = gtk.Label('Factor')
-        self.entry_scale = gtk.Entry()
-        self.entry_scale.set_text('1.0')
-        self.button_scale = gtk.Button('Scale')
-
-        table_dimensions = gtk.Table(rows=1, columns=3)
-        table_dimensions.set_border_width(5)
-        table_dimensions.set_row_spacings(5)
-        table_dimensions.attach(label_scale,      0, 1, 0, 1, yoptions=0)
-        table_dimensions.attach(self.entry_scale, 1, 2, 0, 1, yoptions=0)
-        table_dimensions.attach(self.button_scale, 2, 3, 0, 1, yoptions=0)
-
-        frame_dimensions = gtk.Frame('Dimensions')
-        frame_dimensions.add(table_dimensions)
-
-        self.button_center = gtk.Button('Center model')
-
-        self.pack_start(frame_layers)
-        self.pack_start(frame_dimensions)
-        self.pack_start(self.button_center)
 
 
 class ViewerWindow(gtk.Window):
@@ -89,11 +45,17 @@ class ViewerWindow(gtk.Window):
 
         self.add(main_vbox)
 
-        self.connect('destroy', lambda quit: gtk.main_quit())
+        self.connect('destroy', lambda: gtk.main_quit())
         self.connect('key-press-event', self.on_keypress)
 
         self.panel = None
         self.scene = None
+
+        # dict of properties that other components can read from the app
+        self._app_properties = {
+            'layers_range_max': lambda: self.scene.get_property('max_layers'),
+            'layers_value':     lambda: self.scene.get_property('max_layers'),
+        }
 
     def on_keypress(self, widget, event):
         if event.keyval == gtk.keysyms.Escape:
@@ -119,22 +81,25 @@ class ViewerWindow(gtk.Window):
 
         if ftype == 'gcode':
             model = self.gcode_model(fpath)
-            #Panel = GcodePanel
+            Panel = GcodePanel
         elif ftype == 'stl':
             model = self.stl_model(fpath)
-            #Panel = StlPanel
-
-        if self.panel is None or ftype not in self.panel.supported_types:
-            self.panel = Panel(model)
-            self.panel.scale_layers.connect('value-changed', self.on_scale_value_changed)
-            self.panel.button_scale.connect('clicked', self.on_button_scale_clicked)
-            self.panel.button_center.connect('clicked', self.on_button_center_clicked)
+            Panel = StlPanel
 
         if self.scene is None:
             self.set_up_scene()
-
         self.add_model_to_scene(model)
+
+        if self.panel is None or ftype not in self.panel.supported_types:
+            self.panel = Panel(self)
+
         self.display_scene()
+
+    def get_property(self, name):
+        """
+        Return a property of the application.
+        """
+        return self._app_properties[name]()
 
     def set_up_scene(self):
         self.scene = Scene()

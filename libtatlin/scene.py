@@ -55,6 +55,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.initialized = False
 
+        # dict of scene properties
+        self._scene_properties = {
+            'max_layers': lambda: self.model.max_layers,
+        }
+
     def set_model(self, model):
         self.model = model
         self.actors.append(model)
@@ -245,3 +250,8 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.model.translate(offset_x, offset_y, offset_z)
         self.model.init()
 
+    def get_property(self, name):
+        """
+        Return a property of the scene, e.g number of layers in the current model.
+        """
+        return self._scene_properties[name]()
