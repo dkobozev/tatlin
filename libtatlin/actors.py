@@ -175,8 +175,11 @@ class GcodeModel(object):
         """
         self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
         self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
-        self.arrow_buffer        = VBO(self.arrows, 'GL_STATIC_DRAW')
-        self.arrow_color_buffer  = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
+
+        if self.arrows_enabled:
+            self.arrow_buffer       = VBO(self.arrows, 'GL_STATIC_DRAW')
+            self.arrow_color_buffer = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
+
         self.initialized = True
 
     def display(self):
@@ -184,7 +187,9 @@ class GcodeModel(object):
         glEnableClientState(GL_COLOR_ARRAY)
 
         self._display_movements()
-        self._display_arrows()
+
+        if self.arrows_enabled:
+            self._display_arrows()
 
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)

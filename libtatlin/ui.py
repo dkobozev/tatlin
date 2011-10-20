@@ -54,7 +54,9 @@ class GcodePanel(gtk.VBox):
         self.hscale_layers.set_size_request(200, 35)
 
         self.check_arrows = gtk.CheckButton('Show arrows')
-        self.check_2d = gtk.CheckButton('3D view')
+        self.check_arrows.set_active(True) # check the box
+        self.check_3d = gtk.CheckButton('3D view')
+        self.check_3d.set_active(True) # check the box
         self.btn_reset_perspective = gtk.Button('Reset perspective')
 
         table_display = gtk.Table(rows=2, columns=1)
@@ -63,7 +65,7 @@ class GcodePanel(gtk.VBox):
         table_display.attach(label_layers,               0, 1, 0, 1, yoptions=0)
         table_display.attach(self.hscale_layers,         0, 1, 1, 2, yoptions=0)
         table_display.attach(self.check_arrows,          0, 1, 2, 3, yoptions=0)
-        table_display.attach(self.check_2d,              0, 1, 3, 4, yoptions=0)
+        table_display.attach(self.check_3d,              0, 1, 3, 4, yoptions=0)
         table_display.attach(self.btn_reset_perspective, 0, 1, 4, 5, yoptions=0)
 
         frame_display = gtk.Frame('Display')
@@ -77,6 +79,7 @@ class GcodePanel(gtk.VBox):
 
     def connect_handlers(self):
         self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
+        self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
 
 
 class StlPanel(gtk.VBox):

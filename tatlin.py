@@ -76,6 +76,10 @@ class ViewerWindow(gtk.Window):
         self.scene.center_model()
         self.scene.invalidate()
 
+    def on_arrows_toggled(self, widget):
+        self.scene.show_arrows(widget.get_active())
+        self.scene.invalidate()
+
     def open_and_display_file(self, fpath):
         ftype = self.determine_model_type(fpath)
 

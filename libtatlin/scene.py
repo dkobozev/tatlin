@@ -255,3 +255,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         Return a property of the scene, e.g number of layers in the current model.
         """
         return self._scene_properties[name]()
+
+    def show_arrows(self, show):
+        self.model.arrows_enabled = show
+        self.model.init()
