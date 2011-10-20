@@ -80,6 +80,7 @@ class GcodePanel(gtk.VBox):
     def connect_handlers(self):
         self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
         self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
+        self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
 
 
 class StlPanel(gtk.VBox):
@@ -198,3 +199,5 @@ class StlPanel(gtk.VBox):
 
     def connect_handlers(self):
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
+        self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+

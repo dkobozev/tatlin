@@ -37,6 +37,10 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     responsible for viewing transformations such as zooming, panning and
     rotation, as well as being the interface for the actors.
     """
+    fovy   = 80.0
+    z_near = 1.0
+    z_far  = 9000.0 # very far
+
     def __init__(self):
         GLScene.__init__(self, gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
 
@@ -45,13 +49,10 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.begin_x = 0
         self.begin_y = 0
 
-        self.obj_pos = Vector3(0.0, 180.0, -20.0)
-
-        self.__sphi   = 0.0
-        self.__stheta = -20.0
-        self.fovy     = 80.0
-        self.z_near   = 1.0
-        self.z_far    = 9000.0 # very far
+        self.initial_obj_pos   = Vector3(0.0, 180.0, -20.0)
+        self.initial_azimuth   = 0.0
+        self.initial_elevation = -20.0
+        self.reset_perspective() # set current viewing params
 
         self.initialized = False
 
@@ -123,8 +124,8 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glEnable(GL_CULL_FACE)
 
         glTranslatef(self.obj_pos.x, self.obj_pos.y, self.obj_pos.z)
-        glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
-        glRotatef(self.__sphi, 0.0, 0.0, 1.0)
+        glRotatef(-self.elevation, 1.0, 0.0, 0.0)
+        glRotatef(self.azimuth, 0.0, 0.0, 1.0)
 
         for actor in self.actors:
             actor.display()
@@ -158,8 +159,8 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         glRotate(-90, 1.0, 0.0, 0.0) # make z point up
         glTranslatef(length + 20.0, 0.0, length + 20.0)
-        glRotatef(-self.__stheta, 1.0, 0.0, 0.0)
-        glRotatef(self.__sphi, 0.0, 0.0, 1.0)
+        glRotatef(-self.elevation, 1.0, 0.0, 0.0)
+        glRotatef(self.azimuth, 0.0, 0.0, 1.0)
 
         glBegin(GL_LINES)
         glColor(1.0, 0.0, 0.0)
@@ -204,9 +205,14 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.invalidate()
 
+    def reset_perspective(self):
+        self.obj_pos   = self.initial_obj_pos.copy()
+        self.azimuth   = self.initial_azimuth
+        self.elevation = self.initial_elevation
+
     def rotate(self, delta_x, delta_y):
-        self.__sphi   += delta_x / 4.0
-        self.__stheta -= delta_y / 4.0
+        self.azimuth   += delta_x / 4.0
+        self.elevation -= delta_y / 4.0
 
     def zoom(self, delta_x, delta_y):
         self.obj_pos.y += delta_y / 10.0

@@ -73,11 +73,24 @@ class ViewerWindow(gtk.Window):
         self.scene.invalidate()
 
     def on_button_center_clicked(self, widget):
+        """
+        Center model on platform.
+        """
         self.scene.center_model()
         self.scene.invalidate()
 
     def on_arrows_toggled(self, widget):
+        """
+        Show/hide arrows on the Gcode model.
+        """
         self.scene.show_arrows(widget.get_active())
+        self.scene.invalidate()
+
+    def on_reset_perspective(self, widget):
+        """
+        Restore the view of the model shown on startup.
+        """
+        self.scene.reset_perspective()
         self.scene.invalidate()
 
     def open_and_display_file(self, fpath):
