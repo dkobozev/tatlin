@@ -109,6 +109,7 @@ class ViewerWindow(gtk.Window):
 
         if self.panel is None or ftype not in self.panel.supported_types:
             self.panel = Panel(self)
+            self.panel.show_all()
 
         self.display_scene()
 
