@@ -47,16 +47,12 @@ class GcodePanel(gtk.VBox):
         label_layers = gtk.Label('Layers')
         label_layers.set_alignment(-1, 0) # align text to the left
         self.hscale_layers = gtk.HScale()
-        self.hscale_layers.set_range(1, self.app.get_property('layers_range_max'))
-        self.hscale_layers.set_value(self.app.get_property('layers_value'))
         self.hscale_layers.set_increments(1, 10)
         self.hscale_layers.set_digits(0)
         self.hscale_layers.set_size_request(200, 35)
 
         self.check_arrows = gtk.CheckButton('Show arrows')
-        self.check_arrows.set_active(True) # check the box
         self.check_3d = gtk.CheckButton('3D view')
-        self.check_3d.set_active(True) # check the box
         self.btn_reset_perspective = gtk.Button('Reset perspective')
 
         table_display = gtk.Table(rows=2, columns=1)
@@ -81,6 +77,14 @@ class GcodePanel(gtk.VBox):
         self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
         self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
         self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+
+    def set_initial_values(self):
+        self.hscale_layers.set_range(1, self.app.get_property('layers_range_max'))
+        self.hscale_layers.set_value(self.app.get_property('layers_value'))
+
+        self.check_arrows.set_active(True) # check the box
+
+        self.check_3d.set_active(True) # check the box
 
 
 class StlPanel(gtk.VBox):
@@ -200,4 +204,7 @@ class StlPanel(gtk.VBox):
     def connect_handlers(self):
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
         self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+
+    def set_initial_values(self):
+        pass
 
