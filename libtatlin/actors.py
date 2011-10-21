@@ -236,14 +236,11 @@ class StlModel(object):
         self.vertices = numpy.require(vertices, 'f')
         self.normals  = numpy.require(normals, 'f')
 
-        self.display_list = None
-
-        self.mat_specular = (1.0, 1.0, 1.0, 1.0)
-        self.mat_shininess = 50.0
-        self.light_position = (20.0, 20.0, 20.0)
         self.scaling_factor = 1.0
 
-        self.max_layers = 42
+        self.mat_specular   = (1.0, 1.0, 1.0, 1.0)
+        self.mat_shininess  = 50.0
+        self.light_position = (20.0, 20.0, 20.0)
 
         self.initialized = False
 
@@ -329,7 +326,9 @@ class StlModel(object):
         return bounding_box
 
     def scale(self, factor):
-        self.vertices *= factor
+        if factor != self.scaling_factor:
+            self.vertices *= (factor / self.scaling_factor)
+            self.scaling_factor = factor
 
     def translate(self, x, y, z):
         self.vertices = vector.translate(self.vertices, x, y, z)
