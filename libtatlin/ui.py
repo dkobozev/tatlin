@@ -204,6 +204,10 @@ class StlPanel(gtk.VBox):
     def connect_handlers(self):
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
         self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+        self.entry_factor.connect('focus-out-event', self.on_entry_factor_focus_out)
+
+    def on_entry_factor_focus_out(self, widget, event):
+        self.app.on_scaling_factor_update(widget)
 
     def set_initial_values(self):
         pass

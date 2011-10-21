@@ -61,15 +61,18 @@ class ViewerWindow(gtk.Window):
         if event.keyval == gtk.keysyms.Escape:
             self.on_quit()
 
+    def on_scaling_factor_update(self, widget):
+        try:
+            factor = float(widget.get_text())
+            self.model.scale(factor)
+            self.model.init()
+            self.scene.invalidate()
+        except ValueError:
+            pass # ignore invalid values
+
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
         self.model.num_layers_to_draw = value
-        self.scene.invalidate()
-
-    def on_button_scale_clicked(self, widget):
-        factor = float(self.panel.entry_scale.get_text())
-        self.model.scale(factor)
-        self.model.init()
         self.scene.invalidate()
 
     def on_button_center_clicked(self, widget):
