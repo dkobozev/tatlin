@@ -18,6 +18,10 @@ from libtatlin.scene import Scene
 from libtatlin.ui import StlPanel, GcodePanel
 
 
+def format_float(f):
+    return "%.2f" % f
+
+
 class ActionGroup(gtk.ActionGroup):
     def __init__(self, *args, **kwargs):
         gtk.ActionGroup.__init__(self, *args, **kwargs)
@@ -55,9 +59,9 @@ class ViewerWindow(gtk.Window):
         self._app_properties = {
             'layers_range_max': lambda: self.scene.get_property('max_layers'),
             'layers_value':     lambda: self.scene.get_property('max_layers'),
-            'width':            lambda: self.scene.get_property('width'),
-            'depth':            lambda: self.scene.get_property('depth'),
-            'height':           lambda: self.scene.get_property('height'),
+            'width':            self.model_width,
+            'depth':            self.model_depth,
+            'height':           self.model_height,
         }
 
     def on_keypress(self, widget, event):
@@ -128,6 +132,18 @@ class ViewerWindow(gtk.Window):
         Return a property of the application.
         """
         return self._app_properties[name]()
+
+    def model_width(self):
+        width = self.scene.get_property('width')
+        return format_float(width)
+
+    def model_depth(self):
+        depth = self.scene.get_property('depth')
+        return format_float(depth)
+
+    def model_height(self):
+        height = self.scene.get_property('height')
+        return format_float(height)
 
     def set_up_scene(self):
         self.scene = Scene()

@@ -40,17 +40,17 @@ class BoundingBox(object):
     @property
     def width(self):
         width = abs(self.upper_corner[0] - self.lower_corner[0])
-        return width
+        return round(width, 2)
 
     @property
     def depth(self):
         depth = abs(self.upper_corner[1] - self.lower_corner[1])
-        return depth
+        return round(depth, 2)
 
     @property
     def height(self):
         height = abs(self.upper_corner[2] - self.lower_corner[2])
-        return height
+        return round(height, 2)
 
 
 class Platform(object):
