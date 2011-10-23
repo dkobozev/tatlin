@@ -111,7 +111,6 @@ class StlPanel(gtk.VBox):
 
         label_factor = gtk.Label('Factor:')
         self.entry_factor = gtk.Entry()
-        self.entry_factor.set_text('1.0')
 
         table_dimensions = gtk.Table(rows=4, columns=3)
         table_dimensions.set_border_width(5)
@@ -201,12 +200,30 @@ class StlPanel(gtk.VBox):
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
         self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
         self.entry_factor.connect('focus-out-event', self.on_entry_factor_focus_out)
+        self.entry_x.connect('focus-out-event', self.on_entry_x_focus_out)
+        self.entry_y.connect('focus-out-event', self.on_entry_y_focus_out)
+        self.entry_z.connect('focus-out-event', self.on_entry_z_focus_out)
 
     def on_entry_factor_focus_out(self, widget, event):
-        self.app.on_scaling_factor_update(widget)
+        self.app.scaling_factor_changed(widget.get_text())
+
+    def on_entry_x_focus_out(self, widget, event):
+        width = widget.get_text()
+        self.app.dimension_changed('width', width)
+
+    def on_entry_y_focus_out(self, widget, event):
+        depth = widget.get_text()
+        self.app.dimension_changed('depth', depth)
+
+    def on_entry_z_focus_out(self, widget, event):
+        height = widget.get_text()
+        self.app.dimension_changed('height', height)
 
     def set_initial_values(self):
-        self.entry_x.set_text(str(self.app.get_property('width')))
-        self.entry_y.set_text(str(self.app.get_property('depth')))
-        self.entry_z.set_text(str(self.app.get_property('height')))
+        self.entry_factor.set_text(self.app.get_property('scaling-factor'))
+        self.entry_x.set_text(self.app.get_property('width'))
+        self.entry_y.set_text(self.app.get_property('depth'))
+        self.entry_z.set_text(self.app.get_property('height'))
 
+    def model_size_changed(self):
+        self.set_initial_values()

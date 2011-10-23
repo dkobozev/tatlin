@@ -333,6 +333,7 @@ class StlModel(object):
 
     def scale(self, factor):
         if factor != self.scaling_factor:
+            print '--! scaling vertices'
             self.vertices *= (factor / self.scaling_factor)
             self.scaling_factor = factor
             self.init_model_attributes()

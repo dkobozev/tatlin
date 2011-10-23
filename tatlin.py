@@ -59,6 +59,7 @@ class ViewerWindow(gtk.Window):
         self._app_properties = {
             'layers_range_max': lambda: self.scene.get_property('max_layers'),
             'layers_value':     lambda: self.scene.get_property('max_layers'),
+            'scaling-factor':   self.model_scaling_factor,
             'width':            self.model_width,
             'depth':            self.model_depth,
             'height':           self.model_height,
@@ -68,12 +69,22 @@ class ViewerWindow(gtk.Window):
         if event.keyval == gtk.keysyms.Escape:
             self.on_quit()
 
-    def on_scaling_factor_update(self, widget):
+    def scaling_factor_changed(self, factor):
         try:
-            factor = float(widget.get_text())
-            self.model.scale(factor)
-            self.model.init()
+            factor = float(factor)
+            self.scene.scale_model(factor)
             self.scene.invalidate()
+            # tell all the widgets that care about model size that it has changed
+            self.panel.model_size_changed()
+        except ValueError:
+            pass # ignore invalid values
+
+    def dimension_changed(self, dimension, value):
+        try:
+            value = float(value)
+            self.scene.change_model_dimension(dimension, value)
+            self.scene.invalidate()
+            self.panel.model_size_changed()
         except ValueError:
             pass # ignore invalid values
 
@@ -132,6 +143,10 @@ class ViewerWindow(gtk.Window):
         Return a property of the application.
         """
         return self._app_properties[name]()
+
+    def model_scaling_factor(self):
+        factor = self.scene.get_property('scaling-factor')
+        return format_float(factor)
 
     def model_width(self):
         width = self.scene.get_property('width')

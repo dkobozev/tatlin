@@ -58,10 +58,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         # dict of scene properties
         self._scene_properties = {
-            'max_layers': lambda: self.model.max_layers,
-            'width':      lambda: self.model.width,
-            'depth':      lambda: self.model.depth,
-            'height':     lambda: self.model.height,
+            'max_layers':     lambda: self.model.max_layers,
+            'scaling-factor': lambda: round(self.model.scaling_factor, 2),
+            'width':          lambda: self.model.width,
+            'depth':          lambda: self.model.depth,
+            'height':         lambda: self.model.height,
         }
 
     def set_model(self, model):
@@ -246,6 +247,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     # MODEL MANIPULATION
     # ------------------------------------------------------------------------
 
+    def scale_model(self, factor):
+        print '--- scaling model by factor of:', factor
+        self.model.scale(factor)
+        self.model.init()
+
     def center_model(self):
         """
         Center the model on platform and raise its lowest point to z=0.
@@ -258,6 +264,13 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         offset_z = -lower_corner[2]
         self.model.translate(offset_x, offset_y, offset_z)
         self.model.init()
+
+    def change_model_dimension(self, dimension, value):
+        current_value = getattr(self.model, dimension)
+        # since our scaling is absolute, we have to take current scaling factor
+        # into account
+        factor = (value / current_value) * self.model.scaling_factor
+        self.scale_model(factor)
 
     def get_property(self, name):
         """
