@@ -37,15 +37,18 @@ class BoundingBox(object):
             if point[i] > self.upper_corner[i]:
                 self.upper_corner[i] = point[i]
 
-    def get_width(self):
+    @property
+    def width(self):
         width = abs(self.upper_corner[0] - self.lower_corner[0])
         return width
 
-    def get_depth(self):
+    @property
+    def depth(self):
         depth = abs(self.upper_corner[1] - self.lower_corner[1])
         return depth
 
-    def get_height(self):
+    @property
+    def height(self):
         height = abs(self.upper_corner[2] - self.lower_corner[2])
         return height
 
@@ -254,6 +257,8 @@ class StlModel(object):
         self.mat_shininess  = 50.0
         self.light_position = (20.0, 20.0, 20.0)
 
+        self.init_model_attributes()
+
         self.initialized = False
 
     # ------------------------------------------------------------------------
@@ -330,17 +335,34 @@ class StlModel(object):
         if factor != self.scaling_factor:
             self.vertices *= (factor / self.scaling_factor)
             self.scaling_factor = factor
+            self.init_model_attributes()
 
     def translate(self, x, y, z):
         self.vertices = vector.translate(self.vertices, x, y, z)
+        self.init_model_attributes()
 
     # ------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------
 
-    def get_bounding_box(self):
+    def init_model_attributes(self):
+        """
+        Reset cached properties.
+        """
+        self._bounding_box = None
+
+    @property
+    def bounding_box(self):
         """
         Get a bounding box for the model.
+        """
+        if self._bounding_box is None:
+            self._bounding_box = self._calculate_bounding_box()
+        return self._bounding_box
+
+    def _calculate_bounding_box(self):
+        """
+        Calculate an axis-aligned box enclosing the model.
         """
         bounding_box = None
         for vertex in self.vertices:
@@ -349,14 +371,15 @@ class StlModel(object):
             bounding_box.combine(vertex)
         return bounding_box
 
-    def get_width(self):
-        bounding_box = self.get_bounding_box()
-        return bounding_box.get_width()
+    @property
+    def width(self):
+        return self.bounding_box.width
 
-    def get_depth(self):
-        bounding_box = self.get_bounding_box()
-        return bounding_box.get_depth()
+    @property
+    def depth(self):
+        return self.bounding_box.depth
 
-    def get_height(self):
-        bounding_box = self.get_bounding_box()
-        return bounding_box.get_height()
+    @property
+    def height(self):
+        return self.bounding_box.height
+

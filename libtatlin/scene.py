@@ -59,9 +59,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         # dict of scene properties
         self._scene_properties = {
             'max_layers': lambda: self.model.max_layers,
-            'width':      lambda: self.model.get_width(),
-            'depth':      lambda: self.model.get_depth(),
-            'height':     lambda: self.model.get_height(),
+            'width':      lambda: self.model.width,
+            'depth':      lambda: self.model.depth,
+            'height':     lambda: self.model.height,
         }
 
     def set_model(self, model):
@@ -250,7 +250,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         """
         Center the model on platform and raise its lowest point to z=0.
         """
-        bounding_box = self.model.get_bounding_box()
+        bounding_box = self.model.bounding_box
         lower_corner = bounding_box.lower_corner
         upper_corner = bounding_box.upper_corner
         offset_x = -(upper_corner[0] + lower_corner[0]) / 2
