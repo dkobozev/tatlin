@@ -59,6 +59,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         # dict of scene properties
         self._scene_properties = {
             'max_layers': lambda: self.model.max_layers,
+            'width':      lambda: self.model.get_width(),
+            'depth':      lambda: self.model.get_depth(),
+            'height':     lambda: self.model.get_height(),
         }
 
     def set_model(self, model):

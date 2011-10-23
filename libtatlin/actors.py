@@ -37,6 +37,18 @@ class BoundingBox(object):
             if point[i] > self.upper_corner[i]:
                 self.upper_corner[i] = point[i]
 
+    def get_width(self):
+        width = abs(self.upper_corner[0] - self.lower_corner[0])
+        return width
+
+    def get_depth(self):
+        depth = abs(self.upper_corner[1] - self.lower_corner[1])
+        return depth
+
+    def get_height(self):
+        height = abs(self.upper_corner[2] - self.lower_corner[2])
+        return height
+
 
 class Platform(object):
     """
@@ -314,6 +326,18 @@ class StlModel(object):
     # TRANSFORMATIONS
     # ------------------------------------------------------------------------
 
+    def scale(self, factor):
+        if factor != self.scaling_factor:
+            self.vertices *= (factor / self.scaling_factor)
+            self.scaling_factor = factor
+
+    def translate(self, x, y, z):
+        self.vertices = vector.translate(self.vertices, x, y, z)
+
+    # ------------------------------------------------------------------------
+    # PROPERTIES
+    # ------------------------------------------------------------------------
+
     def get_bounding_box(self):
         """
         Get a bounding box for the model.
@@ -325,11 +349,14 @@ class StlModel(object):
             bounding_box.combine(vertex)
         return bounding_box
 
-    def scale(self, factor):
-        if factor != self.scaling_factor:
-            self.vertices *= (factor / self.scaling_factor)
-            self.scaling_factor = factor
+    def get_width(self):
+        bounding_box = self.get_bounding_box()
+        return bounding_box.get_width()
 
-    def translate(self, x, y, z):
-        self.vertices = vector.translate(self.vertices, x, y, z)
+    def get_depth(self):
+        bounding_box = self.get_bounding_box()
+        return bounding_box.get_depth()
 
+    def get_height(self):
+        bounding_box = self.get_bounding_box()
+        return bounding_box.get_height()

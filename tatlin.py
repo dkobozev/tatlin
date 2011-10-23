@@ -55,6 +55,9 @@ class ViewerWindow(gtk.Window):
         self._app_properties = {
             'layers_range_max': lambda: self.scene.get_property('max_layers'),
             'layers_value':     lambda: self.scene.get_property('max_layers'),
+            'width':            lambda: self.scene.get_property('width'),
+            'depth':            lambda: self.scene.get_property('depth'),
+            'height':           lambda: self.scene.get_property('height'),
         }
 
     def on_keypress(self, widget, event):

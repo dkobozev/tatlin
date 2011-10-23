@@ -206,5 +206,7 @@ class StlPanel(gtk.VBox):
         self.app.on_scaling_factor_update(widget)
 
     def set_initial_values(self):
-        pass
+        self.entry_x.set_text(str(self.app.get_property('width')))
+        self.entry_y.set_text(str(self.app.get_property('depth')))
+        self.entry_z.set_text(str(self.app.get_property('height')))
 
