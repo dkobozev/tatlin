@@ -71,8 +71,6 @@ class GcodePanel(gtk.VBox):
         self.pack_start(frame_dimensions, False)
         self.pack_start(frame_display, False)
 
-        self.connect_handlers()
-
     def connect_handlers(self):
         self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
         self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
@@ -198,8 +196,6 @@ class StlPanel(gtk.VBox):
         self.pack_start(frame_move, False)
         self.pack_start(frame_rotate, False)
         self.pack_start(frame_display, False)
-
-        self.connect_handlers()
 
     def connect_handlers(self):
         self.button_center.connect('clicked', self.app.on_button_center_clicked)

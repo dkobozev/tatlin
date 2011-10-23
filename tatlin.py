@@ -115,6 +115,7 @@ class ViewerWindow(gtk.Window):
             self.panel.show_all()
 
         self.panel.set_initial_values() # update panel to reflect new model properties
+        self.panel.connect_handlers()
         self.scene.reset_perspective() # always start with the same view on the scene
 
         self.display_scene()
