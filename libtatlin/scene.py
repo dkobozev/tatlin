@@ -272,6 +272,10 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         factor = (value / current_value) * self.model.scaling_factor
         self.scale_model(factor)
 
+    def rotate_model(self, angle, axis):
+        self.model.rotate(angle, *axis)
+        self.model.init()
+
     def get_property(self, name):
         """
         Return a property of the scene, e.g number of layers in the current model.

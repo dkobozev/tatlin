@@ -342,6 +342,11 @@ class StlModel(object):
         self.vertices = vector.translate(self.vertices, x, y, z)
         self.init_model_attributes()
 
+    def rotate(self, angle, x, y, z):
+        print '--! rotating vertices'
+        self.vertices = vector.rotate(self.vertices, angle, x, y, z)
+        self.init_model_attributes()
+
     # ------------------------------------------------------------------------
     # PROPERTIES
     # ------------------------------------------------------------------------

@@ -32,6 +32,13 @@ class ActionGroup(gtk.ActionGroup):
 
 
 class ViewerWindow(gtk.Window):
+
+    _axis_map = {
+        'x': [1, 0, 0],
+        'y': [0, 1, 0],
+        'z': [0, 0, 1],
+    }
+
     def __init__(self):
         gtk.Window.__init__(self)
 
@@ -92,6 +99,14 @@ class ViewerWindow(gtk.Window):
         value = int(widget.get_value())
         self.model.num_layers_to_draw = value
         self.scene.invalidate()
+
+    def rotation_changed(self, axis, angle):
+        vector = self._axis_map[axis]
+        try:
+            self.scene.rotate_model(float(angle), vector)
+            self.scene.invalidate()
+        except ValueError:
+            pass # ignore invalid values
 
     def on_button_center_clicked(self, widget):
         """

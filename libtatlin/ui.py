@@ -197,12 +197,19 @@ class StlPanel(gtk.VBox):
         self.pack_start(frame_display, False)
 
     def connect_handlers(self):
-        self.button_center.connect('clicked', self.app.on_button_center_clicked)
-        self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
-        self.entry_factor.connect('focus-out-event', self.on_entry_factor_focus_out)
+        # dimensions
         self.entry_x.connect('focus-out-event', self.on_entry_x_focus_out)
         self.entry_y.connect('focus-out-event', self.on_entry_y_focus_out)
         self.entry_z.connect('focus-out-event', self.on_entry_z_focus_out)
+        self.entry_factor.connect('focus-out-event', self.on_entry_factor_focus_out)
+
+        # rotation
+        self.btn_x_90.connect('clicked', self.on_btn_x_90)
+        self.btn_y_90.connect('clicked', self.on_btn_y_90)
+        self.btn_z_90.connect('clicked', self.on_btn_z_90)
+
+        self.button_center.connect('clicked', self.app.on_button_center_clicked)
+        self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
 
     def on_entry_factor_focus_out(self, widget, event):
         self.app.scaling_factor_changed(widget.get_text())
@@ -219,8 +226,18 @@ class StlPanel(gtk.VBox):
         height = widget.get_text()
         self.app.dimension_changed('height', height)
 
+    def on_btn_x_90(self, widget):
+        self.app.rotation_changed('x', 90)
+
+    def on_btn_y_90(self, widget):
+        self.app.rotation_changed('y', 90)
+
+    def on_btn_z_90(self, widget):
+        self.app.rotation_changed('z', 90)
+
     def set_initial_values(self):
         self.entry_factor.set_text(self.app.get_property('scaling-factor'))
+
         self.entry_x.set_text(self.app.get_property('width'))
         self.entry_y.set_text(self.app.get_property('depth'))
         self.entry_z.set_text(self.app.get_property('height'))
