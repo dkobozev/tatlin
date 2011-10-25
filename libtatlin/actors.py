@@ -98,7 +98,53 @@ class Platform(object):
         glCallList(self.display_list)
 
 
-class GcodeModel(object):
+class Model(object):
+    """
+    Parent class for models that provides common functionality.
+    """
+    def __init__(self):
+        self.init_model_attributes()
+
+    def init_model_attributes(self):
+        """
+        Set/reset saved properties.
+        """
+        self._bounding_box = None
+
+    @property
+    def bounding_box(self):
+        """
+        Get a bounding box for the model.
+        """
+        if self._bounding_box is None:
+            self._bounding_box = self._calculate_bounding_box()
+        return self._bounding_box
+
+    def _calculate_bounding_box(self):
+        """
+        Calculate an axis-aligned box enclosing the model.
+        """
+        bounding_box = None
+        for vertex in self.vertices:
+            if bounding_box is None:
+                bounding_box = BoundingBox(vertex.copy(), vertex.copy())
+            bounding_box.combine(vertex)
+        return bounding_box
+
+    @property
+    def width(self):
+        return self.bounding_box.width
+
+    @property
+    def depth(self):
+        return self.bounding_box.depth
+
+    @property
+    def height(self):
+        return self.bounding_box.height
+
+
+class GcodeModel(Model):
     """
     Model for displaying Gcode data.
     """
@@ -120,12 +166,14 @@ class GcodeModel(object):
     ], 'f')
 
     def __init__(self, model_data):
+        Model.__init__(self)
+
         self.create_vertex_arrays(model_data)
 
-        self.max_layers = len(self.layer_stops)
+        self.max_layers         = len(self.layer_stops)
         self.num_layers_to_draw = self.max_layers
-        self.arrows_enabled = True
-        self.initialized = False
+        self.arrows_enabled     = True
+        self.initialized        = False
 
         print '!!! Gcode model, vertex count:', len(self.vertices)
 
@@ -241,11 +289,13 @@ class GcodeModel(object):
         self.arrow_color_buffer.unbind()
 
 
-class StlModel(object):
+class StlModel(Model):
     """
     Model for displaying and manipulating STL data.
     """
     def __init__(self, model_data):
+        Model.__init__(self)
+
         vertices, normals = model_data
         # convert python lists to numpy arrays for constructing vbos
         self.vertices = numpy.require(vertices, 'f')
@@ -256,8 +306,6 @@ class StlModel(object):
         self.mat_specular   = (1.0, 1.0, 1.0, 1.0)
         self.mat_shininess  = 50.0
         self.light_position = (20.0, 20.0, 20.0)
-
-        self.init_model_attributes()
 
         self.initialized = False
 
@@ -346,46 +394,4 @@ class StlModel(object):
         print '--! rotating vertices'
         self.vertices = vector.rotate(self.vertices, angle, x, y, z)
         self.init_model_attributes()
-
-    # ------------------------------------------------------------------------
-    # PROPERTIES
-    # ------------------------------------------------------------------------
-
-    def init_model_attributes(self):
-        """
-        Reset cached properties.
-        """
-        self._bounding_box = None
-
-    @property
-    def bounding_box(self):
-        """
-        Get a bounding box for the model.
-        """
-        if self._bounding_box is None:
-            self._bounding_box = self._calculate_bounding_box()
-        return self._bounding_box
-
-    def _calculate_bounding_box(self):
-        """
-        Calculate an axis-aligned box enclosing the model.
-        """
-        bounding_box = None
-        for vertex in self.vertices:
-            if bounding_box is None:
-                bounding_box = BoundingBox(vertex.copy(), vertex.copy())
-            bounding_box.combine(vertex)
-        return bounding_box
-
-    @property
-    def width(self):
-        return self.bounding_box.width
-
-    @property
-    def depth(self):
-        return self.bounding_box.depth
-
-    @property
-    def height(self):
-        return self.bounding_box.height
 

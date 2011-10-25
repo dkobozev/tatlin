@@ -84,6 +84,10 @@ class GcodePanel(gtk.VBox):
 
         self.check_3d.set_active(True) # check the box
 
+        self.label_width_value.set_text(self.app.get_property('width'))
+        self.label_depth_value.set_text(self.app.get_property('depth'))
+        self.label_height_value.set_text(self.app.get_property('height'))
+
 
 class StlPanel(gtk.VBox):
     supported_types = ['stl']
