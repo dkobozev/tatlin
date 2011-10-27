@@ -1,6 +1,8 @@
 """
 Parser for STL (stereolithography) files.
 """
+import struct
+
 from vector3 import Vector3
 
 
@@ -87,7 +89,7 @@ class StlAsciiParser(object):
 
     def parse(self):
         """
-        Return a list of facets in STL file.
+        Parse the file into a tuple of normal and facet lists.
         """
         self.finput = open(self.fname, 'r')
         try:
@@ -167,15 +169,92 @@ class StlAsciiParser(object):
         self.vertex_list.append(vertex)
 
 
+class StlBinaryParser(object):
+    """
+    Read data from a binary STL file.
+    """
+    HEADER_LEN      = 80
+    FACET_COUNT_LEN = 4  # one 32-bit unsigned int
+    FACET_LEN       = 50 # twelve 32-bit floats + one 16-bit short unsigned int
+
+    def __init__(self, fname):
+        self.fname = fname
+
+    def parse(self):
+        """
+        Parse the file into a tuple of normal and facet lists.
+        """
+        normal_list = []
+        facet_list  = []
+
+        fp = open(self.fname, 'rb')
+        self._skip_header(fp)
+        for facet_idx in range(self._facet_count(fp)):
+            vertices, normal = self._parse_facet(fp)
+            facet_list.extend(vertices)
+            normal_list.extend([normal] * len(vertices)) # one normal per vertex
+
+        fp.close()
+
+        return facet_list, normal_list
+
+    def _skip_header(self, fp):
+        fp.seek(self.HEADER_LEN)
+
+    def _facet_count(self, fp):
+        raw = fp.read(self.FACET_COUNT_LEN)
+        (count, ) = struct.unpack('<I', raw)
+        return count
+
+    def _parse_facet(self, fp):
+        raw = fp.read(self.FACET_LEN)
+        vertex_data = struct.unpack('<ffffffffffffH', raw)
+
+        normal = [ vertex_data[0], vertex_data[1], vertex_data[2] ]
+        vertices = []
+        for i in range(3, 12, 3):
+            vertices.append([ vertex_data[i], vertex_data[i + 1], vertex_data[i + 2] ])
+        # ignore the attribute byte count...
+
+        return vertices, normal
+
+
+def is_stl_ascii(fname):
+    """
+    Guess whether file with the given name is plain ASCII STL file.
+    """
+    fp = open(fname, 'rb')
+    is_ascii = fp.readline().strip().startswith('solid')
+    fp.close()
+    return is_ascii
+
+
+def StlParser(fname):
+    """
+    STL parser that handles both ASCII and binary formats.
+    """
+    parser = StlAsciiParser if is_stl_ascii(fname) else StlBinaryParser
+    return parser(fname)
+
+
 if __name__ == '__main__':
     import sys
-    parser = StlAsciiParser(sys.argv[1])
+    parser = StlParser(sys.argv[1])
     vertices, normals = parser.parse()
-    print '[ OK ] Parsed %d vertices.' % len(vertices)
-    print 'First 5 vertices:'
-    for vertex in vertices[:15]:
+
+    print '[ OK   ] Parsed %d vertices' % len(vertices)
+
+    print '[ INFO ] First vertices:'
+    for vertex in vertices[:3]:
         print vertex
-    print 'First 5 normals:'
-    for normal in normals[:5]:
+    print '[ INFO ] First normals:'
+    for normal in normals[:3]:
+        print normal
+
+    print '[ INFO ] Last vertices:'
+    for vertex in vertices[-3:]:
+        print vertex
+    print '[ INFO ] Last normals:'
+    for normal in normals[-3:]:
         print normal
 

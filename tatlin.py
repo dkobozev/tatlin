@@ -11,7 +11,7 @@ import gtk
 from gtk.gtkgl.apputils import GLArea
 
 from libtatlin.gcodeparser import GcodeParser
-from libtatlin.stlparser import StlAsciiParser
+from libtatlin.stlparser import StlParser
 from libtatlin.vector3 import Vector3
 from libtatlin.actors import Platform, GcodeModel, StlModel
 from libtatlin.scene import Scene
@@ -213,7 +213,7 @@ class ViewerWindow(gtk.Window):
         return model
 
     def stl_model(self, fpath):
-        parser = StlAsciiParser(fpath)
+        parser = StlParser(fpath)
         model = StlModel(parser.parse())
         return model
 
