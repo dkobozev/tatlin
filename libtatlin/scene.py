@@ -96,18 +96,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.init_actors()
         self.initialized = True
-        print '--- scene init finished'
 
     def init_actors(self):
-        import time
-        t_start = time.time()
-
         for actor in self.actors:
             if not actor.initialized:
                 actor.init()
-
-        t_end = time.time()
-        print '--- actor init took %.2f seconds, %d actor(s)' % ((t_end - t_start), len(self.actors))
 
     def display(self, width, height):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)

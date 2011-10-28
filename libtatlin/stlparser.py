@@ -2,6 +2,8 @@
 Parser for STL (stereolithography) files.
 """
 import struct
+import time
+import logging
 
 from vector3 import Vector3
 
@@ -91,11 +93,16 @@ class StlAsciiParser(object):
         """
         Parse the file into a tuple of normal and facet lists.
         """
+        t_start = time.time()
+
         self.finput = open(self.fname, 'r')
         try:
             self._solid()
         finally:
             self.finput.close()
+
+        t_end = time.time()
+        logging.info('Parsed STL ASCII file in %.2f seconds' % (t_end - t_start))
 
         return self.facet_list, self.normal_list
 
@@ -184,6 +191,8 @@ class StlBinaryParser(object):
         """
         Parse the file into a tuple of normal and facet lists.
         """
+        t_start = time.time()
+
         normal_list = []
         facet_list  = []
 
@@ -195,6 +204,9 @@ class StlBinaryParser(object):
             normal_list.extend([normal] * len(vertices)) # one normal per vertex
 
         fp.close()
+
+        t_end = time.time()
+        logging.info('Parsed STL binary file in %.2f seconds' % (t_end - t_start))
 
         return facet_list, normal_list
 

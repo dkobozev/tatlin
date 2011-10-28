@@ -2,6 +2,8 @@ from __future__ import division
 
 import math
 import numpy
+import logging
+import time
 
 from OpenGL.GL import *
 from OpenGL.GLE import *
@@ -168,6 +170,8 @@ class GcodeModel(Model):
     def __init__(self, model_data):
         Model.__init__(self)
 
+        t_start = time.time()
+
         self.create_vertex_arrays(model_data)
 
         self.max_layers         = len(self.layer_stops)
@@ -175,7 +179,10 @@ class GcodeModel(Model):
         self.arrows_enabled     = True
         self.initialized        = False
 
-        print '!!! Gcode model, vertex count:', len(self.vertices)
+        t_end = time.time()
+
+        logging.info('Initialized Gcode model in %.2f seconds' % (t_end - t_start))
+        logging.info('Vertex count: %d' % len(self.vertices))
 
     def create_vertex_arrays(self, model_data):
         """
@@ -296,6 +303,8 @@ class StlModel(Model):
     def __init__(self, model_data):
         Model.__init__(self)
 
+        t_start = time.time()
+
         vertices, normals = model_data
         # convert python lists to numpy arrays for constructing vbos
         self.vertices = numpy.require(vertices, 'f')
@@ -308,6 +317,11 @@ class StlModel(Model):
         self.light_position = (20.0, 20.0, 20.0)
 
         self.initialized = False
+
+        t_end = time.time()
+
+        logging.info('Initialized STL model in %.2f seconds' % (t_end - t_start))
+        logging.info('Vertex count: %d' % len(self.vertices))
 
     # ------------------------------------------------------------------------
     # DRAWING

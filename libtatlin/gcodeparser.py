@@ -1,6 +1,8 @@
 from __future__ import division
 
 import math
+import time
+import logging
 
 from . import gcodec
 from .vector3 import Vector3
@@ -63,7 +65,9 @@ class GcodeParser(object):
         f.close()
         return content
 
-    def parse_layers(self):
+    def parse(self):
+        t_start = time.time()
+
         layers = []
         layer = []
         for line in self.gcode_lines:
@@ -89,6 +93,10 @@ class GcodeParser(object):
                 self.prev_location = location
 
         layers.append(layer)
+
+        t_end = time.time()
+        logging.info('Parsed Gcode file in %.2f seconds' % (t_end - t_start))
+
         return layers
 
     def parse_location(self, split_line):

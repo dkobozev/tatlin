@@ -4,6 +4,7 @@ from __future__ import division
 
 import sys
 import os
+import logging
 
 import pygtk
 pygtk.require('2.0')
@@ -209,7 +210,7 @@ class ViewerWindow(gtk.Window):
     def gcode_model(self, fpath):
         start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
         parser = GcodeParser(fpath, start_location)
-        model = GcodeModel(parser.parse_layers())
+        model = GcodeModel(parser.parse())
         return model
 
     def stl_model(self, fpath):
@@ -281,6 +282,9 @@ class ViewerWindow(gtk.Window):
 
 
 if __name__ == '__main__':
+    # configure logging
+    logging.basicConfig(format='--- [%(levelname)s] %(message)s', level=logging.DEBUG)
+
     window = ViewerWindow()
     window.open_and_display_file(sys.argv[1])
     window.show_all()
