@@ -9,7 +9,6 @@ gcode:
 stl:
 * lay flat on platform
 * rotate
-* binary stl!
 
 long-term:
 * multi-threading for better responsiveness & speed
