@@ -13,6 +13,7 @@ class GcodePanel(gtk.VBox):
         gtk.VBox.__init__(self)
 
         self.app = app
+        self._handlers_connected = False
 
         # --------------------------------------------------------------------
         # DIMENSIONS
@@ -73,9 +74,14 @@ class GcodePanel(gtk.VBox):
         self.pack_start(frame_display, False)
 
     def connect_handlers(self):
+        if self._handlers_connected:
+            return
+
         self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
         self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
         self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+
+        self._handlers_connected = True
 
     def set_initial_values(self):
         self.hscale_layers.set_range(1, self.app.get_property('layers_range_max'))
@@ -97,6 +103,7 @@ class StlPanel(gtk.VBox):
         gtk.VBox.__init__(self)
 
         self.app = app
+        self._handlers_connected = False
 
         # --------------------------------------------------------------------
         # DIMENSIONS
@@ -202,6 +209,9 @@ class StlPanel(gtk.VBox):
         self.pack_start(frame_display, False)
 
     def connect_handlers(self):
+        if self._handlers_connected:
+            return
+
         # dimensions
         self.entry_x.connect('focus-out-event', self.on_entry_x_focus_out)
         self.entry_y.connect('focus-out-event', self.on_entry_y_focus_out)
@@ -215,6 +225,8 @@ class StlPanel(gtk.VBox):
 
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
         self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+
+        self._handlers_connected = True
 
     def on_entry_factor_focus_out(self, widget, event):
         self.app.scaling_factor_changed(widget.get_text())
