@@ -16,7 +16,7 @@ from libtatlin.stlparser import StlParser
 from libtatlin.vector3 import Vector3
 from libtatlin.actors import Platform, GcodeModel, StlModel
 from libtatlin.scene import Scene
-from libtatlin.ui import StlPanel, GcodePanel
+from libtatlin.ui import StlPanel, GcodePanel, StartupPanel
 
 
 def format_float(f):
@@ -49,13 +49,14 @@ class ViewerWindow(gtk.Window):
         self.actiongroup = self.set_up_actions()
         menu = self.create_menu(self.actiongroup)
 
-        self.hbox_model = gtk.HBox()
+        self.box_scene = gtk.HBox()
+        self.panel_startup = StartupPanel(self)
 
-        main_vbox = gtk.VBox()
-        main_vbox.pack_start(menu, False)
-        main_vbox.pack_start(self.hbox_model)
+        self.box_main = gtk.VBox()
+        self.box_main.pack_start(menu, False)
+        self.box_main.pack_start(self.panel_startup)
 
-        self.add(main_vbox)
+        self.add(self.box_main)
 
         self.connect('destroy', lambda: gtk.main_quit())
         self.connect('key-press-event', self.on_keypress)
@@ -146,7 +147,6 @@ class ViewerWindow(gtk.Window):
 
         if self.panel is None or ftype not in self.panel.supported_types:
             self.panel = Panel(self)
-            self.panel.show_all()
 
         self.panel.set_initial_values() # update panel to reflect new model properties
         self.panel.connect_handlers()
@@ -181,15 +181,21 @@ class ViewerWindow(gtk.Window):
         self.glarea = GLArea(self.scene)
 
     def display_scene(self):
+        # remove startup panel if present
+        if self.box_scene.parent is None:
+            self.box_main.remove(self.panel_startup)
+            self.box_main.pack_start(self.box_scene)
+
         # NOTE: Removing glarea from parent widget causes it to free previously
         # allocated resources. There doesn't seem to be anything about it in
         # the docs, should this be self-evident? It does save the trouble of
         # cleaning up, though.
-        for child in self.hbox_model.children():
-            self.hbox_model.remove(child)
+        for child in self.box_scene.children():
+            self.box_scene.remove(child)
 
-        self.hbox_model.pack_start(self.glarea, expand=True,  fill=True)
-        self.hbox_model.pack_start(self.panel,  expand=False, fill=False)
+        self.box_scene.pack_start(self.glarea, expand=True,  fill=True)
+        self.box_scene.pack_start(self.panel,  expand=False, fill=False)
+        self.box_scene.show_all()
 
     def add_model_to_scene(self, model):
         self.model = model
@@ -268,7 +274,7 @@ class ViewerWindow(gtk.Window):
 
         dialog.destroy()
 
-    def on_open(self, action):
+    def on_open(self, action=None):
         dialog = gtk.FileChooserDialog('Open', None, gtk.FILE_CHOOSER_ACTION_OPEN,
             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
 
@@ -286,6 +292,7 @@ if __name__ == '__main__':
     logging.basicConfig(format='--- [%(levelname)s] %(message)s', level=logging.DEBUG)
 
     window = ViewerWindow()
-    window.open_and_display_file(sys.argv[1])
+    if len(sys.argv) > 1:
+        window.open_and_display_file(sys.argv[1])
     window.show_all()
     gtk.main()

@@ -248,3 +248,31 @@ class StlPanel(gtk.VBox):
 
     def model_size_changed(self):
         self.set_initial_values()
+
+
+class StartupPanel(gtk.VBox):
+    """
+    Panel shown on app startup when nothing has been loaded yet.
+    """
+    def __init__(self, app):
+        gtk.VBox.__init__(self)
+
+        self.app = app
+
+        label = gtk.Label('No files loaded')
+        self.btn_open = gtk.Button(stock=gtk.STOCK_OPEN)
+        self.btn_open.connect('clicked', self.on_open_clicked)
+
+        container = gtk.VBox()
+        container.pack_start(label, False)
+
+        btn_open_align = gtk.Alignment()
+        btn_open_align.set(0.5, 0.5, 0.0, 1.0)
+        btn_open_align.add(self.btn_open)
+        container.pack_start(btn_open_align, False)
+
+        self.pack_start(container, expand=True, fill=False)
+
+    def on_open_clicked(self, widget):
+        self.app.on_open()
+
