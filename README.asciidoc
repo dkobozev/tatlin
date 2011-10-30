@@ -1,0 +1,35 @@
+Tatlin
+======
+
+Tatlin is a Gcode and STL viewer heavily inspired by Mac-only software
+Pleasant3D. Besides viewing, it also supports rotating and scaling of STL
+files. It is currently in early stages of development, but should already
+be quite usable.
+
+Dependencies
+------------
+
+Tatlin requires the following packages:
+
+- Python 2.6+
+- PyGTK 2.24
+- PyOpenGL
+- Python bindings for GtkGLExt
+- NumPy
+
+Usage
+-----
+
+To launch Tatlin from the command line:
+
+    $ python tatlin.py
+
+You can also provide a filename to load:
+
+    $ python tatlin.py foobar.stl
+
+Mouse navigation
+
+* Left mouse button to rotate
+* Middle mouse button to zoom
+* Right mouse button to pan
