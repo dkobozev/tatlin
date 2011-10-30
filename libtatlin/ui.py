@@ -3,6 +3,7 @@ from __future__ import division
 import pygtk
 pygtk.require('2.0')
 import gtk
+import gobject
 
 
 class GcodePanel(gtk.VBox):
@@ -254,10 +255,12 @@ class StartupPanel(gtk.VBox):
     """
     Panel shown on app startup when nothing has been loaded yet.
     """
-    def __init__(self, app):
-        gtk.VBox.__init__(self)
+    __gsignals__ = {
+        'open-clicked': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+    }
 
-        self.app = app
+    def __init__(self):
+        gtk.VBox.__init__(self)
 
         label = gtk.Label('No files loaded')
         self.btn_open = gtk.Button(stock=gtk.STOCK_OPEN)
@@ -274,5 +277,52 @@ class StartupPanel(gtk.VBox):
         self.pack_start(container, expand=True, fill=False)
 
     def on_open_clicked(self, widget):
-        self.app.on_open()
+        self.emit('open-clicked')
+
+
+class MainWindow(gtk.Window):
+    __gsignals__ = {
+        'open-clicked': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+    }
+
+    def __init__(self):
+        gtk.Window.__init__(self)
+
+        self.set_position(gtk.WIN_POS_CENTER)
+        self.set_default_size(640, 480)
+
+        self.menubar = gtk.MenuBar()
+
+        self.box_scene = gtk.HBox()
+        self.panel_startup = StartupPanel()
+        self.panel_startup.connect('open-clicked', self.on_startup_open_clicked)
+
+        self.box_main = gtk.VBox()
+        self.box_main.pack_start(self.menubar, False)
+        self.box_main.pack_start(self.panel_startup)
+
+        self.add(self.box_main)
+
+    def append_menu_item(self, item):
+        self.menubar.append(item)
+
+    def set_file_widgets(self, glarea, panel_file):
+        # remove startup panel if present
+        if self.box_scene.parent is None:
+            self.box_main.remove(self.panel_startup)
+            self.box_main.pack_start(self.box_scene)
+
+        # NOTE: Removing glarea from parent widget causes it to free previously
+        # allocated resources. There doesn't seem to be anything about it in
+        # the docs, should this be self-evident? It does save the trouble of
+        # cleaning up, though.
+        for child in self.box_scene.children():
+            self.box_scene.remove(child)
+
+        self.box_scene.pack_start(glarea, expand=True,  fill=True)
+        self.box_scene.pack_start(panel_file,  expand=False, fill=False)
+        self.box_scene.show_all()
+
+    def on_startup_open_clicked(self, widget):
+        self.emit('open-clicked')
 

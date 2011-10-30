@@ -16,7 +16,7 @@ from libtatlin.stlparser import StlParser
 from libtatlin.vector3 import Vector3
 from libtatlin.actors import Platform, GcodeModel, StlModel
 from libtatlin.scene import Scene
-from libtatlin.ui import StlPanel, GcodePanel, StartupPanel
+from libtatlin.ui import StlPanel, GcodePanel, MainWindow
 
 
 def format_float(f):
@@ -32,8 +32,7 @@ class ActionGroup(gtk.ActionGroup):
         return item
 
 
-class ViewerWindow(gtk.Window):
-
+class App(object):
     _axis_map = {
         'x': [1, 0, 0],
         'y': [0, 1, 0],
@@ -41,25 +40,24 @@ class ViewerWindow(gtk.Window):
     }
 
     def __init__(self):
-        gtk.Window.__init__(self)
+        # ---------------------------------------------------------------------
+        # WINDOW SETUP
+        # ---------------------------------------------------------------------
 
-        self.set_title('viewer')
-        self.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+        self.window = MainWindow()
+        self.window.set_title('viewer')
 
         self.actiongroup = self.set_up_actions()
-        menu = self.create_menu(self.actiongroup)
+        for menu_item in self.create_menu_items(self.actiongroup):
+            self.window.append_menu_item(menu_item)
 
-        self.box_scene = gtk.HBox()
-        self.panel_startup = StartupPanel(self)
+        self.window.connect('destroy', lambda: gtk.main_quit())
+        self.window.connect('key-press-event', self.on_keypress)
+        self.window.connect('open-clicked', self.on_open)
 
-        self.box_main = gtk.VBox()
-        self.box_main.pack_start(menu, False)
-        self.box_main.pack_start(self.panel_startup)
-
-        self.add(self.box_main)
-
-        self.connect('destroy', lambda: gtk.main_quit())
-        self.connect('key-press-event', self.on_keypress)
+        # ---------------------------------------------------------------------
+        # SCENE SETUP
+        # ---------------------------------------------------------------------
 
         self.panel = None
         self.scene = None
@@ -74,9 +72,106 @@ class ViewerWindow(gtk.Window):
             'height':           self.model_height,
         }
 
+    def show_window(self):
+        self.window.show_all()
+
+    # -------------------------------------------------------------------------
+    # ACTIONS
+    # -------------------------------------------------------------------------
+
+    def set_up_actions(self):
+        actiongroup = ActionGroup('main')
+        actiongroup.add_action(gtk.Action('file', '_File', 'File', None))
+
+        action_open = gtk.Action('open', 'Open', 'Open', gtk.STOCK_OPEN)
+        action_open.connect('activate', self.on_open)
+        actiongroup.add_action_with_accel(action_open, '<Control>o')
+
+        save_as = gtk.Action('save-as', 'Save As...', 'Save As...', gtk.STOCK_SAVE_AS)
+        save_as.connect('activate', self.on_save_as)
+        actiongroup.add_action_with_accel(save_as, '<Control><Shift>s')
+
+        action_quit = gtk.Action('quit', 'Quit', 'Quit', gtk.STOCK_QUIT)
+        action_quit.connect('activate', self.on_quit)
+        actiongroup.add_action(action_quit)
+
+        accelgroup = gtk.AccelGroup()
+        for action in actiongroup.list_actions():
+            action.set_accel_group(accelgroup)
+
+        self.window.add_accel_group(accelgroup)
+
+        return actiongroup
+
+    def create_menu_items(self, actiongroup):
+        file_menu = gtk.Menu()
+        file_menu.append(actiongroup.menu_item('open'))
+        file_menu.append(actiongroup.menu_item('save-as'))
+        file_menu.append(actiongroup.menu_item('quit'))
+
+        item_file = actiongroup.menu_item('file')
+        item_file.set_submenu(file_menu)
+
+        return [item_file]
+
+    # -------------------------------------------------------------------------
+    # PROPERTIES
+    # -------------------------------------------------------------------------
+
+    def get_property(self, name):
+        """
+        Return a property of the application.
+        """
+        return self._app_properties[name]()
+
+    def model_scaling_factor(self):
+        factor = self.scene.get_property('scaling-factor')
+        return format_float(factor)
+
+    def model_width(self):
+        width = self.scene.get_property('width')
+        return format_float(width)
+
+    def model_depth(self):
+        depth = self.scene.get_property('depth')
+        return format_float(depth)
+
+    def model_height(self):
+        height = self.scene.get_property('height')
+        return format_float(height)
+
+    # -------------------------------------------------------------------------
+    # EVENT HANDLERS
+    # -------------------------------------------------------------------------
+
     def on_keypress(self, widget, event):
         if event.keyval == gtk.keysyms.Escape:
             self.on_quit()
+
+    def on_save_as(self, action):
+        dialog = gtk.FileChooserDialog('Save As', None,
+            action=gtk.FILE_CHOOSER_ACTION_SAVE,
+            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT))
+        dialog.set_do_overwrite_confirmation(True)
+
+        if dialog.run() == gtk.RESPONSE_ACCEPT:
+            from libtatlin.stlparser import StlFile
+            stl_file = StlFile(self.model)
+            stl_file.write(dialog.get_filename())
+
+        dialog.destroy()
+
+    def on_open(self, action=None):
+        dialog = gtk.FileChooserDialog('Open', None, gtk.FILE_CHOOSER_ACTION_OPEN,
+            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
+
+        if dialog.run() == gtk.RESPONSE_ACCEPT:
+            self.open_and_display_file(dialog.get_filename())
+
+        dialog.destroy()
+
+    def on_quit(self, action=None):
+        gtk.main_quit()
 
     def scaling_factor_changed(self, factor):
         try:
@@ -131,18 +226,24 @@ class ViewerWindow(gtk.Window):
         self.scene.reset_perspective()
         self.scene.invalidate()
 
+    # -------------------------------------------------------------------------
+    # FILE OPERATIONS
+    # -------------------------------------------------------------------------
+
     def open_and_display_file(self, fpath):
         ftype = self.determine_model_type(fpath)
 
         if ftype == 'gcode':
-            model = self.gcode_model(fpath)
+            model = self.load_gcode_model(fpath)
             Panel = GcodePanel
         elif ftype == 'stl':
-            model = self.stl_model(fpath)
+            model = self.load_stl_model(fpath)
             Panel = StlPanel
 
         if self.scene is None:
-            self.set_up_scene()
+            self.scene = Scene()
+            self.glarea = GLArea(self.scene)
+
         self.add_model_to_scene(model)
 
         if self.panel is None or ftype not in self.panel.supported_types:
@@ -152,57 +253,7 @@ class ViewerWindow(gtk.Window):
         self.panel.connect_handlers()
         self.scene.reset_perspective() # always start with the same view on the scene
 
-        self.display_scene()
-
-    def get_property(self, name):
-        """
-        Return a property of the application.
-        """
-        return self._app_properties[name]()
-
-    def model_scaling_factor(self):
-        factor = self.scene.get_property('scaling-factor')
-        return format_float(factor)
-
-    def model_width(self):
-        width = self.scene.get_property('width')
-        return format_float(width)
-
-    def model_depth(self):
-        depth = self.scene.get_property('depth')
-        return format_float(depth)
-
-    def model_height(self):
-        height = self.scene.get_property('height')
-        return format_float(height)
-
-    def set_up_scene(self):
-        self.scene = Scene()
-        self.glarea = GLArea(self.scene)
-
-    def display_scene(self):
-        # remove startup panel if present
-        if self.box_scene.parent is None:
-            self.box_main.remove(self.panel_startup)
-            self.box_main.pack_start(self.box_scene)
-
-        # NOTE: Removing glarea from parent widget causes it to free previously
-        # allocated resources. There doesn't seem to be anything about it in
-        # the docs, should this be self-evident? It does save the trouble of
-        # cleaning up, though.
-        for child in self.box_scene.children():
-            self.box_scene.remove(child)
-
-        self.box_scene.pack_start(self.glarea, expand=True,  fill=True)
-        self.box_scene.pack_start(self.panel,  expand=False, fill=False)
-        self.box_scene.show_all()
-
-    def add_model_to_scene(self, model):
-        self.model = model
-
-        self.scene.clear()
-        self.scene.set_model(model)
-        self.scene.add_supporting_actor(Platform()) # platform needs to be added last to be translucent
+        self.window.set_file_widgets(self.glarea, self.panel)
 
     def determine_model_type(self, fpath):
         fname = os.path.basename(fpath)
@@ -213,86 +264,32 @@ class ViewerWindow(gtk.Window):
 
         return extension[1:]
 
-    def gcode_model(self, fpath):
+    def load_gcode_model(self, fpath):
         start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
         parser = GcodeParser(fpath, start_location)
         model = GcodeModel(parser.parse())
         return model
 
-    def stl_model(self, fpath):
+    def load_stl_model(self, fpath):
         parser = StlParser(fpath)
         model = StlModel(parser.parse())
         return model
 
-    def set_up_actions(self):
-        actiongroup = ActionGroup('main')
-        actiongroup.add_action(gtk.Action('file', '_File', 'File', None))
+    def add_model_to_scene(self, model):
+        self.model = model
 
-        action_open = gtk.Action('open', 'Open', 'Open', gtk.STOCK_OPEN)
-        action_open.connect('activate', self.on_open)
-        actiongroup.add_action_with_accel(action_open, '<Control>o')
-
-        save_as = gtk.Action('save-as', 'Save As...', 'Save As...', gtk.STOCK_SAVE_AS)
-        save_as.connect('activate', self.on_save_as)
-        actiongroup.add_action_with_accel(save_as, '<Control><Shift>s')
-
-        action_quit = gtk.Action('quit', 'Quit', 'Quit', gtk.STOCK_QUIT)
-        action_quit.connect('activate', self.on_quit)
-        actiongroup.add_action(action_quit)
-
-        accelgroup = gtk.AccelGroup()
-        for action in actiongroup.list_actions():
-            action.set_accel_group(accelgroup)
-
-        self.add_accel_group(accelgroup)
-
-        return actiongroup
-
-    def create_menu(self, actiongroup):
-        file_menu = gtk.Menu()
-        file_menu.append(actiongroup.menu_item('open'))
-        file_menu.append(actiongroup.menu_item('save-as'))
-        file_menu.append(actiongroup.menu_item('quit'))
-
-        menubar = gtk.MenuBar()
-        item_file = actiongroup.menu_item('file')
-        item_file.set_submenu(file_menu)
-        menubar.append(item_file)
-
-        return menubar
-
-    def on_save_as(self, action):
-        dialog = gtk.FileChooserDialog('Save As', None,
-            action=gtk.FILE_CHOOSER_ACTION_SAVE,
-            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT))
-        dialog.set_do_overwrite_confirmation(True)
-
-        if dialog.run() == gtk.RESPONSE_ACCEPT:
-            from libtatlin.stlparser import StlFile
-            stl_file = StlFile(self.model)
-            stl_file.write(dialog.get_filename())
-
-        dialog.destroy()
-
-    def on_open(self, action=None):
-        dialog = gtk.FileChooserDialog('Open', None, gtk.FILE_CHOOSER_ACTION_OPEN,
-            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
-
-        if dialog.run() == gtk.RESPONSE_ACCEPT:
-            self.open_and_display_file(dialog.get_filename())
-
-        dialog.destroy()
-
-    def on_quit(self, action=None):
-        gtk.main_quit()
+        self.scene.clear()
+        self.scene.set_model(model)
+        self.scene.add_supporting_actor(Platform()) # platform needs to be added last to be translucent
 
 
 if __name__ == '__main__':
     # configure logging
     logging.basicConfig(format='--- [%(levelname)s] %(message)s', level=logging.DEBUG)
 
-    window = ViewerWindow()
+    app = App()
     if len(sys.argv) > 1:
-        window.open_and_display_file(sys.argv[1])
-    window.show_all()
+        app.open_and_display_file(sys.argv[1])
+    app.show_window()
     gtk.main()
+
