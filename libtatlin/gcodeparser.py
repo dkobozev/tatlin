@@ -22,11 +22,11 @@ class Movement(object):
     def points(self):
         return (self.point_a, self.point_b)
 
-    def angle(self):
+    def angle(self, precision=0):
         x = self.point_b.x - self.point_a.x
         y = self.point_b.y - self.point_a.y
         angle = math.degrees(math.atan2(y, -x)) # negate x for clockwise rotation angle
-        return angle
+        return round(angle, precision)
 
 
 class GcodeParser(object):

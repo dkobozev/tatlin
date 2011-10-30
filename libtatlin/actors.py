@@ -202,7 +202,6 @@ class GcodeModel(Model):
                 arrow = self.arrow
                 # position the arrow with respect to movement
                 arrow = vector.rotate(arrow, movement.angle(), 0.0, 0.0, 1.0)
-                arrow = vector.translate(arrow, b.x, b.y, b.z)
                 arrow_list.extend(arrow)
 
                 vertex_color = self.movement_color(movement)
@@ -210,9 +209,13 @@ class GcodeModel(Model):
 
             self.layer_stops.append(len(vertex_list))
 
-        self.vertices = numpy.require(vertex_list, 'f')
-        self.colors = numpy.require(color_list, 'f')
-        self.arrows = numpy.require(arrow_list, 'f')
+        self.vertices = numpy.array(vertex_list, 'f')
+        self.colors = numpy.array(color_list, 'f')
+        self.arrows = numpy.array(arrow_list, 'f')
+        # by translating the arrow vertices outside of the loop, we achieve a
+        # significant performance gain thanks to numpy. it would be really nice
+        # if we could rotate in a similar fashion...
+        self.arrows = self.arrows + self.vertices[1::2].repeat(3, 0)
 
         # for every pair of vertices of the model, there are 3 vertices for the arrow
         assert len(self.arrows) == ((len(self.vertices) // 2) * 3), \
