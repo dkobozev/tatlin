@@ -28,17 +28,6 @@ class BoundingBox(object):
         self.upper_corner = upper_corner
         self.lower_corner = lower_corner
 
-    def combine(self, point):
-        """
-        Combine bounding box with a point so that the resulting bounding box encloses the original bounding box and the point.
-        """
-        for i in range(3):
-            if point[i] < self.lower_corner[i]:
-                self.lower_corner[i] = point[i]
-
-            if point[i] > self.upper_corner[i]:
-                self.upper_corner[i] = point[i]
-
     @property
     def width(self):
         width = abs(self.upper_corner[0] - self.lower_corner[0])
@@ -126,12 +115,13 @@ class Model(object):
         """
         Calculate an axis-aligned box enclosing the model.
         """
-        bounding_box = None
-        for vertex in self.vertices:
-            if bounding_box is None:
-                bounding_box = BoundingBox(vertex.copy(), vertex.copy())
-            bounding_box.combine(vertex)
-        return bounding_box
+        # swap rows and columns in our vertex arrays so that we can do max and
+        # min on axis 1
+        xyz_rows = self.vertices.reshape(-1, order='F').reshape(3, -1)
+        lower_corner = xyz_rows.min(1)
+        upper_corner = xyz_rows.max(1)
+        box = BoundingBox(upper_corner, lower_corner)
+        return box
 
     @property
     def width(self):

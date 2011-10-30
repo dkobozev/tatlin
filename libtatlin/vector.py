@@ -13,7 +13,7 @@ identity_matrix = [
 rotation_matrix_cache = {}
 
 def translate(vertices, x, y, z):
-    translated = vertices + [x, y, z]
+    translated = vertices + numpy.array([x, y, z], 'f')
     return translated
 
 def rotate(vertices, angle, x, y, z):
