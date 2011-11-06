@@ -80,6 +80,7 @@ class GcodePanel(gtk.VBox):
         self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
         self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
         self.btn_reset_view.connect('clicked', self.app.on_reset_view)
+        self.check_3d.connect('toggled', self.app.on_set_mode)
 
         self._handlers_connected = True
 

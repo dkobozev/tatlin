@@ -237,7 +237,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         delta_y = event.y - self.cursor_y
 
         if event.state & gtk.gdk.BUTTON1_MASK: # left mouse button
-            self.rotate(delta_x, delta_y)
+            self.rotate(event.x, event.y, delta_x, delta_y, width, height)
         elif event.state & gtk.gdk.BUTTON2_MASK: # middle mouse button
             self.zoom(delta_x, delta_y)
         elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
@@ -248,8 +248,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.invalidate()
 
-    def reset_view(self):
-        if self.mode_2d:
+    def reset_view(self, both=False):
+        if both:
+            self.reset_perspective()
+            self.reset_ortho()
+        elif self.mode_2d:
             self.reset_ortho()
         else: # 3d
             self.reset_perspective()
@@ -265,7 +268,16 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.azimuth_2d   = self.initial_azimuth_2d
         self.zoom_2d      = self.initial_zoom_2d
 
-    def rotate(self, delta_x, delta_y):
+    def rotate(self, x, y, delta_x, delta_y, width, height):
+        if not self.mode_2d: # TODO: find out why it's not working in 2d
+            win_coords = gluProject(0, 0, 0)
+            origin_window_y = win_coords[1]
+            y_bottom = height - y
+
+            if y_bottom > origin_window_y:
+                # reverse rotation if cursor is above the model's origin
+                delta_x = -delta_x
+
         if self.mode_2d:
             self.azimuth_2d += delta_x / 4.0
         else: # 3d
@@ -273,11 +285,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             self.elevation -= delta_y / 4.0
 
     def zoom(self, delta_x, delta_y):
-        # 3d
-        self.obj_pos.y += delta_y / 10.0
-        # 2d
-        zoom_2d = self.zoom_2d + (delta_y / 15.0)
-        self.zoom_2d = max(zoom_2d, 0.1)
+        if self.mode_2d:
+            zoom_2d = self.zoom_2d + (delta_y / 15.0)
+            self.zoom_2d = max(zoom_2d, 0.1)
+        else: # 3d
+            self.obj_pos.y += delta_y / 10.0
 
     def pan(self, delta_x, delta_y, width, height):
         """

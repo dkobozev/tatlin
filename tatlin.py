@@ -226,6 +226,10 @@ class App(object):
         self.scene.reset_view()
         self.scene.invalidate()
 
+    def on_set_mode(self, widget):
+        self.scene.mode_2d = not widget.get_active()
+        self.scene.invalidate()
+
     # -------------------------------------------------------------------------
     # FILE OPERATIONS
     # -------------------------------------------------------------------------
@@ -251,7 +255,8 @@ class App(object):
 
         self.panel.set_initial_values() # update panel to reflect new model properties
         self.panel.connect_handlers()
-        self.scene.reset_view()         # always start with the same view on the scene
+        self.scene.reset_view(True)     # always start with the same view on the scene
+        self.scene.mode_2d = False
 
         self.window.set_file_widgets(self.glarea, self.panel)
 
