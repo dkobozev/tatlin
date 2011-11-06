@@ -85,7 +85,7 @@ class Platform(object):
 
         glPopMatrix()
 
-    def display(self):
+    def display(self, mode_2d=False):
         glCallList(self.display_list)
 
 
@@ -164,7 +164,7 @@ class GcodeModel(Model):
 
         self.create_vertex_arrays(model_data)
 
-        self.max_layers         = len(self.layer_stops)
+        self.max_layers         = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers
         self.arrows_enabled     = True
         self.initialized        = False
@@ -180,7 +180,7 @@ class GcodeModel(Model):
         """
         vertex_list = []
         color_list = []
-        self.layer_stops = [] # indexes at which layers end
+        self.layer_stops = [0]
         arrow_list = []
 
         for layer in model_data:
@@ -233,9 +233,6 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
-        """
-        Create a display list for each model layer.
-        """
         self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
         self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
 
@@ -245,11 +242,11 @@ class GcodeModel(Model):
 
         self.initialized = True
 
-    def display(self):
+    def display(self, mode_2d=False):
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
 
-        self._display_movements()
+        self._display_movements(mode_2d)
 
         if self.arrows_enabled:
             self._display_arrows()
@@ -257,14 +254,22 @@ class GcodeModel(Model):
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
 
-    def _display_movements(self):
+    def _display_movements(self, mode_2d=False):
         self.vertex_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, None)
 
         self.vertex_color_buffer.bind()
         glColorPointer(4, GL_FLOAT, 0, None)
 
-        glDrawArrays(GL_LINES, 0, self.layer_stops[self.num_layers_to_draw - 1])
+        if mode_2d:
+            glScale(1.0, 1.0, 0.0) # discard z coordinates
+            start = self.layer_stops[self.num_layers_to_draw - 1]
+            end   = self.layer_stops[self.num_layers_to_draw] - start
+        else: # 3d
+            start = 0
+            end   = self.layer_stops[self.num_layers_to_draw]
+
+        glDrawArrays(GL_LINES, start, end)
 
         self.vertex_buffer.unbind()
         self.vertex_color_buffer.unbind()
@@ -276,12 +281,8 @@ class GcodeModel(Model):
         self.arrow_color_buffer.bind()
         glColorPointer(4, GL_FLOAT, 0, None)
 
-        layer_idx = self.num_layers_to_draw - 1
-        if layer_idx > 0:
-            start = (self.layer_stops[layer_idx - 1] // 2) * 3
-        else:
-            start = 0
-        end = (self.layer_stops[layer_idx] // 2) * 3
+        start = (self.layer_stops[self.num_layers_to_draw - 1] // 2) * 3
+        end   = (self.layer_stops[self.num_layers_to_draw] // 2) * 3
 
         glDrawArrays(GL_TRIANGLES, start, end - start)
 
@@ -377,7 +378,7 @@ class StlModel(Model):
 
         glPopMatrix()
 
-    def display(self):
+    def display(self, mode_2d=False):
         glEnable(GL_LIGHTING)
         self.draw_facets()
         glDisable(GL_LIGHTING)

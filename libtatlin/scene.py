@@ -38,7 +38,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     rotation, as well as being the interface for the actors.
     """
     fovy   = 80.0
-    z_near = 1.0
+    z_near = 0.1
     z_far  = 9000.0 # very far
 
     def __init__(self):
@@ -46,13 +46,23 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.actors = []
 
-        self.begin_x = 0
-        self.begin_y = 0
-
+        # 3D
+        self.cursor_x = 0
+        self.cursor_y = 0
         self.initial_obj_pos   = Vector3(0.0, 180.0, -20.0)
         self.initial_azimuth   = 0.0
         self.initial_elevation = -20.0
         self.reset_perspective() # set current viewing params
+
+        # 2D
+        self._mode_2d     = False
+        self.ortho_near   = -50.0
+        self.ortho_far    = 50.0
+        self.initial_zoom_2d      = 5.0
+        self.initial_obj_pos_x_2d = 0.0
+        self.initial_obj_pos_y_2d = 0.0
+        self.initial_azimuth_2d   = 0.0
+        self.reset_ortho()
 
         self.initialized = False
 
@@ -80,8 +90,8 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     # ------------------------------------------------------------------------
 
     def init(self):
-        glClearColor(0.0, 0.0, 0.0, 0.0)
-        glClearDepth(1.0)
+        glClearColor(0.0, 0.0, 0.0, 0.0) # set clear color to black
+        glClearDepth(1.0)                # set depth value to 1
         glDepthFunc(GL_LEQUAL)
 
         glEnable(GL_DEPTH_TEST)
@@ -103,61 +113,97 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
                 actor.init()
 
     def display(self, width, height):
+        # clear the color and depth buffers from any leftover junk
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
+        # replace current matrix with identity matrix
         glLoadIdentity()
-        glRotate(-90, 1.0, 0.0, 0.0) # make z point up
 
-        glDisable(GL_CULL_FACE)
-        glDisable(GL_DEPTH_TEST)
-        glDepthMask(GL_FALSE)
-        self.view_ortho(width, height)
+        # TODO: see if we have to enable any of these
+        #glDepthMask(GL_TRUE)
+        #glEnable(GL_DEPTH_TEST)
+        #glEnable(GL_CULL_FACE)
 
+        self.switch_to_ortho(width, height)
         self.draw_axes()
 
-        self.view_perspective()
-        glDepthMask(GL_TRUE)
-        glEnable(GL_DEPTH_TEST)
-        glEnable(GL_CULL_FACE)
+        if self.mode_2d:
+            # perform 2d transformations
+            self.center_ortho_on_origin(width, height)
+            glTranslate(self.obj_pos_x_2d, self.obj_pos_y_2d, 0)
+            glRotate(self.azimuth_2d, 0.0, 0.0, 1.0)
+            glScale(self.zoom_2d, self.zoom_2d, self.zoom_2d)
+        else: # 3d
+            # restore projection and modelview matrices and perform 3d
+            # transformations
+            self.restore_perspective()
 
-        glTranslatef(self.obj_pos.x, self.obj_pos.y, self.obj_pos.z)
-        glRotatef(-self.elevation, 1.0, 0.0, 0.0)
-        glRotatef(self.azimuth, 0.0, 0.0, 1.0)
+            glRotate(-90, 1.0, 0.0, 0.0) # make z point up
+            glTranslate(self.obj_pos.x, self.obj_pos.y, self.obj_pos.z)
+            glRotate(-self.elevation, 1.0, 0.0, 0.0)
+            glRotate(self.azimuth, 0.0, 0.0, 1.0)
 
+        # draw actors
         for actor in self.actors:
-            actor.display()
+            actor.display(self.mode_2d)
+
+        # if mode is 2d, restore projection and modelview matrices
+        if self.mode_2d:
+            self.restore_perspective()
 
         glFlush()
 
     def reshape(self, width, height):
         glViewport(0, 0, width, height)
+
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(self.fovy, width / height, self.z_near, self.z_far)
         glMatrixMode(GL_MODELVIEW)
 
-    def view_ortho(self, width, height):
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        glOrtho(0, width, 0, height, -100.0, 100.0)
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
+    def switch_to_ortho(self, width, height):
+        """
+        Set up orthographic projection.
+        """
+        glMatrixMode(GL_PROJECTION) # select projection matrix
+        glPushMatrix()              # save the current projection matrix
+        glLoadIdentity()            # set up orthographic projection
+        glOrtho(0, width, 0, height, self.ortho_near, self.ortho_far)
+        glMatrixMode(GL_MODELVIEW)  # select the modelview matrix
+        glPushMatrix()              # save the current modelview matrix
+        glLoadIdentity()            # replace the modelview matrix with identity
 
-    def view_perspective(self):
+    def center_ortho_on_origin(self, width, height):
+        """
+        Center orthographic projection box on (0, 0, 0).
+        """
         glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
+        glLoadIdentity()
+        x, y = width / 2, height / 2
+        glOrtho(-x, x, -y, y, self.ortho_near, self.ortho_far)
         glMatrixMode(GL_MODELVIEW)
-        glPopMatrix()
+
+    def restore_perspective(self):
+        """
+        Switch back to the perspective projection.
+        """
+        # projection and modelview matrix stacks are separate, so we don't have
+        # to pop them in specific order
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix() # restore the projection matrix
+        glMatrixMode(GL_MODELVIEW)
+        glPopMatrix() # restore the modelview matrix
 
     def draw_axes(self, length=50.0):
         glPushMatrix()
 
-        glRotate(-90, 1.0, 0.0, 0.0) # make z point up
-        glTranslatef(length + 20.0, 0.0, length + 20.0)
-        glRotatef(-self.elevation, 1.0, 0.0, 0.0)
-        glRotatef(self.azimuth, 0.0, 0.0, 1.0)
+        if self.mode_2d:
+            glTranslate(length + 20.0, length + 20.0, 0.0)
+            glRotate(self.azimuth_2d, 0.0, 0.0, 1.0)
+        else: # 3d
+            glRotate(-90, 1.0, 0.0, 0.0) # make z point up
+            glTranslatef(length + 20.0, 0.0, length + 20.0)
+            glRotatef(-self.elevation, 1.0, 0.0, 0.0)
+            glRotatef(self.azimuth, 0.0, 0.0, 1.0)
 
         glBegin(GL_LINES)
         glColor(1.0, 0.0, 0.0)
@@ -176,19 +222,19 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glPopMatrix()
 
     # ------------------------------------------------------------------------
-    # VIEWING TRANSFORMATIONS
+    # VIEWING MANIPULATIONS
     # ------------------------------------------------------------------------
 
     def button_press(self, width, height, event):
-        self.begin_x = event.x
-        self.begin_y = event.y
+        self.cursor_x = event.x
+        self.cursor_y = event.y
 
     def button_release(self, width, height, event):
         pass
 
     def button_motion(self, width, height, event):
-        delta_x = event.x - self.begin_x
-        delta_y = event.y - self.begin_y
+        delta_x = event.x - self.cursor_x
+        delta_y = event.y - self.cursor_y
 
         if event.state & gtk.gdk.BUTTON1_MASK: # left mouse button
             self.rotate(delta_x, delta_y)
@@ -197,22 +243,41 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
             self.pan(delta_x, delta_y, width, height)
 
-        self.begin_x = event.x
-        self.begin_y = event.y
+        self.cursor_x = event.x
+        self.cursor_y = event.y
 
         self.invalidate()
+
+    def reset_view(self):
+        if self.mode_2d:
+            self.reset_ortho()
+        else: # 3d
+            self.reset_perspective()
 
     def reset_perspective(self):
         self.obj_pos   = self.initial_obj_pos.copy()
         self.azimuth   = self.initial_azimuth
         self.elevation = self.initial_elevation
 
+    def reset_ortho(self):
+        self.obj_pos_x_2d = self.initial_obj_pos_x_2d
+        self.obj_pos_y_2d = self.initial_obj_pos_y_2d
+        self.azimuth_2d   = self.initial_azimuth_2d
+        self.zoom_2d      = self.initial_zoom_2d
+
     def rotate(self, delta_x, delta_y):
-        self.azimuth   += delta_x / 4.0
-        self.elevation -= delta_y / 4.0
+        if self.mode_2d:
+            self.azimuth_2d += delta_x / 4.0
+        else: # 3d
+            self.azimuth   += delta_x / 4.0
+            self.elevation -= delta_y / 4.0
 
     def zoom(self, delta_x, delta_y):
+        # 3d
         self.obj_pos.y += delta_y / 10.0
+        # 2d
+        zoom_2d = self.zoom_2d + (delta_y / 15.0)
+        self.zoom_2d = max(zoom_2d, 0.1)
 
     def pan(self, delta_x, delta_y, width, height):
         """
@@ -228,13 +293,31 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         if magnitude_x > 0.0:
             x_scale = magnitude_x / width
             x_slow = 1 / magnitude_x
-            self.obj_pos.x -= delta_x * x_scale * window_h * x_slow
+            offset_x = delta_x * x_scale * window_h * x_slow
+
+            if self.mode_2d:
+                self.obj_pos_x_2d -= offset_x
+            else: # 3d
+                self.obj_pos.x -= offset_x
 
         magnitude_y = abs(delta_y)
         if magnitude_y > 0.0:
             y_scale = magnitude_y / width
             y_slow = 1 / magnitude_y
-            self.obj_pos.z += delta_y * y_scale * window_h * y_slow
+            offset_z = delta_y * y_scale * window_h * y_slow
+
+            if self.mode_2d:
+                self.obj_pos_y_2d += offset_z
+            else: # 3d
+                self.obj_pos.z += offset_z
+
+    @property
+    def mode_2d(self):
+        return self._mode_2d
+
+    @mode_2d.setter
+    def mode_2d(self, value):
+        self._mode_2d = value
 
     # ------------------------------------------------------------------------
     # MODEL MANIPULATION

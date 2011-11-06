@@ -55,16 +55,16 @@ class GcodePanel(gtk.VBox):
 
         self.check_arrows = gtk.CheckButton('Show arrows')
         self.check_3d = gtk.CheckButton('3D view')
-        self.btn_reset_perspective = gtk.Button('Reset perspective')
+        self.btn_reset_view = gtk.Button('Reset view')
 
         table_display = gtk.Table(rows=2, columns=1)
         table_display.set_border_width(5)
         table_display.set_row_spacings(5)
-        table_display.attach(label_layers,               0, 1, 0, 1, yoptions=0)
-        table_display.attach(self.hscale_layers,         0, 1, 1, 2, yoptions=0)
-        table_display.attach(self.check_arrows,          0, 1, 2, 3, yoptions=0)
-        table_display.attach(self.check_3d,              0, 1, 3, 4, yoptions=0)
-        table_display.attach(self.btn_reset_perspective, 0, 1, 4, 5, yoptions=0)
+        table_display.attach(label_layers,        0, 1, 0, 1, yoptions=0)
+        table_display.attach(self.hscale_layers,  0, 1, 1, 2, yoptions=0)
+        table_display.attach(self.check_arrows,   0, 1, 2, 3, yoptions=0)
+        table_display.attach(self.check_3d,       0, 1, 3, 4, yoptions=0)
+        table_display.attach(self.btn_reset_view, 0, 1, 4, 5, yoptions=0)
 
         frame_display = gtk.Frame('Display')
         frame_display.add(table_display)
@@ -79,7 +79,7 @@ class GcodePanel(gtk.VBox):
 
         self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
         self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
-        self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+        self.btn_reset_view.connect('clicked', self.app.on_reset_view)
 
         self._handlers_connected = True
 
@@ -197,11 +197,11 @@ class StlPanel(gtk.VBox):
         # DISPLAY
         # --------------------------------------------------------------------
 
-        self.btn_reset_perspective = gtk.Button('Reset perspective')
+        self.btn_reset_view = gtk.Button('Reset view')
 
         frame_display = gtk.Frame('Display')
         frame_display.set_border_width(5)
-        frame_display.add(self.btn_reset_perspective)
+        frame_display.add(self.btn_reset_view)
 
         self.pack_start(frame_dimensions, False)
         self.pack_start(frame_move, False)
@@ -224,7 +224,7 @@ class StlPanel(gtk.VBox):
         self.btn_z_90.connect('clicked', self.on_btn_z_90)
 
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
-        self.btn_reset_perspective.connect('clicked', self.app.on_reset_perspective)
+        self.btn_reset_view.connect('clicked', self.app.on_reset_view)
 
         self._handlers_connected = True
 

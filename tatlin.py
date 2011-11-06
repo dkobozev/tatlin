@@ -219,11 +219,11 @@ class App(object):
         self.scene.show_arrows(widget.get_active())
         self.scene.invalidate()
 
-    def on_reset_perspective(self, widget):
+    def on_reset_view(self, widget):
         """
         Restore the view of the model shown on startup.
         """
-        self.scene.reset_perspective()
+        self.scene.reset_view()
         self.scene.invalidate()
 
     # -------------------------------------------------------------------------
@@ -251,7 +251,7 @@ class App(object):
 
         self.panel.set_initial_values() # update panel to reflect new model properties
         self.panel.connect_handlers()
-        self.scene.reset_perspective() # always start with the same view on the scene
+        self.scene.reset_view()         # always start with the same view on the scene
 
         self.window.set_file_widgets(self.glarea, self.panel)
 
