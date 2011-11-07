@@ -3,9 +3,6 @@ general:
 * axis labels
 * add more divisions to platform grid
 
-gcode:
-* 2D view
-
 stl:
 * lay flat on platform
 * rotate

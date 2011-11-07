@@ -269,15 +269,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.zoom_2d      = self.initial_zoom_2d
 
     def rotate(self, x, y, delta_x, delta_y, width, height):
-        if not self.mode_2d: # TODO: find out why it's not working in 2d
-            win_coords = gluProject(0, 0, 0)
-            origin_window_y = win_coords[1]
-            y_bottom = height - y
-
-            if y_bottom > origin_window_y:
-                # reverse rotation if cursor is above the model's origin
-                delta_x = -delta_x
-
         if self.mode_2d:
             self.azimuth_2d += delta_x / 4.0
         else: # 3d
@@ -286,7 +277,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
     def zoom(self, delta_x, delta_y):
         if self.mode_2d:
-            zoom_2d = self.zoom_2d + (delta_y / 15.0)
+            zoom_2d = self.zoom_2d - (delta_y / 15.0)
             self.zoom_2d = max(zoom_2d, 0.1)
         else: # 3d
             self.obj_pos.y += delta_y / 10.0
@@ -299,28 +290,24 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         space, using program window dimensions and field of view angle. A
         factor is applied to avoid speeding up on rapid mouse movements.
         """
-        window_h = 2 * abs(self.obj_pos) * math.tan(self.fovy / 2) # height of window in object space
+        if self.mode_2d:
+            self.obj_pos_x_2d += delta_x
+            self.obj_pos_y_2d -= delta_y
+        else: # 3d
+            window_h = 2 * abs(self.obj_pos) * math.tan(self.fovy / 2) # height of window in object space
 
-        magnitude_x = abs(delta_x)
-        if magnitude_x > 0.0:
-            x_scale = magnitude_x / width
-            x_slow = 1 / magnitude_x
-            offset_x = delta_x * x_scale * window_h * x_slow
-
-            if self.mode_2d:
-                self.obj_pos_x_2d -= offset_x
-            else: # 3d
+            magnitude_x = abs(delta_x)
+            if magnitude_x > 0.0:
+                x_scale = magnitude_x / width
+                x_slow = 1 / magnitude_x
+                offset_x = delta_x * x_scale * window_h * x_slow
                 self.obj_pos.x -= offset_x
 
-        magnitude_y = abs(delta_y)
-        if magnitude_y > 0.0:
-            y_scale = magnitude_y / width
-            y_slow = 1 / magnitude_y
-            offset_z = delta_y * y_scale * window_h * y_slow
-
-            if self.mode_2d:
-                self.obj_pos_y_2d += offset_z
-            else: # 3d
+            magnitude_y = abs(delta_y)
+            if magnitude_y > 0.0:
+                y_scale = magnitude_y / width
+                y_slow = 1 / magnitude_y
+                offset_z = delta_y * y_scale * window_h * y_slow
                 self.obj_pos.z += offset_z
 
     @property
