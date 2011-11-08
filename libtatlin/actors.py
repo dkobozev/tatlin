@@ -51,11 +51,13 @@ class Platform(object):
     # makerbot platform size
     width = 120
     depth = 100
-    grid  = 10
+    graduations_major = 10
 
     def __init__(self):
-        self.color_guides = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.4)
-        self.color_fill   = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
+        self.color_grads_minor  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
+        self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
+        self.color_grads_major  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
+        self.color_fill         = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
         self.initialized = False
 
     def init(self):
@@ -66,15 +68,24 @@ class Platform(object):
         glPushMatrix()
 
         glTranslate(-self.width / 2, -self.depth / 2, 0)
-        glColor(*self.color_guides)
+
+        def color(i):
+            if i % self.graduations_major == 0:
+                glColor(*self.color_grads_major)
+            elif i % (self.graduations_major / 2) == 0:
+                glColor(*self.color_grads_interm)
+            else:
+                glColor(*self.color_grads_minor)
 
         # draw the grid
         glBegin(GL_LINES)
-        for i in range(0, self.width + self.grid, self.grid):
+        for i in range(0, self.width + 1):
+            color(i)
             glVertex3f(float(i), 0.0,        0.0)
             glVertex3f(float(i), self.depth, 0.0)
 
-        for i in range(0, self.depth + self.grid, self.grid):
+        for i in range(0, self.depth + 1):
+            color(i)
             glVertex3f(0,          float(i), 0.0)
             glVertex3f(self.width, float(i), 0.0)
         glEnd()
