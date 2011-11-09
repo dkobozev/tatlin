@@ -5,6 +5,8 @@
 
   <title>dkobozev/tatlin @ GitHub</title>
 
+  <link rel="stylesheet" type="text/css" href="css/jquery.lightbox-0.5.css" media="screen" />
+
   <style type="text/css">
     body {
       margin-top: 1.0em;
@@ -38,8 +40,27 @@
     .download { float: right; }
     pre { background: #222; color: #fff; padding: 15px;}
     hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+    .screenshots {
+        text-align: left;
+        margin: 0 auto 26px auto;
+        width: 516px;
+    }
+    .screenshots img {
+        margin: 13px;
+        border: 1px solid #fff;
+        -moz-box-shadow: 0 0 2px #000;
+        -webkit-box-shadow: 0 0 2px #000;
+    }
     .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
+</style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"></script>
+    <script src="js/jquery.lightbox-0.5.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".screenshots a").lightBox();
+        });
+    </script>
 </head>
 
 <body>
@@ -53,7 +74,12 @@
     </div>
 
     <h2>See</h2>
-    <p>[screenshots]</p>
+    <p class="screenshots">
+        <a href="images/screenshots/gcode-overview.png"><img src="images/screenshots/gcode-overview-thumb.png" alt="Displaying a Gcode file" /></a>
+        <a href="images/screenshots/gcode-layers.png"><img src="images/screenshots/gcode-layers-thumb.png" alt="The number of layers to display can be adjusted" /></a>
+        <a href="images/screenshots/gcode-2d.png"><img src="images/screenshots/gcode-2d-thumb.png" alt="Each layer can be displayed in 2D for closer examination" /></a>
+        <a href="images/screenshots/stl.png"><img src="images/screenshots/stl-thumb.png" alt="Displaying an STL file" /></a>
+    </p>
 
     <div class="download">
       <a href="https://github.com/dkobozev/tatlin/zipball/master">
@@ -93,7 +119,7 @@
 
 
     <h2>License</h2>
-    <p>Tatlin is lincensed under GPLv2 or later.</p>
+    <p>Tatlin is licensed under GPLv2 or later.</p>
 
 
     <h2>Contact me</h2>
