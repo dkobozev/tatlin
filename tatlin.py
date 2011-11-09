@@ -67,9 +67,9 @@ class App(object):
         for menu_item in self.create_menu_items(self.actiongroup):
             self.window.append_menu_item(menu_item)
 
-        self.window.connect('destroy', lambda: gtk.main_quit())
+        self.window.connect('destroy',         self.on_quit)
         self.window.connect('key-press-event', self.on_keypress)
-        self.window.connect('open-clicked', self.on_open)
+        self.window.connect('open-clicked',    self.on_open)
 
         # ---------------------------------------------------------------------
         # SCENE SETUP
