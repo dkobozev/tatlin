@@ -319,6 +319,11 @@ class MainWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
 
+        self._app_name = 'Tatlin'
+        self._file_modified = False
+        self._filename = None
+        self._title_changed()
+
         self.set_position(gtk.WIN_POS_CENTER)
         self.set_default_size(640, 480)
 
@@ -356,4 +361,35 @@ class MainWindow(gtk.Window):
 
     def on_startup_open_clicked(self, widget):
         self.emit('open-clicked')
+
+    @property
+    def file_modified(self):
+        return self._file_modified
+
+    @file_modified.setter
+    def file_modified(self, value):
+        self._file_modified = value
+        self._title_changed()
+
+    @property
+    def filename(self):
+        return self._filename
+
+    @filename.setter
+    def filename(self, value):
+        self._filename = value
+        self._title_changed()
+
+    def _title_changed(self):
+        """
+        Format and set title.
+        """
+        title = self._app_name
+        if self._filename is not None:
+            filename = self._filename
+            if self._file_modified:
+                filename = '*' + filename
+            title = filename + ' - ' + title
+
+        self.set_title(title)
 

@@ -61,7 +61,6 @@ class App(object):
         # ---------------------------------------------------------------------
 
         self.window = MainWindow()
-        self.window.set_title('viewer')
 
         self.actiongroup = self.set_up_actions()
         for menu_item in self.create_menu_items(self.actiongroup):
@@ -174,6 +173,7 @@ class App(object):
             from libtatlin.stlparser import StlFile
             stl_file = StlFile(self.model)
             stl_file.write(dialog.get_filename())
+            self.window.file_modified = False
 
         dialog.destroy()
 
@@ -196,6 +196,7 @@ class App(object):
             self.scene.invalidate()
             # tell all the widgets that care about model size that it has changed
             self.panel.model_size_changed()
+            self.window.file_modified = self.scene.model_modified
         except ValueError:
             pass # ignore invalid values
 
@@ -205,6 +206,7 @@ class App(object):
             self.scene.change_model_dimension(dimension, value)
             self.scene.invalidate()
             self.panel.model_size_changed()
+            self.window.file_modified = self.scene.model_modified
         except ValueError:
             pass # ignore invalid values
 
@@ -218,6 +220,7 @@ class App(object):
         try:
             self.scene.rotate_model(float(angle), vector)
             self.scene.invalidate()
+            self.window.file_modified = self.scene.model_modified
         except ValueError:
             pass # ignore invalid values
 
@@ -227,6 +230,7 @@ class App(object):
         """
         self.scene.center_model()
         self.scene.invalidate()
+        self.window.file_modified = self.scene.model_modified
 
     def on_arrows_toggled(self, widget):
         """
@@ -275,6 +279,7 @@ class App(object):
         self.scene.mode_2d = False
 
         self.window.set_file_widgets(self.glarea, self.panel)
+        self.window.filename = os.path.basename(fpath)
 
     def determine_model_type(self, fpath):
         fname = os.path.basename(fpath)

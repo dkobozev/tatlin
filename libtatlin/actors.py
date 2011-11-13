@@ -129,6 +129,10 @@ class Model(object):
         """
         Set/reset saved properties.
         """
+        self.invalidate_bounding_box()
+        self.modified = False
+
+    def invalidate_bounding_box(self):
         self._bounding_box = None
 
     @property
@@ -421,14 +425,17 @@ class StlModel(Model):
             print '--! scaling vertices'
             self.vertices *= (factor / self.scaling_factor)
             self.scaling_factor = factor
-            self.init_model_attributes()
+            self.invalidate_bounding_box()
+            self.modified = True
 
     def translate(self, x, y, z):
         self.vertices = vector.translate(self.vertices, x, y, z)
-        self.init_model_attributes()
+        self.invalidate_bounding_box()
+        self.modified = True
 
     def rotate(self, angle, x, y, z):
         print '--! rotating vertices'
         self.vertices = vector.rotate(self.vertices, angle, x, y, z)
-        self.init_model_attributes()
+        self.invalidate_bounding_box()
+        self.modified = True
 

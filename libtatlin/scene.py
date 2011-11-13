@@ -378,3 +378,14 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     def show_arrows(self, show):
         self.model.arrows_enabled = show
         self.model.init()
+
+    @property
+    def model_modified(self):
+        """
+        Return true when an important model property has been modified.
+
+        Important properties exclude viewing transformations and can be
+        something like size, shape or color.
+        """
+        return self.model.modified
+
