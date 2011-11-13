@@ -23,32 +23,6 @@ import struct
 import time
 import logging
 
-from vector3 import Vector3
-
-
-class StlFile(object):
-    def __init__(self, model):
-        self.vertices, self.normals = model.vertices, model.normals
-
-    def write(self, fpath):
-        f = open(fpath, 'w')
-        print >>f, 'solid'
-        print >>f, ''.join([self.facet(self.vertices[i:i+3], self.normals[i]) for i in xrange(0, len(self.vertices), 3)])
-        print >>f, 'endsolid'
-        f.close()
-
-    def facet(self, vertices, normal):
-        template = """facet normal %.6f %.6f %.6f
-  outer loop
-    %s
-  endloop
-endfacet
-"""
-        stl_facet = template % ( normal[0], normal[1], normal[2],
-            '\n'.join(['vertex %.6f %.6f %.6f' % (v[0], v[1], v[2]) for v in vertices])
-        )
-        return stl_facet
-
 
 class ParseError(Exception):
     pass

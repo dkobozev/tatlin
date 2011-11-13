@@ -93,9 +93,15 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             'height':         lambda: self.model.height,
         }
 
-    def set_model(self, model):
-        self.model = model
-        self.actors.append(model)
+    def load_file(self, model_file):
+        self.model = model_file.load_model()
+        self.actors.append(self.model)
+
+    def export_to_file(self, model_file):
+        """
+        Write model to file.
+        """
+        model_file.write_stl(self.model)
 
     def add_supporting_actor(self, actor):
         self.actors.append(actor)
@@ -339,6 +345,12 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     # ------------------------------------------------------------------------
     # MODEL MANIPULATION
     # ------------------------------------------------------------------------
+
+    def change_num_layers(self, number):
+        """
+        Change number of visible layers for Gcode model.
+        """
+        self.model.num_layers_to_draw = number
 
     def scale_model(self, factor):
         print '--- scaling model by factor of:', factor

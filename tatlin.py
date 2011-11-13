@@ -27,12 +27,11 @@ pygtk.require('2.0')
 import gtk
 from gtk.gtkgl.apputils import GLArea
 
-from libtatlin.gcodeparser import GcodeParser
 from libtatlin.stlparser import StlParser
-from libtatlin.vector3 import Vector3
-from libtatlin.actors import Platform, GcodeModel, StlModel
+from libtatlin.actors import Platform
 from libtatlin.scene import Scene
 from libtatlin.ui import StlPanel, GcodePanel, MainWindow
+from libtatlin.storage import ModelFile
 
 
 def format_float(f):
@@ -170,9 +169,9 @@ class App(object):
         dialog.set_do_overwrite_confirmation(True)
 
         if dialog.run() == gtk.RESPONSE_ACCEPT:
-            from libtatlin.stlparser import StlFile
-            stl_file = StlFile(self.model)
-            stl_file.write(dialog.get_filename())
+            stl_file = ModelFile(dialog.get_filename())
+            self.scene.export_to_file(stl_file)
+            self.window.filename = stl_file.basename
             self.window.file_modified = False
 
         dialog.destroy()
@@ -212,7 +211,7 @@ class App(object):
 
     def on_scale_value_changed(self, widget):
         value = int(widget.get_value())
-        self.model.num_layers_to_draw = value
+        self.scene.change_num_layers(value)
         self.scene.invalidate()
 
     def rotation_changed(self, axis, angle):
@@ -255,22 +254,20 @@ class App(object):
     # -------------------------------------------------------------------------
 
     def open_and_display_file(self, fpath):
-        ftype = self.determine_model_type(fpath)
+        f = ModelFile(fpath)
 
-        if ftype == 'gcode':
-            model = self.load_gcode_model(fpath)
+        if f.filetype == 'gcode':
             Panel = GcodePanel
-        elif ftype == 'stl':
-            model = self.load_stl_model(fpath)
+        elif f.filetype == 'stl':
             Panel = StlPanel
 
         if self.scene is None:
             self.scene = Scene()
             self.glarea = GLArea(self.scene)
 
-        self.add_model_to_scene(model)
+        self.add_file_to_scene(f)
 
-        if self.panel is None or ftype not in self.panel.supported_types:
+        if self.panel is None or f.filetype not in self.panel.supported_types:
             self.panel = Panel(self)
 
         self.panel.set_initial_values() # update panel to reflect new model properties
@@ -279,33 +276,11 @@ class App(object):
         self.scene.mode_2d = False
 
         self.window.set_file_widgets(self.glarea, self.panel)
-        self.window.filename = os.path.basename(fpath)
+        self.window.filename = f.basename
 
-    def determine_model_type(self, fpath):
-        fname = os.path.basename(fpath)
-        extension = os.path.splitext(fname)[-1].lower()
-
-        if extension not in ['.gcode', '.stl']:
-            raise Exception('Unknown file extension: %s' % extension)
-
-        return extension[1:]
-
-    def load_gcode_model(self, fpath):
-        start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
-        parser = GcodeParser(fpath, start_location)
-        model = GcodeModel(parser.parse())
-        return model
-
-    def load_stl_model(self, fpath):
-        parser = StlParser(fpath)
-        model = StlModel(parser.parse())
-        return model
-
-    def add_model_to_scene(self, model):
-        self.model = model
-
+    def add_file_to_scene(self, f):
         self.scene.clear()
-        self.scene.set_model(model)
+        self.scene.load_file(f)
         self.scene.add_supporting_actor(Platform()) # platform needs to be added last to be translucent
 
 
