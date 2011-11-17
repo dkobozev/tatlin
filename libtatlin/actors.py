@@ -350,6 +350,29 @@ class StlModel(Model):
         logging.info('Initialized STL model in %.2f seconds' % (t_end - t_start))
         logging.info('Vertex count: %d' % len(self.vertices))
 
+    def normal_data_empty(self):
+        """
+        Return true if the model has no normal data.
+        """
+        empty = (self.normals.max() == 0 and self.normals.min() == 0)
+        return empty
+
+    def calculate_normals(self):
+        """
+        Calculate surface normals for model vertices.
+        """
+        a = self.vertices[0::3] - self.vertices[1::3]
+        b = self.vertices[1::3] - self.vertices[2::3]
+        cross = numpy.cross(a, b)
+
+        # normalize the cross product
+        magnitudes = numpy.apply_along_axis(numpy.linalg.norm, 1, cross).reshape(-1, 1)
+        normals = cross / magnitudes
+
+        # each of 3 facet vertices shares the same normal
+        normals = normals.repeat(3, 0)
+        return normals
+
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
@@ -359,6 +382,11 @@ class StlModel(Model):
         Create vertex buffer objects (VBOs).
         """
         self.vertex_buffer = VBO(self.vertices, 'GL_STATIC_DRAW')
+
+        if self.normal_data_empty():
+            logging.info('STL model has no normal data')
+            self.normals = self.calculate_normals()
+
         self.normal_buffer = VBO(self.normals, 'GL_STATIC_DRAW')
         self.initialized = True
 
@@ -400,7 +428,6 @@ class StlModel(Model):
 
         glDisableClientState(GL_NORMAL_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
-
         self.normal_buffer.unbind()
         self.vertex_buffer.unbind()
 
