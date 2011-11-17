@@ -24,15 +24,15 @@ import time
 import logging
 
 
-class ParseError(Exception):
+class StlParseError(Exception):
     pass
 
-class InvalidTokenError(ParseError):
+class InvalidTokenError(StlParseError):
     def __init__(self, line_no, msg):
         full_msg = 'parse error on line %d: %s' % (line_no, msg)
-        ParseError.__init__(self, full_msg)
+        StlParseError.__init__(self, full_msg)
 
-class ParseEOF(ParseError):
+class ParseEOF(StlParseError):
     pass
 
 
@@ -190,7 +190,7 @@ class StlBinaryParser(object):
 
         fp = open(self.fname, 'rb')
         self._skip_header(fp)
-        for facet_idx in range(self._facet_count(fp)):
+        for facet_idx in xrange(self._facet_count(fp)):
             vertices, normal = self._parse_facet(fp)
             facet_list.extend(vertices)
             normal_list.extend([normal] * len(vertices)) # one normal per vertex
@@ -207,20 +207,26 @@ class StlBinaryParser(object):
 
     def _facet_count(self, fp):
         raw = fp.read(self.FACET_COUNT_LEN)
-        (count, ) = struct.unpack('<I', raw)
-        return count
+        try:
+            (count, ) = struct.unpack('<I', raw)
+            return count
+        except struct.error:
+            raise StlParseError("Error unpacking binary STL data")
 
     def _parse_facet(self, fp):
         raw = fp.read(self.FACET_LEN)
-        vertex_data = struct.unpack('<ffffffffffffH', raw)
+        try:
+            vertex_data = struct.unpack('<ffffffffffffH', raw)
 
-        normal = [ vertex_data[0], vertex_data[1], vertex_data[2] ]
-        vertices = []
-        for i in range(3, 12, 3):
-            vertices.append([ vertex_data[i], vertex_data[i + 1], vertex_data[i + 2] ])
-        # ignore the attribute byte count...
+            normal = [ vertex_data[0], vertex_data[1], vertex_data[2] ]
+            vertices = []
+            for i in range(3, 12, 3):
+                vertices.append([ vertex_data[i], vertex_data[i + 1], vertex_data[i + 2] ])
+            # ignore the attribute byte count...
 
-        return vertices, normal
+            return vertices, normal
+        except struct.error:
+            raise StlParseError("Error unpacking binary STL data")
 
 
 def is_stl_ascii(fname):

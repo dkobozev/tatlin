@@ -393,3 +393,38 @@ class MainWindow(gtk.Window):
 
         self.set_title(title)
 
+
+class SaveDialog(gtk.FileChooserDialog):
+    """
+    Dialog for saving a file.
+    """
+    def __init__(self, directory=None):
+        gtk.FileChooserDialog.__init__(self, 'Save As', None,
+            action=gtk.FILE_CHOOSER_ACTION_SAVE,
+            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT))
+
+        self.set_do_overwrite_confirmation(True)
+        if directory is not None:
+            self.set_current_folder(directory)
+
+
+class OpenDialog(gtk.FileChooserDialog):
+    """
+    Dialog for opening a file.
+    """
+    def __init__(self, directory=None):
+        dialog = gtk.FileChooserDialog.__init__(self, 'Open', None,
+            action=gtk.FILE_CHOOSER_ACTION_OPEN,
+            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
+
+        if directory is not None:
+            self.set_current_folder(directory)
+
+
+class OpenErrorAlert(gtk.MessageDialog):
+    def __init__(self, parent, fpath, error):
+        gtk.MessageDialog.__init__(self, parent,
+            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+            "Error opening file %s: %s" % (fpath, error))
+

@@ -30,8 +30,9 @@ from gtk.gtkgl.apputils import GLArea
 from libtatlin.stlparser import StlParser
 from libtatlin.actors import Platform
 from libtatlin.scene import Scene
-from libtatlin.ui import StlPanel, GcodePanel, MainWindow
-from libtatlin.storage import ModelFile
+from libtatlin.ui import StlPanel, GcodePanel, MainWindow, \
+SaveDialog, OpenDialog, OpenErrorAlert
+from libtatlin.storage import ModelFile, ModelFileError
 
 
 def format_float(f):
@@ -75,6 +76,7 @@ class App(object):
 
         self.panel = None
         self.scene = None
+        self.model_file = None
 
         # dict of properties that other components can read from the app
         self._app_properties = {
@@ -154,6 +156,17 @@ class App(object):
         height = self.scene.get_property('height')
         return format_float(height)
 
+    @property
+    def current_dir(self):
+        """
+        Return path where a file should be saved to.
+        """
+        if self.model_file is not None:
+            dur = self.model_file.dirname
+        else:
+            dur = os.getcwd()
+        return dur
+
     # -------------------------------------------------------------------------
     # EVENT HANDLERS
     # -------------------------------------------------------------------------
@@ -163,22 +176,19 @@ class App(object):
             self.on_quit()
 
     def on_save_as(self, action):
-        dialog = gtk.FileChooserDialog('Save As', None,
-            action=gtk.FILE_CHOOSER_ACTION_SAVE,
-            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT))
-        dialog.set_do_overwrite_confirmation(True)
+        dialog = SaveDialog(self.current_dir)
 
         if dialog.run() == gtk.RESPONSE_ACCEPT:
             stl_file = ModelFile(dialog.get_filename())
             self.scene.export_to_file(stl_file)
+            self.model_file = stl_file
             self.window.filename = stl_file.basename
             self.window.file_modified = False
 
         dialog.destroy()
 
     def on_open(self, action=None):
-        dialog = gtk.FileChooserDialog('Open', None, gtk.FILE_CHOOSER_ACTION_OPEN,
-            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
+        dialog = OpenDialog(self.current_dir)
 
         if dialog.run() == gtk.RESPONSE_ACCEPT:
             self.open_and_display_file(dialog.get_filename())
@@ -254,34 +264,52 @@ class App(object):
     # -------------------------------------------------------------------------
 
     def open_and_display_file(self, fpath):
-        f = ModelFile(fpath)
+        try:
+            self.model_file = ModelFile(fpath)
 
-        if f.filetype == 'gcode':
-            Panel = GcodePanel
-        elif f.filetype == 'stl':
-            Panel = StlPanel
+            if self.scene is None:
+                self.scene = Scene()
+                self.glarea = GLArea(self.scene)
 
-        if self.scene is None:
-            self.scene = Scene()
-            self.glarea = GLArea(self.scene)
+            self.add_file_to_scene(self.model_file)
 
-        self.add_file_to_scene(f)
+            if self.panel is None or not self.panel_matches_file():
+                self.panel = self.create_panel()
 
-        if self.panel is None or f.filetype not in self.panel.supported_types:
-            self.panel = Panel(self)
+            # update panel to reflect new model properties
+            self.panel.set_initial_values()
+            self.panel.connect_handlers()
+            # always start with the same view on the scene
+            self.scene.reset_view(True)
+            self.scene.mode_2d = False
 
-        self.panel.set_initial_values() # update panel to reflect new model properties
-        self.panel.connect_handlers()
-        self.scene.reset_view(True)     # always start with the same view on the scene
-        self.scene.mode_2d = False
+            self.window.set_file_widgets(self.glarea, self.panel)
+            self.window.filename = self.model_file.basename
+        except IOError, e:
+            dialog = OpenErrorAlert(self.window, fpath, e.strerror)
+            dialog.run()
+            dialog.destroy()
+        except ModelFileError, e:
+            dialog = OpenErrorAlert(self.window, fpath, e.message)
+            dialog.run()
+            dialog.destroy()
 
-        self.window.set_file_widgets(self.glarea, self.panel)
-        self.window.filename = f.basename
 
     def add_file_to_scene(self, f):
         self.scene.clear()
         self.scene.load_file(f)
         self.scene.add_supporting_actor(Platform()) # platform needs to be added last to be translucent
+
+    def create_panel(self):
+        if self.model_file.filetype == 'gcode':
+            Panel = GcodePanel
+        elif self.model_file.filetype == 'stl':
+            Panel = StlPanel
+        return Panel(self)
+
+    def panel_matches_file(self):
+        matches = (self.model_file.filetype in self.panel.supported_types)
+        return matches
 
 
 if __name__ == '__main__':

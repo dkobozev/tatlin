@@ -23,10 +23,15 @@ from __future__ import division
 
 import os
 
-from .gcodeparser import GcodeParser
-from .stlparser import StlParser
+from .gcodeparser import GcodeParser, GcodeParseError
+from .stlparser import StlParser, StlParseError
 from .vector3 import Vector3
 from .actors import Platform, StlModel, GcodeModel
+
+
+class ModelFileError(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
 
 
 class ModelFile(object):
@@ -40,6 +45,7 @@ class ModelFile(object):
         }
 
     def _reset_file_attributes(self):
+        self._dirname   = None
         self._basename  = None
         self._extension = None
 
@@ -51,6 +57,12 @@ class ModelFile(object):
     def path(self, path):
         self._reset_file_attributes()
         self._path = path
+
+    @property
+    def dirname(self):
+        if self._dirname is None:
+            self._dirname = os.path.dirname(self.path)
+        return self._dirname
 
     @property
     def basename(self):
@@ -70,7 +82,7 @@ class ModelFile(object):
         Determine filetype based on extension.
         """
         if self.extension not in ['.gcode', '.stl']:
-            raise Exception('Unknown file extension: %s' % extension)
+            raise ModelFileError('Unsupported file extension: %s' % self.extension)
 
         return self.extension[1:]
 
@@ -81,13 +93,21 @@ class ModelFile(object):
     def _load_gcode_model(self):
         start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
         parser = GcodeParser(self.path, start_location)
-        model = GcodeModel(parser.parse())
-        return model
+        try:
+            model = GcodeModel(parser.parse())
+            return model
+        except GcodeParseError, e:
+            # rethrow as generic file error
+            raise ModelFileError("Parsing error: %s" % e.message)
 
     def _load_stl_model(self):
         parser = StlParser(self.path)
-        model = StlModel(parser.parse())
-        return model
+        try:
+            model = StlModel(parser.parse())
+            return model
+        except StlParseError, e:
+            # rethrow as generic file error
+            raise ModelFileError("Parsing error: %s" % e.message)
 
     def write_stl(self, stl_model):
         assert self.filetype == 'stl'

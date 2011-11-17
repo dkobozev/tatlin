@@ -26,6 +26,10 @@ from . import gcodec
 from .vector3 import Vector3
 
 
+class GcodeParseError(Exception):
+    pass
+
+
 class Movement(object):
     def __init__(self, point_a, point_b, extruder_on=False, is_perimeter=False,
             is_loop=False, is_perimeter_outer=False, is_surrounding_loop=False):
@@ -110,10 +114,14 @@ class GcodeParser(object):
                 layer.append(movement)
                 self.prev_location = location
 
-        layers.append(layer)
+        if len(layer) > 0:
+            layers.append(layer)
 
         t_end = time.time()
         logging.info('Parsed Gcode file in %.2f seconds' % (t_end - t_start))
+
+        if len(layers) < 1:
+            raise GcodeParseError("File does not contain valid Gcode")
 
         return layers
 
