@@ -31,7 +31,7 @@ from libtatlin.stlparser import StlParser
 from libtatlin.actors import Platform
 from libtatlin.scene import Scene
 from libtatlin.ui import StlPanel, GcodePanel, MainWindow, \
-SaveDialog, OpenDialog, OpenErrorAlert
+SaveDialog, OpenDialog, OpenErrorAlert, QuitDialog
 from libtatlin.storage import ModelFile, ModelFileError
 
 
@@ -67,7 +67,6 @@ class App(object):
             self.window.append_menu_item(menu_item)
 
         self.window.connect('destroy',         self.on_quit)
-        self.window.connect('key-press-event', self.on_keypress)
         self.window.connect('open-clicked',    self.on_open)
 
         # ---------------------------------------------------------------------
@@ -109,7 +108,7 @@ class App(object):
 
         action_quit = gtk.Action('quit', 'Quit', 'Quit', gtk.STOCK_QUIT)
         action_quit.connect('activate', self.on_quit)
-        actiongroup.add_action(action_quit)
+        actiongroup.add_action_with_accel(action_quit, '<Control>q')
 
         accelgroup = gtk.AccelGroup()
         for action in actiongroup.list_actions():
@@ -171,11 +170,17 @@ class App(object):
     # EVENT HANDLERS
     # -------------------------------------------------------------------------
 
-    def on_keypress(self, widget, event):
-        if event.keyval == gtk.keysyms.Escape:
-            self.on_quit()
+    def on_save(self, action=None):
+        """
+        Save changes to the same file.
+        """
+        self.scene.export_to_file(self.model_file)
+        self.window.file_modified = False
 
-    def on_save_as(self, action):
+    def on_save_as(self, action=None):
+        """
+        Save changes to a new file.
+        """
         dialog = SaveDialog(self.current_dir)
 
         if dialog.run() == gtk.RESPONSE_ACCEPT:
@@ -196,7 +201,34 @@ class App(object):
         dialog.destroy()
 
     def on_quit(self, action=None):
-        gtk.main_quit()
+        """
+        On quit, show a dialog proposing to save the changes if the scene has
+        been modified.
+        """
+        do_quit = True
+
+        if self.scene.model_modified:
+            dialog = QuitDialog(self.window)
+
+            discard_changes = False
+            while do_quit and self.scene.model_modified and not discard_changes:
+                response = dialog.run()
+
+                if response == QuitDialog.RESPONSE_SAVE:
+                    dialog.hide()
+                    self.on_save()
+                elif response == QuitDialog.RESPONSE_SAVE_AS:
+                    dialog.hide()
+                    self.on_save_as()
+                elif response in [QuitDialog.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
+                    do_quit = False
+                elif response == QuitDialog.RESPONSE_DISCARD:
+                    discard_changes = True
+
+            dialog.destroy()
+
+        if do_quit:
+            gtk.main_quit()
 
     def scaling_factor_changed(self, factor):
         try:

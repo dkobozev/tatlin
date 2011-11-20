@@ -413,7 +413,7 @@ class OpenDialog(gtk.FileChooserDialog):
     Dialog for opening a file.
     """
     def __init__(self, directory=None):
-        dialog = gtk.FileChooserDialog.__init__(self, 'Open', None,
+        gtk.FileChooserDialog.__init__(self, 'Open', None,
             action=gtk.FILE_CHOOSER_ACTION_OPEN,
             buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
 
@@ -427,4 +427,24 @@ class OpenErrorAlert(gtk.MessageDialog):
             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
             "Error opening file %s: %s" % (fpath, error))
+
+
+class QuitDialog(gtk.Dialog):
+    RESPONSE_CANCEL  = gtk.RESPONSE_CANCEL
+    RESPONSE_DISCARD = 1
+    RESPONSE_SAVE_AS = 2
+    RESPONSE_SAVE    = 3
+
+    def __init__(self, parent=None):
+        super(QuitDialog, self).__init__(None, parent,
+            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+            (
+                gtk.STOCK_DISCARD, self.RESPONSE_DISCARD,
+                gtk.STOCK_CANCEL,  self.RESPONSE_CANCEL,
+                gtk.STOCK_SAVE_AS, self.RESPONSE_SAVE_AS,
+                gtk.STOCK_SAVE,    self.RESPONSE_SAVE,
+            ))
+        label = gtk.Label('Save changes to file before closing?')
+        self.vbox.pack_start(label)
+        label.show()
 
