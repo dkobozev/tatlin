@@ -233,9 +233,16 @@ class StlPanel(gtk.VBox):
 
         # dimensions
         self.entry_x.connect('focus-out-event', self.on_entry_x_focus_out)
+        self.entry_x.connect('key-press-event', self.on_key_press)
+
         self.entry_y.connect('focus-out-event', self.on_entry_y_focus_out)
+        self.entry_y.connect('key-press-event', self.on_key_press)
+
         self.entry_z.connect('focus-out-event', self.on_entry_z_focus_out)
+        self.entry_z.connect('key-press-event', self.on_key_press)
+
         self.entry_factor.connect('focus-out-event', self.on_entry_factor_focus_out)
+        self.entry_factor.connect('key-press-event', self.on_key_press)
 
         # rotation
         self.btn_x_90.connect('clicked', self.on_btn_x_90)
@@ -246,6 +253,14 @@ class StlPanel(gtk.VBox):
         self.btn_reset_view.connect('clicked', self.app.on_reset_view)
 
         self._handlers_connected = True
+
+    def on_key_press(self, widget, event):
+        """
+        Make enter have the same effect as focusing out of an entry.
+        """
+        if event.keyval == gtk.keysyms.Return:
+            widget.emit('focus-out-event', event)
+            return True # stop processing the event
 
     def on_entry_factor_focus_out(self, widget, event):
         self.app.scaling_factor_changed(widget.get_text())
