@@ -122,6 +122,16 @@ class Model(object):
     """
     Parent class for models that provides common functionality.
     """
+    AXIS_X = (1, 0, 0)
+    AXIS_Y = (0, 1, 0)
+    AXIS_Z = (0, 0, 1)
+
+    letter_axis_map = {
+        'x': AXIS_X,
+        'y': AXIS_Y,
+        'z': AXIS_Z,
+    }
+
     def __init__(self):
         self.init_model_attributes()
 
@@ -327,6 +337,7 @@ class StlModel(Model):
     """
     Model for displaying and manipulating STL data.
     """
+
     def __init__(self, model_data):
         Model.__init__(self)
 
@@ -338,6 +349,11 @@ class StlModel(Model):
         self.normals  = numpy.require(normals, 'f')
 
         self.scaling_factor = 1.0
+        self.rotation_angle = {
+            self.AXIS_X: 0.0,
+            self.AXIS_Y: 0.0,
+            self.AXIS_Z: 0.0,
+        }
 
         self.mat_specular   = (1.0, 1.0, 1.0, 1.0)
         self.mat_shininess  = 50.0
@@ -460,9 +476,23 @@ class StlModel(Model):
         self.invalidate_bounding_box()
         self.modified = True
 
-    def rotate(self, angle, x, y, z):
-        print '--! rotating vertices'
-        self.vertices = vector.rotate(self.vertices, angle, x, y, z)
-        self.invalidate_bounding_box()
-        self.modified = True
+    def rotate(self, angle, axis, relative=True):
+        """
+        Rotate model clockwise to the angle relative to its initial position.
+
+        If relative is False, calling this function more than one time with the
+        same angle will have no effect on the model.
+        """
+        if relative:
+            relative_angle = angle
+            self.rotation_angle[axis] += angle
+        else:
+            relative_angle = (angle - self.rotation_angle[axis]) % 360
+            self.rotation_angle[axis] = angle
+
+        if relative_angle != 0:
+            print '--! rotating vertices'
+            self.vertices = vector.rotate(self.vertices, relative_angle, *axis)
+            self.invalidate_bounding_box()
+            self.modified = True
 

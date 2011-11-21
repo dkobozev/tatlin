@@ -31,6 +31,7 @@ import gtk
 from gtk.gtkgl.apputils import GLScene, GLSceneButton, GLSceneButtonMotion
 
 from .vector3 import Vector3
+from .actors import Model
 
 
 def paginate(sequence, n):
@@ -91,6 +92,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             'width':          lambda: self.model.width,
             'depth':          lambda: self.model.depth,
             'height':         lambda: self.model.height,
+            'rotation-x':     lambda: self.model.rotation_angle[self.model.AXIS_X],
+            'rotation-y':     lambda: self.model.rotation_angle[self.model.AXIS_Y],
+            'rotation-z':     lambda: self.model.rotation_angle[self.model.AXIS_Z],
         }
 
     def load_file(self, model_file):
@@ -378,8 +382,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         factor = (value / current_value) * self.model.scaling_factor
         self.scale_model(factor)
 
-    def rotate_model(self, angle, axis):
-        self.model.rotate(angle, *axis)
+    def rotate_model(self, angle, axis_name, relative=True):
+        axis = Model.letter_axis_map[axis_name]
+        self.model.rotate(angle, axis, relative)
         self.model.init()
 
     def get_property(self, name):

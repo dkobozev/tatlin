@@ -244,10 +244,22 @@ class StlPanel(gtk.VBox):
         self.entry_factor.connect('focus-out-event', self.on_entry_factor_focus_out)
         self.entry_factor.connect('key-press-event', self.on_key_press)
 
-        # rotation
-        self.btn_x_90.connect('clicked', self.on_btn_x_90)
-        self.btn_y_90.connect('clicked', self.on_btn_y_90)
-        self.btn_z_90.connect('clicked', self.on_btn_z_90)
+        # ---------------------------------------------------------------------
+        # ROTATION
+        # ---------------------------------------------------------------------
+
+        self.entry_rotate_x.connect('focus-out-event', self.on_abs_angle_changed, 'x')
+        self.entry_rotate_x.connect('key-press-event', self.on_key_press)
+
+        self.entry_rotate_y.connect('focus-out-event', self.on_abs_angle_changed, 'y')
+        self.entry_rotate_y.connect('key-press-event', self.on_key_press)
+
+        self.entry_rotate_z.connect('focus-out-event', self.on_abs_angle_changed, 'z')
+        self.entry_rotate_z.connect('key-press-event', self.on_key_press)
+
+        self.btn_x_90.connect('clicked', self.on_rel_angle_changed, 'x', 90)
+        self.btn_y_90.connect('clicked', self.on_rel_angle_changed, 'y', 90)
+        self.btn_z_90.connect('clicked', self.on_rel_angle_changed, 'z', 90)
 
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
         self.btn_reset_view.connect('clicked', self.app.on_reset_view)
@@ -277,24 +289,37 @@ class StlPanel(gtk.VBox):
         height = widget.get_text()
         self.app.dimension_changed('height', height)
 
-    def on_btn_x_90(self, widget):
-        self.app.rotation_changed('x', 90)
+    def on_rel_angle_changed(self, widget, axis, angle):
+        current_angle = float(self.app.get_property('rotation-' + axis))
+        angle = (current_angle + angle) % 360
+        self.app.rotation_changed(axis, angle)
+        self.model_angle_changed()
 
-    def on_btn_y_90(self, widget):
-        self.app.rotation_changed('y', 90)
-
-    def on_btn_z_90(self, widget):
-        self.app.rotation_changed('z', 90)
+    def on_abs_angle_changed(self, widget, event, axis):
+        self.app.rotation_changed(axis, widget.get_text())
+        self.model_angle_changed()
 
     def set_initial_values(self):
+        self._set_size_properties()
+        self._set_rotation_properties()
+
+    def _set_size_properties(self):
         self.entry_factor.set_text(self.app.get_property('scaling-factor'))
 
         self.entry_x.set_text(self.app.get_property('width'))
         self.entry_y.set_text(self.app.get_property('depth'))
         self.entry_z.set_text(self.app.get_property('height'))
 
+    def _set_rotation_properties(self):
+        self.entry_rotate_x.set_text(self.app.get_property('rotation-x'))
+        self.entry_rotate_y.set_text(self.app.get_property('rotation-y'))
+        self.entry_rotate_z.set_text(self.app.get_property('rotation-z'))
+
     def model_size_changed(self):
-        self.set_initial_values()
+        self._set_size_properties()
+
+    def model_angle_changed(self):
+        self._set_rotation_properties()
 
 
 class StartupPanel(gtk.VBox):

@@ -49,11 +49,6 @@ class ActionGroup(gtk.ActionGroup):
 
 
 class App(object):
-    _axis_map = {
-        'x': [1, 0, 0],
-        'y': [0, 1, 0],
-        'z': [0, 0, 1],
-    }
 
     def __init__(self):
         # ---------------------------------------------------------------------
@@ -85,6 +80,9 @@ class App(object):
             'width':            self.model_width,
             'depth':            self.model_depth,
             'height':           self.model_height,
+            'rotation-x':       self.model_rotation_x,
+            'rotation-y':       self.model_rotation_y,
+            'rotation-z':       self.model_rotation_z,
         }
 
     def show_window(self):
@@ -154,6 +152,18 @@ class App(object):
     def model_height(self):
         height = self.scene.get_property('height')
         return format_float(height)
+
+    def model_rotation_x(self):
+        angle = self.scene.get_property('rotation-x')
+        return format_float(angle)
+
+    def model_rotation_y(self):
+        angle = self.scene.get_property('rotation-y')
+        return format_float(angle)
+
+    def model_rotation_z(self):
+        angle = self.scene.get_property('rotation-z')
+        return format_float(angle)
 
     @property
     def current_dir(self):
@@ -257,9 +267,8 @@ class App(object):
         self.scene.invalidate()
 
     def rotation_changed(self, axis, angle):
-        vector = self._axis_map[axis]
         try:
-            self.scene.rotate_model(float(angle), vector)
+            self.scene.rotate_model(float(angle), axis, False)
             self.scene.invalidate()
             self.window.file_modified = self.scene.model_modified
         except ValueError:
