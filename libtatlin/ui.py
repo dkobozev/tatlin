@@ -38,13 +38,13 @@ class GcodePanel(gtk.VBox):
         # --------------------------------------------------------------------
 
         label_width = gtk.Label('X:')
-        self.label_width_value = gtk.Label('43 mm')
+        self.label_width_value = gtk.Label()
 
         label_depth = gtk.Label('Y:')
-        self.label_depth_value = gtk.Label('43 mm')
+        self.label_depth_value = gtk.Label()
 
         label_height = gtk.Label('Z:')
-        self.label_height_value = gtk.Label('43 mm')
+        self.label_height_value = gtk.Label()
 
         table_dimensions = gtk.Table(rows=3, columns=2)
         table_dimensions.set_border_width(5)
@@ -291,7 +291,7 @@ class StlPanel(gtk.VBox):
 
     def on_rel_angle_changed(self, widget, axis, angle):
         current_angle = float(self.app.get_property('rotation-' + axis))
-        angle = (current_angle + angle) % 360
+        angle = current_angle + angle
         self.app.rotation_changed(axis, angle)
         self.model_angle_changed()
 

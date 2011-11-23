@@ -132,6 +132,8 @@ class Model(object):
         'z': AXIS_Z,
     }
 
+    axis_letter_map = dict([(v, k) for k, v in letter_axis_map.items()])
+
     def __init__(self):
         self.init_model_attributes()
 
@@ -465,7 +467,7 @@ class StlModel(Model):
 
     def scale(self, factor):
         if factor != self.scaling_factor:
-            print '--! scaling vertices'
+            logging.info('actually scaling vertices')
             self.vertices *= (factor / self.scaling_factor)
             self.scaling_factor = factor
             self.invalidate_bounding_box()
@@ -476,23 +478,41 @@ class StlModel(Model):
         self.invalidate_bounding_box()
         self.modified = True
 
-    def rotate(self, angle, axis, relative=True):
-        """
-        Rotate model clockwise to the angle relative to its initial position.
+    def rotate_rel(self, angle, axis):
+        logging.info('rotating vertices by a relative angle of '
+                     '%.2f degrees along the %s axis' %
+                     (angle, self.axis_letter_map[axis]))
 
-        If relative is False, calling this function more than one time with the
-        same angle will have no effect on the model.
-        """
-        if relative:
-            relative_angle = angle
-            self.rotation_angle[axis] += angle
-        else:
-            relative_angle = (angle - self.rotation_angle[axis]) % 360
-            self.rotation_angle[axis] = angle
+        angle = angle % 360
+        self.vertices = vector.rotate(self.vertices, angle, *axis)
+        self.rotation_angle[axis] += angle
+        self.invalidate_bounding_box()
+        self.modified = True
 
-        if relative_angle != 0:
-            print '--! rotating vertices'
-            self.vertices = vector.rotate(self.vertices, relative_angle, *axis)
-            self.invalidate_bounding_box()
-            self.modified = True
+    def rotate_abs(self, angle, axis):
+        angle = angle % 360
+        if self.rotation_angle[axis] == angle:
+            return
+
+        logging.info('rotating vertices by an absolute angle of '
+                     '%.2f degrees along the %s axis' %
+                     (angle, self.axis_letter_map[axis]))
+        final_matrix = vector.identity_matrix()
+
+        # modify matrix to rotate to initial position
+        for v in [self.AXIS_Z, self.AXIS_Y, self.AXIS_X]:
+            matrix = vector.rotation_matrix(-self.rotation_angle[v], *v)
+            final_matrix = final_matrix.dot(matrix)
+
+        # change the angle
+        self.rotation_angle[axis] = angle
+
+        # modify matrix to rotate to new position
+        for v in [self.AXIS_X, self.AXIS_Y, self.AXIS_Z]:
+            matrix = vector.rotation_matrix(self.rotation_angle[v], *v)
+            final_matrix = final_matrix.dot(matrix)
+
+        self.vertices = self.vertices.dot(final_matrix)
+        self.invalidate_bounding_box()
+        self.modified = True
 

@@ -268,7 +268,7 @@ class App(object):
 
     def rotation_changed(self, axis, angle):
         try:
-            self.scene.rotate_model(float(angle), axis, False)
+            self.scene.rotate_model(float(angle), axis)
             self.scene.invalidate()
             self.window.file_modified = self.scene.model_modified
         except ValueError:

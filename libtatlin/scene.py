@@ -382,9 +382,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         factor = (value / current_value) * self.model.scaling_factor
         self.scale_model(factor)
 
-    def rotate_model(self, angle, axis_name, relative=True):
+    def rotate_model(self, angle, axis_name):
         axis = Model.letter_axis_map[axis_name]
-        self.model.rotate(angle, axis, relative)
+        self.model.rotate_abs(angle, axis)
         self.model.init()
 
     def get_property(self, name):
