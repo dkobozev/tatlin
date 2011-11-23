@@ -1,11 +1,12 @@
 general:
-* quick view buttons
-* axis labels
+* remove/disable 'save file' menu item for gcode files (high)
+* ask about saving changes on opening another file (high)
+* quick view buttons (low)
+* axis labels (low)
 
 stl:
-* lay flat on platform
-* rotate
+* lay flat on platform (medium)
 
 long-term:
-* multi-threading for better responsiveness & speed
-* undo/redo
+* multi-threading for better responsiveness & speed (low)
+* undo/redo (low)
