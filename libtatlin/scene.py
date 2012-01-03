@@ -28,7 +28,7 @@ from OpenGL.GLUT import *
 import pygtk
 pygtk.require('2.0')
 import gtk
-from gtk.gtkgl.apputils import GLScene, GLSceneButton, GLSceneButtonMotion
+from gtk.gtkgl.apputils import GLArea, GLScene, GLSceneButton, GLSceneButtonMotion
 
 from .vector3 import Vector3
 from .actors import Model
@@ -48,6 +48,17 @@ def html_color(color):
     return parsed
 
 
+class SceneArea(GLArea):
+    """
+    Extend GLScene to provide mouse wheel support.
+    """
+    def __init__(self, *args, **kwargs):
+        super(SceneArea, self).__init__(*args, **kwargs)
+
+        self.connect('scroll-event', self.glscene.wheel_scroll)
+        self.add_events(gtk.gdk.SCROLL_MASK)
+
+
 class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     """
     A scene is responsible for displaying a model and accompanying objects (actors).
@@ -61,8 +72,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     z_far  = 9000.0 # very far
 
     def __init__(self):
-        GLScene.__init__(self, gtk.gdkgl.MODE_RGB | gtk.gdkgl.MODE_DEPTH | gtk.gdkgl.MODE_DOUBLE)
-
+        super(Scene, self).__init__(gtk.gdkgl.MODE_RGB |
+                                    gtk.gdkgl.MODE_DEPTH |
+                                    gtk.gdkgl.MODE_DOUBLE)
         self.actors = []
 
         # 3D
@@ -275,6 +287,14 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.cursor_x = event.x
         self.cursor_y = event.y
 
+        self.invalidate()
+
+    def wheel_scroll(self, widget, event):
+        delta_y = 30.0
+        if event.direction == gtk.gdk.SCROLL_DOWN:
+            delta_y = -delta_y
+
+        self.zoom(0, delta_y)
         self.invalidate()
 
     def reset_view(self, both=False):

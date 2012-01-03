@@ -25,11 +25,10 @@ import logging
 import pygtk
 pygtk.require('2.0')
 import gtk
-from gtk.gtkgl.apputils import GLArea
 
 from libtatlin.stlparser import StlParser
 from libtatlin.actors import Platform
-from libtatlin.scene import Scene
+from libtatlin.scene import Scene, SceneArea
 from libtatlin.ui import StlPanel, GcodePanel, MainWindow, \
 SaveDialog, OpenDialog, OpenErrorAlert, QuitDialog
 from libtatlin.storage import ModelFile, ModelFileError
@@ -310,7 +309,7 @@ class App(object):
 
             if self.scene is None:
                 self.scene = Scene()
-                self.glarea = GLArea(self.scene)
+                self.glarea = SceneArea(self.scene)
 
             self.add_file_to_scene(self.model_file)
 
