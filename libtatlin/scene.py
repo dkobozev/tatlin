@@ -109,8 +109,8 @@ class ViewOrtho(ViewMode):
         super(ViewOrtho, self).__init__()
 
         self.x, self.y, self.z = 0.0, 0.0, 0.0
-        self.zoom_factor = 5.0
-        self.azimuth = 0.0
+        self.zoom_factor       = 5.0
+        self.azimuth           = 0.0
         self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth'])
         self.push_state()
 
@@ -341,7 +341,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.current_view.begin(w, h)
         self.current_view.display_transform()
         for actor in self.actors:
-            actor.display(self.current_view is ViewOrtho)
+            actor.display(self.mode_2d)
         self.current_view.end()
 
         glFlush()
@@ -417,7 +417,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
     @property
     def mode_2d(self):
-        return self.current_view is ViewOrtho
+        return isinstance(self.current_view, ViewOrtho)
 
     @mode_2d.setter
     def mode_2d(self, value):
