@@ -61,7 +61,7 @@ class ViewMode(object):
         Save state variables.
         """
         for var in self._save_vars:
-            self._stack.push(getattr(self, var))
+            self._stack.append(getattr(self, var))
 
     def pop_state(self):
         """
@@ -70,11 +70,12 @@ class ViewMode(object):
         for var in reversed(self._save_vars):
             setattr(self, var, self._stack.pop())
 
-    def reset(self):
+    def reset_state(self):
         """
         Reset internal state to initial values.
         """
-        raise NotImplementedError('method not implemented')
+        self.pop_state()
+        self.push_state()
 
     def begin(self):
         """
@@ -88,21 +89,30 @@ class ViewMode(object):
         """
         raise NotImplementedError('method not implemented')
 
+    def zoom(self, delta_x, delta_y):
+        factor = 1
+        if delta_y > 0:
+            factor = 1.5
+        elif delta_y < 0:
+            factor = 0.75
+        self.zoom_factor = max(self.zoom_factor * factor, 0.1)
+
 
 class ViewOrtho(ViewMode):
     """
     Orthographic projection transformations (2D mode).
     """
     NEAR = -50.0
-    FAR  = 50.0
+    FAR  =  50.0
 
     def __init__(self):
         super(ViewOrtho, self).__init__()
 
         self.x, self.y, self.z = 0.0, 0.0, 0.0
-        self.zoom = 5.0
+        self.zoom_factor = 5.0
         self.azimuth = 0.0
-        self._save_vars.extend(['x', 'y', 'z', 'zoom', 'azimuth'])
+        self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth'])
+        self.push_state()
 
         self.w, self.h = None, None
 
@@ -129,10 +139,10 @@ class ViewOrtho(ViewMode):
         glPopMatrix() # restore the modelview matrix
 
     def display_transform(self):
-        self._center_ortho_on_origin()
+        self._center_on_origin()
         glTranslate(self.x, self.y, self.z)
         glRotate(self.azimuth, 0.0, 0.0, 1.0)
-        glScale(self.zoom, self.zoom, self.zoom)
+        glScale(self.zoom_factor, self.zoom_factor, self.zoom_factor)
 
     def _center_on_origin(self):
         """
@@ -146,10 +156,17 @@ class ViewOrtho(ViewMode):
 
     def ui_transform(self, length):
         glTranslate(length + 20.0, length + 20.0, 0.0)
-        glRotate(self.azimuth_2d, 0.0, 0.0, 1.0)
+        glRotate(self.azimuth, 0.0, 0.0, 1.0)
+
+    def rotate(self, delta_x, delta_y):
+        self.azimuth += delta_x / 4.0
+
+    def pan(self, delta_x, delta_y, w, h):
+        self.x += delta_x
+        self.y -= delta_y
 
 
-class ViewPerspective(object):
+class ViewPerspective(ViewMode):
     """
     Perspective projection transformations (3D mode).
     """
@@ -158,11 +175,13 @@ class ViewPerspective(object):
     FAR  = 9000.0 # very far
 
     def __init__(self):
+        super(ViewPerspective, self).__init__()
+
         self.x, self.y, self.z = 0.0, 180.0, -20.0
-        self.zoom      = 1.0
-        self.azimuth   = 0.0
-        self.elevation = -20.0
-        self._save_vars.extend(['x', 'y', 'z', 'zoom', 'azimuth', 'elevation'])
+        self.zoom_factor = 1.0
+        self.azimuth     = 0.0
+        self.elevation   = -20.0
+        self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth', 'elevation'])
         self.push_state()
 
     def begin(self, w, h):
@@ -185,7 +204,7 @@ class ViewPerspective(object):
         glTranslate(self.x, self.y, self.z)
         glRotate(-self.elevation, 1.0, 0.0, 0.0)
         glRotate(self.azimuth, 0.0, 0.0, 1.0)
-        glScale(self.zoom, self.zoom, self.zoom)
+        glScale(self.zoom_factor, self.zoom_factor, self.zoom_factor)
 
     def ui_transform(self, length):
         glRotate(-90, 1.0, 0.0, 0.0) # make z point up
@@ -193,6 +212,33 @@ class ViewPerspective(object):
         glRotatef(-self.elevation, 1.0, 0.0, 0.0)
         glRotatef(self.azimuth, 0.0, 0.0, 1.0)
 
+    def rotate(self, delta_x, delta_y):
+        self.azimuth   += delta_x / 4.0
+        self.elevation -= delta_y / 4.0
+
+    def pan(self, delta_x, delta_y, w, h):
+        """
+        Pan by relating mouse movements to movements in object space, using
+        viewport dimensions and field of view angle. A factor is applied to
+        avoid speeding up on rapid mouse movements.
+        """
+        # calculate height of window in object space
+        v = Vector3(self.x, self.y, self.z)
+        window_h = 2 * abs(v) * math.tan(self.FOVY / 2)
+
+        magnitude_x = abs(delta_x)
+        if magnitude_x > 0.0:
+            x_scale = magnitude_x / w
+            x_slow = 1 / magnitude_x
+            offset_x = delta_x * x_scale * window_h * x_slow
+            self.x -= offset_x
+
+        magnitude_y = abs(delta_y)
+        if magnitude_y > 0.0:
+            y_scale = magnitude_y / w
+            y_slow = 1 / magnitude_y
+            offset_z = delta_y * y_scale * window_h * y_slow
+            self.z += offset_z
 
 class SceneArea(GLArea):
     """
@@ -213,10 +259,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     responsible for viewing transformations such as zooming, panning and
     rotation, as well as being the interface for the actors.
     """
-    #fovy   = 80.0
-    #z_near = 0.1
-    #z_far  = 9000.0 # very far
-
     def __init__(self):
         super(Scene, self).__init__(gtk.gdkgl.MODE_RGB |
                                     gtk.gdkgl.MODE_DEPTH |
@@ -228,22 +270,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.view_ortho = ViewOrtho()
         self.view_perspective = ViewPerspective()
         self.current_view = self.view_perspective
-
-        # 3D
-        #self.initial_obj_pos   = Vector3(0.0, 180.0, -20.0)
-        #self.initial_azimuth   = 0.0
-        #self.initial_elevation = -20.0
-        #self.reset_perspective() # set current viewing params
-
-        # 2D
-        #self._mode_2d     = False
-        #self.ortho_near   = -50.0
-        #self.ortho_far    = 50.0
-        #self.initial_zoom_2d      = 5.0
-        #self.initial_obj_pos_x_2d = 0.0
-        #self.initial_obj_pos_y_2d = 0.0
-        #self.initial_azimuth_2d   = 0.0
-        #self.reset_ortho()
 
         self.initialized = False
 
@@ -325,73 +351,12 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         #glEnable(GL_DEPTH_TEST)
         #glEnable(GL_CULL_FACE)
 
-        #if self.mode_2d:
-            # perform 2d transformations
-            #self.center_ortho_on_origin(width, height)
-            #glTranslate(self.obj_pos_x_2d, self.obj_pos_y_2d, 0)
-            #glRotate(self.azimuth_2d, 0.0, 0.0, 1.0)
-            #glScale(self.zoom_2d, self.zoom_2d, self.zoom_2d)
-        #else: # 3d
-            # restore projection and modelview matrices and perform 3d
-            # transformations
-            #self.restore_perspective()
-
-            #glRotate(-90, 1.0, 0.0, 0.0) # make z point up
-            #glTranslate(self.obj_pos.x, self.obj_pos.y, self.obj_pos.z)
-            #glRotate(-self.elevation, 1.0, 0.0, 0.0)
-            #glRotate(self.azimuth, 0.0, 0.0, 1.0)
-            #glScale(self.zoom_2d, self.zoom_2d, self.zoom_2d)
-
-
-        # if mode is 2d, restore projection and modelview matrices
-        #if self.mode_2d:
-        #    self.restore_perspective()
-
-
     def reshape(self, w, h):
         glViewport(0, 0, w, h)
 
-        #glMatrixMode(GL_PROJECTION)
-        #glLoadIdentity()
-        #gluPerspective(self.fovy, width / height, self.z_near, self.z_far)
-        #glMatrixMode(GL_MODELVIEW)
-
-    #def switch_to_ortho(self, width, height):
-    #    """
-    #    Set up orthographic projection.
-    #    """
-    #    glMatrixMode(GL_PROJECTION) # select projection matrix
-    #    glPushMatrix()              # save the current projection matrix
-    #    glLoadIdentity()            # set up orthographic projection
-    #    glOrtho(0, width, 0, height, self.ortho_near, self.ortho_far)
-    #    glMatrixMode(GL_MODELVIEW)  # select the modelview matrix
-    #    glPushMatrix()              # save the current modelview matrix
-    #    glLoadIdentity()            # replace the modelview matrix with identity
-
-    #def center_ortho_on_origin(self, width, height):
-    #    """
-    #    Center orthographic projection box on (0, 0, 0).
-    #    """
-    #    glMatrixMode(GL_PROJECTION)
-    #    glLoadIdentity()
-    #    x, y = width / 2, height / 2
-    #    glOrtho(-x, x, -y, y, self.ortho_near, self.ortho_far)
-    #    glMatrixMode(GL_MODELVIEW)
-
-    #def restore_perspective(self):
-    #    """
-    #    Switch back to the perspective projection.
-    #    """
-    #    # projection and modelview matrix stacks are separate, so we don't have
-    #    # to pop them in specific order
-    #    glMatrixMode(GL_PROJECTION)
-    #    glPopMatrix() # restore the projection matrix
-    #    glMatrixMode(GL_MODELVIEW)
-    #    glPopMatrix() # restore the modelview matrix
-
     def draw_axes(self, length=50.0):
         glPushMatrix()
-        self.current_mode.ui_transform()
+        self.current_view.ui_transform(length)
 
         glBegin(GL_LINES)
         glColor(1.0, 0.0, 0.0)
@@ -407,16 +372,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glVertex3f(0.0, 0.0, length)
         glEnd()
         glPopMatrix()
-
-        #if self.mode_2d:
-            #glTranslate(length + 20.0, length + 20.0, 0.0)
-            #glRotate(self.azimuth_2d, 0.0, 0.0, 1.0)
-        #else: # 3d
-            #glRotate(-90, 1.0, 0.0, 0.0) # make z point up
-            #glTranslatef(length + 20.0, 0.0, length + 20.0)
-            #glRotatef(-self.elevation, 1.0, 0.0, 0.0)
-            #glRotatef(self.azimuth, 0.0, 0.0, 1.0)
-
 
     # ------------------------------------------------------------------------
     # VIEWING MANIPULATIONS
@@ -434,11 +389,11 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         delta_y = event.y - self.cursor_y
 
         if event.state & gtk.gdk.BUTTON1_MASK: # left mouse button
-            self.rotate(event.x, event.y, delta_x, delta_y, width, height)
+            self.current_view.rotate(delta_x, delta_y)
         elif event.state & gtk.gdk.BUTTON2_MASK: # middle mouse button
-            self.zoom(delta_x, delta_y)
+            self.current_view.zoom(delta_x, delta_y)
         elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
-            self.pan(delta_x, delta_y, width, height)
+            self.current_view.pan(delta_x, delta_y, width, height)
 
         self.cursor_x = event.x
         self.cursor_y = event.y
@@ -450,84 +405,23 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         if event.direction == gtk.gdk.SCROLL_DOWN:
             delta_y = -delta_y
 
-        self.zoom(0, delta_y)
+        self.current_view.zoom(0, delta_y)
         self.invalidate()
 
     def reset_view(self, both=False):
         if both:
-            self.reset_perspective()
-            self.reset_ortho()
-        elif self.mode_2d:
-            self.reset_ortho()
-        else: # 3d
-            self.reset_perspective()
-
-    def reset_perspective(self):
-        self.obj_pos   = self.initial_obj_pos.copy()
-        self.azimuth   = self.initial_azimuth
-        self.elevation = self.initial_elevation
-
-    #def reset_ortho(self):
-    #    self.obj_pos_x_2d = self.initial_obj_pos_x_2d
-    #    self.obj_pos_y_2d = self.initial_obj_pos_y_2d
-    #    self.azimuth_2d   = self.initial_azimuth_2d
-    #    self.zoom_2d      = self.initial_zoom_2d
-
-    def rotate(self, x, y, delta_x, delta_y, width, height):
-        if self.mode_2d:
-            self.azimuth_2d += delta_x / 4.0
-        else: # 3d
-            self.azimuth   += delta_x / 4.0
-            self.elevation -= delta_y / 4.0
-
-    def zoom(self, delta_x, delta_y):
-        #if self.mode_2d:
-        #    zoom_2d = self.zoom_2d - (delta_y / 15.0)
-        #    self.zoom_2d = max(zoom_2d, 0.1)
-        #else: # 3d
-        #    self.obj_pos.y += delta_y / 10.0
-        factor = 1
-        if delta_y > 0:
-            factor = 1.5
-        elif delta_y < 0:
-            factor = 0.75
-        self.zoom_2d = max(self.zoom_2d * factor, 0.1)
-
-    def pan(self, delta_x, delta_y, width, height):
-        """
-        Pan the model.
-
-        Pannings works by relating mouse movements to movements in object
-        space, using program window dimensions and field of view angle. A
-        factor is applied to avoid speeding up on rapid mouse movements.
-        """
-        if self.mode_2d:
-            self.obj_pos_x_2d += delta_x
-            self.obj_pos_y_2d -= delta_y
-        else: # 3d
-            window_h = 2 * abs(self.obj_pos) * math.tan(self.fovy / 2) # height of window in object space
-
-            magnitude_x = abs(delta_x)
-            if magnitude_x > 0.0:
-                x_scale = magnitude_x / width
-                x_slow = 1 / magnitude_x
-                offset_x = delta_x * x_scale * window_h * x_slow
-                self.obj_pos.x -= offset_x
-
-            magnitude_y = abs(delta_y)
-            if magnitude_y > 0.0:
-                y_scale = magnitude_y / width
-                y_slow = 1 / magnitude_y
-                offset_z = delta_y * y_scale * window_h * y_slow
-                self.obj_pos.z += offset_z
+            self.view_ortho.reset_state()
+            self.view_perspective.reset_state()
+        else:
+            self.current_view.reset_state()
 
     @property
     def mode_2d(self):
-        return self._mode_2d
+        return self.current_view is ViewOrtho
 
     @mode_2d.setter
     def mode_2d(self, value):
-        self._mode_2d = value
+        self.current_view = self.view_ortho if value else self.view_perspective
 
     # ------------------------------------------------------------------------
     # MODEL MANIPULATION
