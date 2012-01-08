@@ -1,12 +1,18 @@
 general:
 * remove/disable 'save file' menu item for gcode files (high)
 * ask about saving changes on opening another file (high)
+
+ui:
+* status bar
+* legend in glscene
 * quick view buttons (low)
 * axis labels (low)
 
 stl:
+* fix lighting
 * lay flat on platform (medium)
 
 long-term:
 * multi-threading for better responsiveness & speed (low)
+* rewrite VBO loading in C for better performance
 * undo/redo (low)

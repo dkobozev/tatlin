@@ -52,6 +52,9 @@ class ViewMode(object):
     """
     Base class for projection transformations.
     """
+    ZOOM_MIN = 0.1
+    ZOOM_MAX = 1000
+
     def __init__(self):
         self._stack = []
         self._save_vars = []
@@ -90,20 +93,19 @@ class ViewMode(object):
         raise NotImplementedError('method not implemented')
 
     def zoom(self, delta_x, delta_y):
-        factor = 1
         if delta_y > 0:
-            factor = 1.5
+            self.zoom_factor = min(self.zoom_factor * 1.2, self.ZOOM_MAX)
         elif delta_y < 0:
-            factor = 0.75
-        self.zoom_factor = max(self.zoom_factor * factor, 0.1)
+            self.zoom_factor = max(self.zoom_factor * 0.83, self.ZOOM_MIN)
 
 
 class ViewOrtho(ViewMode):
     """
     Orthographic projection transformations (2D mode).
     """
-    NEAR = -50.0
-    FAR  =  50.0
+    NEAR       = -50.0
+    FAR        =  50.0
+    PAN_FACTOR =  4
 
     def __init__(self):
         super(ViewOrtho, self).__init__()
@@ -159,11 +161,11 @@ class ViewOrtho(ViewMode):
         glRotate(self.azimuth, 0.0, 0.0, 1.0)
 
     def rotate(self, delta_x, delta_y):
-        self.azimuth += delta_x / 4.0
+        self.azimuth += delta_x
 
-    def pan(self, delta_x, delta_y, w, h):
-        self.x += delta_x
-        self.y -= delta_y
+    def pan(self, delta_x, delta_y):
+        self.x += delta_x * self.PAN_FACTOR
+        self.y -= delta_y * self.PAN_FACTOR
 
 
 class ViewPerspective(ViewMode):
@@ -201,10 +203,15 @@ class ViewPerspective(ViewMode):
 
     def display_transform(self):
         glRotate(-90, 1.0, 0.0, 0.0) # make z point up
-        glTranslate(self.x, self.y, self.z)
+        glTranslate(0.0, self.y, 0.0)    # move away from the displayed object
+
+        # zoom
+        glScale(self.zoom_factor, self.zoom_factor, self.zoom_factor)
+
+        # pan and rotate
+        glTranslate(self.x, 0.0, self.z)
         glRotate(-self.elevation, 1.0, 0.0, 0.0)
         glRotate(self.azimuth, 0.0, 0.0, 1.0)
-        glScale(self.zoom_factor, self.zoom_factor, self.zoom_factor)
 
     def ui_transform(self, length):
         glRotate(-90, 1.0, 0.0, 0.0) # make z point up
@@ -213,32 +220,13 @@ class ViewPerspective(ViewMode):
         glRotatef(self.azimuth, 0.0, 0.0, 1.0)
 
     def rotate(self, delta_x, delta_y):
-        self.azimuth   += delta_x / 4.0
-        self.elevation -= delta_y / 4.0
+        self.azimuth   += delta_x
+        self.elevation -= delta_y
 
-    def pan(self, delta_x, delta_y, w, h):
-        """
-        Pan by relating mouse movements to movements in object space, using
-        viewport dimensions and field of view angle. A factor is applied to
-        avoid speeding up on rapid mouse movements.
-        """
-        # calculate height of window in object space
-        v = Vector3(self.x, self.y, self.z)
-        window_h = 2 * abs(v) * math.tan(self.FOVY / 2)
+    def pan(self, delta_x, delta_y):
+        self.x += delta_x / self.zoom_factor
+        self.z -= delta_y / self.zoom_factor
 
-        magnitude_x = abs(delta_x)
-        if magnitude_x > 0.0:
-            x_scale = magnitude_x / w
-            x_slow = 1 / magnitude_x
-            offset_x = delta_x * x_scale * window_h * x_slow
-            self.x -= offset_x
-
-        magnitude_y = abs(delta_y)
-        if magnitude_y > 0.0:
-            y_scale = magnitude_y / w
-            y_slow = 1 / magnitude_y
-            offset_z = delta_y * y_scale * window_h * y_slow
-            self.z += offset_z
 
 class SceneArea(GLArea):
     """
@@ -259,6 +247,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     responsible for viewing transformations such as zooming, panning and
     rotation, as well as being the interface for the actors.
     """
+    PAN_SPEED    = 25
+    ROTATE_SPEED = 25
+
     def __init__(self):
         super(Scene, self).__init__(gtk.gdkgl.MODE_RGB |
                                     gtk.gdkgl.MODE_DEPTH |
@@ -389,11 +380,13 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         delta_y = event.y - self.cursor_y
 
         if event.state & gtk.gdk.BUTTON1_MASK: # left mouse button
-            self.current_view.rotate(delta_x, delta_y)
+            self.current_view.rotate(delta_x * self.ROTATE_SPEED / 100,
+                                     delta_y * self.ROTATE_SPEED / 100)
         elif event.state & gtk.gdk.BUTTON2_MASK: # middle mouse button
             self.current_view.zoom(delta_x, delta_y)
         elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
-            self.current_view.pan(delta_x, delta_y, width, height)
+            self.current_view.pan(delta_x * self.PAN_SPEED / 100,
+                                  delta_y * self.PAN_SPEED / 100)
 
         self.cursor_x = event.x
         self.cursor_y = event.y
