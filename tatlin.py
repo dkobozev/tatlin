@@ -57,11 +57,14 @@ class App(object):
         self.window = MainWindow()
 
         self.actiongroup = self.set_up_actions()
-        for menu_item in self.create_menu_items(self.actiongroup):
+        self.create_menu_items(self.actiongroup)
+        for menu_item in self.menu_items:
             self.window.append_menu_item(menu_item)
 
-        self.window.connect('destroy',         self.on_quit)
-        self.window.connect('open-clicked',    self.on_open)
+        self.menu_enable_file_items(False)
+
+        self.window.connect('destroy',      self.quit)
+        self.window.connect('open-clicked', self.open_file_dialog)
 
         # ---------------------------------------------------------------------
         # SCENE SETUP
@@ -96,15 +99,19 @@ class App(object):
         actiongroup.add_action(gtk.Action('file', '_File', 'File', None))
 
         action_open = gtk.Action('open', 'Open', 'Open', gtk.STOCK_OPEN)
-        action_open.connect('activate', self.on_open)
+        action_open.connect('activate', self.open_file_dialog)
         actiongroup.add_action_with_accel(action_open, '<Control>o')
 
+        action_save = gtk.Action('save', 'Save', 'Save file', gtk.STOCK_SAVE)
+        action_save.connect('activate', self.save_file)
+        actiongroup.add_action_with_accel(action_save, '<Control>s')
+
         save_as = gtk.Action('save-as', 'Save As...', 'Save As...', gtk.STOCK_SAVE_AS)
-        save_as.connect('activate', self.on_save_as)
+        save_as.connect('activate', self.save_file_as)
         actiongroup.add_action_with_accel(save_as, '<Control><Shift>s')
 
         action_quit = gtk.Action('quit', 'Quit', 'Quit', gtk.STOCK_QUIT)
-        action_quit.connect('activate', self.on_quit)
+        action_quit.connect('activate', self.quit)
         actiongroup.add_action_with_accel(action_quit, '<Control>q')
 
         accelgroup = gtk.AccelGroup()
@@ -118,13 +125,24 @@ class App(object):
     def create_menu_items(self, actiongroup):
         file_menu = gtk.Menu()
         file_menu.append(actiongroup.menu_item('open'))
-        file_menu.append(actiongroup.menu_item('save-as'))
+
+        save_item = actiongroup.menu_item('save')
+        file_menu.append(save_item)
+
+        save_as_item = actiongroup.menu_item('save-as')
+        file_menu.append(save_as_item)
+
         file_menu.append(actiongroup.menu_item('quit'))
 
         item_file = actiongroup.menu_item('file')
         item_file.set_submenu(file_menu)
 
-        return [item_file]
+        self.menu_items_file = [save_item, save_as_item]
+        self.menu_items = [item_file]
+
+    def menu_enable_file_items(self, enable=True):
+        for menu_item in self.menu_items_file:
+            menu_item.set_sensitive(enable)
 
     # -------------------------------------------------------------------------
     # PROPERTIES
@@ -179,14 +197,14 @@ class App(object):
     # EVENT HANDLERS
     # -------------------------------------------------------------------------
 
-    def on_save(self, action=None):
+    def save_file(self, action=None):
         """
         Save changes to the same file.
         """
         self.scene.export_to_file(self.model_file)
         self.window.file_modified = False
 
-    def on_save_as(self, action=None):
+    def save_file_as(self, action=None):
         """
         Save changes to a new file.
         """
@@ -201,43 +219,46 @@ class App(object):
 
         dialog.destroy()
 
-    def on_open(self, action=None):
-        dialog = OpenDialog(self.current_dir)
+    def open_file_dialog(self, action=None):
+        if self.save_changes_dialog():
+            dialog = OpenDialog(self.current_dir)
 
-        if dialog.run() == gtk.RESPONSE_ACCEPT:
-            self.open_and_display_file(dialog.get_filename())
+            if dialog.run() == gtk.RESPONSE_ACCEPT:
+                self.open_and_display_file(dialog.get_filename())
 
-        dialog.destroy()
+            dialog.destroy()
 
-    def on_quit(self, action=None):
+    def quit(self, action=None):
         """
         On quit, show a dialog proposing to save the changes if the scene has
         been modified.
         """
-        do_quit = True
+        if self.save_changes_dialog():
+            gtk.main_quit()
 
-        if self.scene.model_modified:
+    def save_changes_dialog(self):
+        proceed = True
+        if self.scene and self.scene.model_modified:
             dialog = QuitDialog(self.window)
+            ask_again = True
 
-            discard_changes = False
-            while do_quit and self.scene.model_modified and not discard_changes:
+            while ask_again:
                 response = dialog.run()
-
                 if response == QuitDialog.RESPONSE_SAVE:
-                    dialog.hide()
-                    self.on_save()
+                    self.save_file()
+                    ask_again = False
                 elif response == QuitDialog.RESPONSE_SAVE_AS:
-                    dialog.hide()
-                    self.on_save_as()
+                    self.save_file_as()
+                    ask_again = self.scene.model_modified
                 elif response in [QuitDialog.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
-                    do_quit = False
+                    ask_again = False
+                    proceed = False
                 elif response == QuitDialog.RESPONSE_DISCARD:
-                    discard_changes = True
+                    ask_again = False
 
             dialog.destroy()
 
-        if do_quit:
-            gtk.main_quit()
+        return proceed
 
     def scaling_factor_changed(self, factor):
         try:
@@ -325,6 +346,7 @@ class App(object):
 
             self.window.set_file_widgets(self.glarea, self.panel)
             self.window.filename = self.model_file.basename
+            self.menu_enable_file_items(self.model_file.filetype != 'gcode')
         except IOError, e:
             dialog = OpenErrorAlert(self.window, fpath, e.strerror)
             dialog.run()
@@ -333,7 +355,6 @@ class App(object):
             dialog = OpenErrorAlert(self.window, fpath, e.message)
             dialog.run()
             dialog.destroy()
-
 
     def add_file_to_scene(self, f):
         self.scene.clear()

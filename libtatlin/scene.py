@@ -254,7 +254,8 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         super(Scene, self).__init__(gtk.gdkgl.MODE_RGB |
                                     gtk.gdkgl.MODE_DEPTH |
                                     gtk.gdkgl.MODE_DOUBLE)
-        self.actors = []
+        self.model    = None
+        self.actors   = []
         self.cursor_x = 0
         self.cursor_y = 0
 
@@ -474,5 +475,5 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         Important properties exclude viewing transformations and can be
         something like size, shape or color.
         """
-        return self.model.modified
+        return self.model and self.model.modified
 

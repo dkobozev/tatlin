@@ -1,6 +1,5 @@
 general:
-* remove/disable 'save file' menu item for gcode files (high)
-* ask about saving changes on opening another file (high)
+* orthographic view
 
 ui:
 * status bar
@@ -11,6 +10,7 @@ ui:
 stl:
 * fix lighting
 * lay flat on platform (medium)
+* custom offset
 
 long-term:
 * multi-threading for better responsiveness & speed (low)
