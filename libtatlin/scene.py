@@ -303,16 +303,12 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glClearDepth(1.0)                # set depth value to 1
         glDepthFunc(GL_LEQUAL)
 
-        glEnable(GL_DEPTH_TEST)
         glEnable(GL_COLOR_MATERIAL)
-
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_CULL_FACE)
         # simulate translucency by blending colors
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        glutInit()
-        # TODO: doesn't this conflict with the constructor?
-        glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
 
         self.init_actors()
         self.initialized = True
@@ -325,6 +321,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     def display(self, w, h):
         # clear the color and depth buffers from any leftover junk
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glCullFace(GL_BACK) # discard back-facing polygons
 
         self.view_ortho.begin(w, h)
         self.draw_axes()
@@ -335,13 +332,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         for actor in self.actors:
             actor.display(self.mode_2d)
         self.current_view.end()
-
-        glFlush()
-
-        # TODO: see if we have to enable any of these
-        #glDepthMask(GL_TRUE)
-        #glEnable(GL_DEPTH_TEST)
-        #glEnable(GL_CULL_FACE)
 
     def reshape(self, w, h):
         glViewport(0, 0, w, h)

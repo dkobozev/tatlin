@@ -25,7 +25,6 @@ import time
 
 from OpenGL.GL import *
 from OpenGL.GLE import *
-from OpenGL.GLUT import *
 from OpenGL.arrays.vbo import VBO
 
 import vector
@@ -187,12 +186,11 @@ class GcodeModel(Model):
     """
     # define color names for different types of extruder movements
     color_map = {
-        'red':    [1.0, 0.0, 0.0, 0.6],
-        'yellow': [1.0, 0.875, 0.0, 0.6],
-        'orange': [1.0, 0.373, 0.0, 0.6],
-        'green':  [0.0, 1.0, 0.0, 0.6],
+        'red':    [1.0, 0.0,   0.0,   0.6],
+        'yellow': [1.0, 0.875, 0.0,   0.6],
+        'green':  [0.0, 1.0,   0.0,   0.6],
         'cyan':   [0.0, 0.875, 0.875, 0.6],
-        'gray':   [0.6, 0.6, 0.6, 0.6],
+        'gray':   [0.6, 0.6,   0.6,   0.6],
     }
 
     # vertices for arrow to display the direction of movement
