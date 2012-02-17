@@ -56,6 +56,6 @@ def rotate(vertices, angle, x, y, z):
         _rotation_matrix_cache[key] = rotation_matrix(angle, x, y, z)
 
     matrix = _rotation_matrix_cache[key]
-    rotated = vertices.dot(matrix)
+    rotated = numpy.dot(vertices, matrix)
     return rotated
 
