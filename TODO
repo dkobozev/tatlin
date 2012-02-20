@@ -8,7 +8,6 @@ ui:
 * axis labels (low)
 
 stl:
-* fix lighting
 * lay flat on platform (medium)
 * custom offset
 

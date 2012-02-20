@@ -321,7 +321,13 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     def display(self, w, h):
         # clear the color and depth buffers from any leftover junk
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glCullFace(GL_BACK) # discard back-facing polygons
+
+        # discard back-facing polygons
+        glCullFace(GL_BACK)
+
+        # fix normals after scaling to prevent problems with lighting
+        # see: http://www.opengl.org/resources/faq/technical/lights.htm#ligh0090
+        glEnable(GL_RESCALE_NORMAL)
 
         self.view_ortho.begin(w, h)
         self.draw_axes()
