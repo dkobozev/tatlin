@@ -320,6 +320,10 @@ class App(object):
         self.scene.mode_2d = not widget.get_active()
         self.scene.invalidate()
 
+    def on_set_ortho(self, widget):
+        self.scene.mode_ortho = widget.get_active()
+        self.scene.invalidate()
+
     # -------------------------------------------------------------------------
     # FILE OPERATIONS
     # -------------------------------------------------------------------------

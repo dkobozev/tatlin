@@ -71,8 +71,9 @@ class GcodePanel(gtk.VBox):
         self.hscale_layers.set_digits(0)
         self.hscale_layers.set_size_request(200, 35)
 
-        self.check_arrows = gtk.CheckButton('Show arrows')
-        self.check_3d = gtk.CheckButton('3D view')
+        self.check_arrows   = gtk.CheckButton('Show arrows')
+        self.check_3d       = gtk.CheckButton('3D view')
+        self.check_ortho    = gtk.CheckButton('Orthographic projection')
         self.btn_reset_view = gtk.Button('Reset view')
 
         table_display = gtk.Table(rows=2, columns=1)
@@ -82,7 +83,8 @@ class GcodePanel(gtk.VBox):
         table_display.attach(self.hscale_layers,  0, 1, 1, 2, yoptions=0)
         table_display.attach(self.check_arrows,   0, 1, 2, 3, yoptions=0)
         table_display.attach(self.check_3d,       0, 1, 3, 4, yoptions=0)
-        table_display.attach(self.btn_reset_view, 0, 1, 4, 5, yoptions=0)
+        table_display.attach(self.check_ortho,    0, 1, 4, 5, yoptions=0)
+        table_display.attach(self.btn_reset_view, 0, 1, 5, 6, yoptions=0)
 
         frame_display = gtk.Frame('Display')
         frame_display.add(table_display)
@@ -95,10 +97,11 @@ class GcodePanel(gtk.VBox):
         if self._handlers_connected:
             return
 
-        self.hscale_layers.connect('value-changed', self.app.on_scale_value_changed)
-        self.check_arrows.connect('toggled', self.app.on_arrows_toggled)
-        self.btn_reset_view.connect('clicked', self.app.on_reset_view)
-        self.check_3d.connect('toggled', self.app.on_set_mode)
+        self.hscale_layers.connect( 'value-changed', self.app.on_scale_value_changed)
+        self.check_arrows.connect(  'toggled',       self.app.on_arrows_toggled)
+        self.btn_reset_view.connect('clicked',       self.app.on_reset_view)
+        self.check_3d.connect(      'toggled',       self.on_set_mode)
+        self.check_ortho.connect(   'toggled',       self.app.on_set_ortho)
 
         self._handlers_connected = True
 
@@ -114,6 +117,9 @@ class GcodePanel(gtk.VBox):
         self.label_depth_value.set_text(self.app.get_property('depth'))
         self.label_height_value.set_text(self.app.get_property('height'))
 
+    def on_set_mode(self, widget):
+        self.check_ortho.set_sensitive(widget.get_active())
+        self.app.on_set_mode(widget)
 
 class StlPanel(gtk.VBox):
     supported_types = ['stl']
@@ -216,11 +222,18 @@ class StlPanel(gtk.VBox):
         # DISPLAY
         # --------------------------------------------------------------------
 
+        self.check_ortho    = gtk.CheckButton('Orthographic projection')
         self.btn_reset_view = gtk.Button('Reset view')
+
+        table_display = gtk.Table(rows=2, columns=1)
+        table_display.set_border_width(5)
+        table_display.set_row_spacings(5)
+        table_display.attach(self.check_ortho,    0, 1, 0, 1, yoptions=0)
+        table_display.attach(self.btn_reset_view, 0, 1, 1, 2, yoptions=0)
 
         frame_display = gtk.Frame('Display')
         frame_display.set_border_width(5)
-        frame_display.add(self.btn_reset_view)
+        frame_display.add(table_display)
 
         self.pack_start(frame_dimensions, False)
         self.pack_start(frame_move, False)
@@ -261,8 +274,18 @@ class StlPanel(gtk.VBox):
         self.btn_y_90.connect('clicked', self.on_rel_angle_changed, 'y', 90)
         self.btn_z_90.connect('clicked', self.on_rel_angle_changed, 'z', 90)
 
+        # ---------------------------------------------------------------------
+        # MOVE
+        # ---------------------------------------------------------------------
+
         self.button_center.connect('clicked', self.app.on_button_center_clicked)
+
+        # ---------------------------------------------------------------------
+        # DISPLAY
+        # ---------------------------------------------------------------------
+
         self.btn_reset_view.connect('clicked', self.app.on_reset_view)
+        self.check_ortho.connect('toggled', self.app.on_set_ortho)
 
         self._handlers_connected = True
 
