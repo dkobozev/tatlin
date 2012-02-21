@@ -442,6 +442,12 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         if self.current_view.supports_ortho:
             self.current_view.ortho = value
 
+    def rotate_view(self, azimuth, elevation):
+        if not self.mode_2d:
+            self.current_view.azimuth = azimuth
+            self.current_view.elevation = elevation
+            self.invalidate()
+
     # ------------------------------------------------------------------------
     # MODEL MANIPULATION
     # ------------------------------------------------------------------------

@@ -324,6 +324,24 @@ class App(object):
         self.scene.mode_ortho = widget.get_active()
         self.scene.invalidate()
 
+    def on_view_front(self, widget):
+        self.scene.rotate_view(0, 0)
+
+    def on_view_back(self, widget):
+        self.scene.rotate_view(180, 0)
+
+    def on_view_left(self, widget):
+        self.scene.rotate_view(90, 0)
+
+    def on_view_right(self, widget):
+        self.scene.rotate_view(-90, 0)
+
+    def on_view_top(self, widget):
+        self.scene.rotate_view(0, -90)
+
+    def on_view_bottom(self, widget):
+        self.scene.rotate_view(0, 90)
+
     # -------------------------------------------------------------------------
     # FILE OPERATIONS
     # -------------------------------------------------------------------------

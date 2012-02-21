@@ -1,10 +1,6 @@
-general:
-* orthographic view
-
 ui:
 * status bar
 * legend in glscene
-* quick view buttons (low)
 * axis labels (low)
 
 stl:

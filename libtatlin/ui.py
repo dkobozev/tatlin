@@ -24,6 +24,41 @@ import gtk
 import gobject
 
 
+class ViewButtons(gtk.Table):
+    def __init__(self, app):
+        super(ViewButtons, self).__init__()
+
+        self.app = app
+
+        self.btn_front = gtk.Button('Front')
+        self.btn_back  = gtk.Button('Back')
+        self.btn_left  = gtk.Button('Left')
+        self.btn_right = gtk.Button('Right')
+
+        self.btn_top    = gtk.Button('Top')
+        self.btn_bottom = gtk.Button('Bottom')
+
+        vbox = gtk.VBox()
+        vbox.pack_start(self.btn_top,    False)
+        vbox.pack_start(self.btn_bottom, False)
+
+        self.set_border_width(5)
+        self.set_row_spacings(5)
+        self.attach(self.btn_front,  1, 2, 2, 3, yoptions=0)
+        self.attach(self.btn_back,   1, 2, 0, 1, yoptions=0)
+        self.attach(self.btn_left,   0, 1, 1, 2)
+        self.attach(self.btn_right,  2, 3, 1, 2)
+        self.attach(vbox,            1, 2, 1, 2, yoptions=0)
+
+        # connect handlers
+        self.btn_front.connect( 'clicked', self.app.on_view_front)
+        self.btn_back.connect(  'clicked', self.app.on_view_back)
+        self.btn_left.connect(  'clicked', self.app.on_view_left)
+        self.btn_right.connect( 'clicked', self.app.on_view_right)
+        self.btn_top.connect(   'clicked', self.app.on_view_top)
+        self.btn_bottom.connect('clicked', self.app.on_view_bottom)
+
+
 class GcodePanel(gtk.VBox):
     supported_types = ['gcode']
 
@@ -73,6 +108,7 @@ class GcodePanel(gtk.VBox):
 
         self.check_arrows   = gtk.CheckButton('Show arrows')
         self.check_3d       = gtk.CheckButton('3D view')
+        view_buttons        = ViewButtons(self.app)
         self.check_ortho    = gtk.CheckButton('Orthographic projection')
         self.btn_reset_view = gtk.Button('Reset view')
 
@@ -83,8 +119,9 @@ class GcodePanel(gtk.VBox):
         table_display.attach(self.hscale_layers,  0, 1, 1, 2, yoptions=0)
         table_display.attach(self.check_arrows,   0, 1, 2, 3, yoptions=0)
         table_display.attach(self.check_3d,       0, 1, 3, 4, yoptions=0)
-        table_display.attach(self.check_ortho,    0, 1, 4, 5, yoptions=0)
-        table_display.attach(self.btn_reset_view, 0, 1, 5, 6, yoptions=0)
+        table_display.attach(view_buttons,        0, 1, 4, 5, yoptions=0)
+        table_display.attach(self.check_ortho,    0, 1, 5, 6, yoptions=0)
+        table_display.attach(self.btn_reset_view, 0, 1, 6, 7, yoptions=0)
 
         frame_display = gtk.Frame('Display')
         frame_display.add(table_display)
@@ -118,8 +155,12 @@ class GcodePanel(gtk.VBox):
         self.label_height_value.set_text(self.app.get_property('height'))
 
     def on_set_mode(self, widget):
+        """
+        Make ortho checkbox insensitive when not in 3D mode.
+        """
         self.check_ortho.set_sensitive(widget.get_active())
         self.app.on_set_mode(widget)
+
 
 class StlPanel(gtk.VBox):
     supported_types = ['stl']
@@ -222,14 +263,17 @@ class StlPanel(gtk.VBox):
         # DISPLAY
         # --------------------------------------------------------------------
 
+        view_buttons = ViewButtons(self.app)
+
         self.check_ortho    = gtk.CheckButton('Orthographic projection')
         self.btn_reset_view = gtk.Button('Reset view')
 
         table_display = gtk.Table(rows=2, columns=1)
         table_display.set_border_width(5)
         table_display.set_row_spacings(5)
-        table_display.attach(self.check_ortho,    0, 1, 0, 1, yoptions=0)
-        table_display.attach(self.btn_reset_view, 0, 1, 1, 2, yoptions=0)
+        table_display.attach(view_buttons,        0, 1, 0, 1, yoptions=0)
+        table_display.attach(self.check_ortho,    0, 1, 1, 2, yoptions=0)
+        table_display.attach(self.btn_reset_view, 0, 1, 2, 3, yoptions=0)
 
         frame_display = gtk.Frame('Display')
         frame_display.set_border_width(5)
