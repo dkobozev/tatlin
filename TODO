@@ -1,7 +1,6 @@
 ui:
 * status bar
 * legend in glscene
-* axis labels (low)
 
 stl:
 * lay flat on platform (medium)

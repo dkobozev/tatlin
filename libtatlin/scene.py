@@ -23,13 +23,13 @@ import math
 from OpenGL.GL import *
 from OpenGL.GLE import *
 from OpenGL.GLU import *
+from OpenGL.GLUT import *
 
 import pygtk
 pygtk.require('2.0')
 import gtk
 from gtk.gtkgl.apputils import GLArea, GLScene, GLSceneButton, GLSceneButtonMotion
 
-from .vector3 import Vector3
 from .actors import Model
 
 
@@ -104,8 +104,8 @@ class View2D(ViewMode):
     """
     Orthographic projection transformations (2D mode).
     """
-    NEAR       = -50.0
-    FAR        =  50.0
+    NEAR       = -100.0
+    FAR        =  100.0
     PAN_FACTOR =  4
 
     def __init__(self):
@@ -366,19 +366,36 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glPushMatrix()
         self.current_view.ui_transform(length)
 
+        axes = [
+            (-length, 0.0, 0.0),
+            (0.0, -length, 0.0),
+            (0.0, 0.0, length),
+        ]
+        colors = [
+            (1.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0),
+            html_color('008aff')
+        ]
+        labels = ['x', 'y', 'z']
+
         glBegin(GL_LINES)
-        glColor(1.0, 0.0, 0.0)
-        glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(-length, 0.0, 0.0)
 
-        glColor(0.0, 1.0, 0.0)
-        glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(0.0, -length, 0.0)
+        for axis, color in zip(axes, colors):
+            glColor(*color)
+            glVertex(0.0, 0.0, 0.0)
+            glVertex(*axis)
 
-        glColor(*html_color('008aff'))
-        glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(0.0, 0.0, length)
         glEnd()
+
+        # draw axis labels
+        glutInit()
+
+        for label, axis, color in zip(labels, axes, colors):
+            glColor(*color)
+            # add padding to labels
+            glRasterPos(axis[0] + 2, axis[1] + 2, axis[2] + 2)
+            glutBitmapString(GLUT_BITMAP_8_BY_13, label);
+
         glPopMatrix()
 
     # ------------------------------------------------------------------------
