@@ -67,8 +67,6 @@ class GcodeParser(object):
 
         self.is_new_layer = self.is_new_layer_from_marker if self.file_has_layer_markers() else self.is_new_layer_from_gcode
 
-        if start_location is None:
-            start_location = Vector3(0.0, 0.0, 0.0)
         self.prev_location = start_location
 
         self.extruder_on         = False
@@ -122,6 +120,8 @@ class GcodeParser(object):
 
         if len(layers) < 1:
             raise GcodeParseError("File does not contain valid Gcode")
+
+        del layers[0][0] # first movement is not an actual movement, delete
 
         return layers
 

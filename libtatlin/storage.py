@@ -26,7 +26,7 @@ import os
 from .gcodeparser import GcodeParser, GcodeParseError
 from .stlparser import StlParser, StlParseError
 from .vector3 import Vector3
-from .actors import Platform, StlModel, GcodeModel
+from .actors import StlModel, GcodeModel
 
 
 class ModelFileError(Exception):
@@ -91,8 +91,7 @@ class ModelFile(object):
         return model
 
     def _load_gcode_model(self):
-        start_location = Vector3(Platform.width / 2, -Platform.depth / 2, 10.0)
-        parser = GcodeParser(self.path, start_location)
+        parser = GcodeParser(self.path)
         try:
             model = GcodeModel(parser.parse())
             return model
