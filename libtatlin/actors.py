@@ -65,16 +65,17 @@ class Platform(object):
     """
     Platform on which models are placed.
     """
-    # makerbot platform size
-    width = 120
-    depth = 100
     graduations_major = 10
 
-    def __init__(self):
+    def __init__(self, width, depth):
+        self.width = width
+        self.depth = depth
+
         self.color_grads_minor  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
         self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
         self.color_grads_major  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
         self.color_fill         = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
+
         self.initialized = False
 
     def init(self):

@@ -32,6 +32,7 @@ from libtatlin.scene import Scene, SceneArea
 from libtatlin.ui import StlPanel, GcodePanel, MainWindow, \
 SaveDialog, OpenDialog, OpenErrorAlert, QuitDialog
 from libtatlin.storage import ModelFile, ModelFileError
+from libtatlin.config import Config
 
 
 def format_float(f):
@@ -67,9 +68,17 @@ class App(object):
         self.window.connect('open-clicked', self.open_file_dialog)
 
         # ---------------------------------------------------------------------
-        # SCENE SETUP
+        # APP SETUP
         # ---------------------------------------------------------------------
 
+        self.init_config()
+        self.init_scene()
+
+    def init_config(self):
+        fname = os.path.expanduser(os.path.join('~', '.tatlin'))
+        self.config = Config(fname)
+
+    def init_scene(self):
         self.panel = None
         self.scene = None
         self.model_file = None
@@ -381,7 +390,12 @@ class App(object):
     def add_file_to_scene(self, f):
         self.scene.clear()
         self.scene.load_file(f)
-        self.scene.add_supporting_actor(Platform()) # platform needs to be added last to be translucent
+
+        # platform needs to be added last to be translucent
+        platform_w = self.config.read('machine.platform_w', int)
+        platform_d = self.config.read('machine.platform_d', int)
+        platform = Platform(platform_w, platform_d)
+        self.scene.add_supporting_actor(platform)
 
     def create_panel(self):
         if self.model_file.filetype == 'gcode':

@@ -31,5 +31,12 @@ You can also provide a filename to load:
 Mouse navigation
 
 * Left mouse button to rotate
-* Middle mouse button to zoom
+* Mouse wheel / middle mouse button to zoom
 * Right mouse button to pan
+
+Build platform size can be customized by creating a file called `.tatlin` in
+your home directory with the following contents:
+
+    [machine]
+    platform_w = 300
+    platform_d = 300

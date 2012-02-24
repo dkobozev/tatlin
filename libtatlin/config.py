@@ -6,29 +6,32 @@ class Config(object):
     """
     Read and write Tatlin configuration.
     """
-    def __init__(self):
+    def __init__(self, fname):
         self.defaults = {
+            # makerbot thing-o-matic platform size
             'machine.platform_w': 120,
-            'machine.platform_h': 100,
+            'machine.platform_d': 100,
         }
 
-        self.fname = os.path.expanduser(os.path.join('~', '.tatlin'))
-
+        self.fname = fname
         self.config = ConfigParser()
         self.config.read(self.fname)
 
-    def read(self, key):
-        val = self._read_file(key)
+    def read(self, key, conv=None):
+        val = self._read_file(key, conv)
         if val is None:
             val = self.defaults[key]
 
         return val
 
-    def _read_file(self, key):
+    def _read_file(self, key, conv):
         section, option = self._parse_specifier(key)
         try:
-            val = self.config.get(section, option)
-        except (NoSectionError, NoOptionError):
+            if conv:
+                val = conv(self.config.get(section, option))
+            else:
+                val = self.config.get(section, option)
+        except (NoSectionError, NoOptionError, ValueError):
             val = None
         return val
 
@@ -53,7 +56,7 @@ class Config(object):
 
 
 if __name__ == '__main__':
-    c = Config()
+    c = Config('.tatlin')
     c.write('foo', 'bar')
     c.write('machine.toolhead', 0)
     print c.read('foo')
