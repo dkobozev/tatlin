@@ -164,7 +164,7 @@ class GcodeParser(object):
 
         if split_line[0] in ('G1', 'G2', 'G3'):
             new_location = gcodec.getLocationFromSplitLine(self.prev_location, split_line)
-            if new_location.z - self.prev_location.z > 0.1:
+            if self.prev_location and new_location.z - self.prev_location.z > 0.1:
                 is_new_layer = True
 
         return is_new_layer
