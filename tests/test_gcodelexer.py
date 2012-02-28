@@ -1,13 +1,13 @@
 import unittest
-from libtatlin.gcodeparser2 import GcodeParser2
+from libtatlin.gcodeparser2 import GcodeLexer
 
 
-class GcodeParser2Test(unittest.TestCase):
+class GcodeLexerTest(unittest.TestCase):
     def setUp(self):
-        self.parser = GcodeParser2()
+        self.lexer = GcodeLexer()
 
     def compare_output(self, line, expected):
-        self.assertEqual(self.parser.parse_line(line), expected)
+        self.assertEqual(self.lexer.scan_line(line), expected)
 
     def test_empty(self):
         line = ''
@@ -51,6 +51,14 @@ class GcodeParser2Test(unittest.TestCase):
         line = 'G1 X81.430 Y77.020 E1.08502 ; skirt'
         expected = ('G1', {'X': 81.43, 'Y': 77.02, 'E': 1.08502}, '; skirt')
         self.compare_output(line, expected)
+
+    def test_slic3r_file(self):
+        self.lexer.load('tests/data/gcode/slic3r.gcode')
+        self.lexer.scan()
+
+    def test_skeinforge_file(self):
+        self.lexer.load('tests/data/gcode/top.gcode')
+        self.lexer.scan()
 
 
 if __name__ == '__main__':
