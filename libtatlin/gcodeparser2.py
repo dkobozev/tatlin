@@ -1,11 +1,27 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2012 Denis Kobozev
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 """
 Gcode parser.
-
-Since Gcode is not standardized, this parser makes certain assumptions:
-
-* Numeric arguments to commands are floats e.g. X95.700
-
 """
+
+import time
+import logging
+
 
 class GcodeParserError(Exception):
     pass
@@ -23,35 +39,47 @@ class GcodeLexer(object):
         self.line_no = None
         self.current_line = None
 
-    def load(self, fname):
-        content = self.read_file(fname)
+    def load(self, gcode):
+        content = self.read_input(gcode)
         self.lines = self.split_lines(content)
 
-    def read_file(self, fname):
-        f = open(fname, 'r')
-        content = f.read()
-        f.close()
+    def read_input(self, src):
+        """
+        Accept string or a file-like object to read input from.
+        """
+        if hasattr(src, 'read'):
+            content = src.read()
+        else:
+            content = src
         return content
 
     def split_lines(self, content):
+        """
+        Break input into lines.
+        """
         lines = content.replace('\r', '\n').replace('\n\n', '\n').split('\n')
         return lines
 
     def scan(self):
+        """
+        Return a generator for commands split into tokens.
+        """
         try:
-            all_tokens = []
             for line_idx, line in enumerate(self.lines):
                 self.line_no = line_idx + 1
                 self.current_line = line
                 tokens = self.scan_line(line)
-                all_tokens.append(tokens)
 
-            return all_tokens
+                if not self.is_blank(tokens):
+                    yield tokens
         except GcodeArgumentError as e:
             raise GcodeParserError('Error parsing arguments: %s on line %d\n'
                 '\t%s' % (str(e), self.line_no, self.current_line))
 
     def scan_line(self, line):
+        """
+        Break line into tokens.
+        """
         command, comment = self.split_comment(line)
         parts = command.split()
         if parts:
@@ -61,6 +89,8 @@ class GcodeLexer(object):
 
     def split_comment(self, line):
         """
+        Return a 2-tuple of command and comment.
+
         Comments start with a semicolon ; or a open parentheses (.
         """
         idx_semi = line.find(';')
@@ -77,6 +107,9 @@ class GcodeLexer(object):
         return (command, comment)
 
     def scan_args(self, args):
+        """
+        Build a map of axis names to axis values.
+        """
         d = {}
         for arg in args:
             try:
@@ -89,6 +122,12 @@ class GcodeLexer(object):
                 raise GcodeArgumentError(str(e))
         return d
 
+    def is_blank(self, tokens):
+        """
+        Return true if tokens does not contain any information.
+        """
+        return tokens == ('', {}, '')
+
 
 class Movement(object):
     """
@@ -99,10 +138,11 @@ class Movement(object):
     FLAG_PERIMETER_OUTER = 2
     FLAG_LOOP            = 4
     FLAG_SURROUND_LOOP   = 8
+    FLAG_EXTRUDER_ON     = 16
 
     def __init__(self, src, dst, delta_e, feedrate, flags=0):
         self.src = src
-        self.dst   = dst
+        self.dst = dst
 
         self.delta_e  = delta_e
         self.feedrate = feedrate
@@ -120,53 +160,52 @@ class GcodeParser(object):
     marker_surrounding_loop_end   = '(</surroundingLoop>)'
 
     def __init__(self):
-        self.fname = None
         self.lexer = GcodeLexer()
-        self.prev_coords = None
+        self.src   = None
         self.e_len = 0
         self.flags = 0
 
-    def load(self, fname):
-        self.fname = fname
-        self.lexer.load(fname)
+    def load(self, src):
+        self.lexer.load(src)
 
     def parse(self):
+        t_start = time.time()
+
         layers = []
         movements = []
 
-        commands_gen = self.lexer.scan()
-        first_command = commands_gen.next()
-        self.prev_coords = self.command_coords(first_command[1])
-        self.read_command_state(first_command)
-
-        for command in commands_gen:
-            # create new movement
+        for command in self.lexer.scan():
+            gcode, args, comment = command
             dst = self.command_coords(command)
-            e_len = command[1]['E']
-            delta_e = e_len - self.e_len
-            feedrate = command[1]['F']
+            e_len    = args['E']
+            feedrate = args['F']
+            self.set_flags(command)
 
-            movement = Movement(self.prev_coords, dst, delta_e, feedrate,
-                                self.flags)
-            movements.append(movement)
+            if self.src and dst and self.src != dst:
+                move = Movement(self.src, dst, delta_e, feedrate, self.flags)
+                movements.append(move)
 
-            # update parser state
-            self.prev_coords = dst
-            self.read_command_state(command)
+                if self.is_new_layer(dst, gcode, comment):
+                    layers.append(movements)
+                    movements = []
+
+            if dst:
+                self.src = dst
             self.e_len = e_len
 
-            movements.append(movement)
-
-            if self.is_new_layer():
-                layers.append(movements)
-                movements = []
-
+        # don't forget leftover movements
         if len(movements) > 0:
             layers.append(movements)
 
+        t_end = time.time()
+        logging.info('Parsed Gcode file in %.2f seconds' % (t_end - t_start))
+
+        if len(layers) < 1:
+            raise GcodeParseError("File does not contain valid Gcode")
+
         return layers
 
-    def read_command_state(self, command):
+    def set_flags(self, command):
         """
         Set internal parser state based on command arguments.
         """
@@ -193,13 +232,32 @@ class GcodeParser(object):
         elif self.marker_surrounding_loop_end in comment:
             self.flags &= ~Movement.FLAG_SURROUND_LOOP
 
-    def command_coords(self, args):
-        coords = (args['X'], args['Y'], args['Z'])
-        return coords
+        elif gcode == 'M101':
+            self.flags |= Movement.FLAG_EXTRUDER_ON
+
+        elif gcode == 'M103':
+            self.flags &= ~Movement.FLAG_EXTRUDER_ON
+
+    def command_coords(self, command):
+        gcode, args, comment = command
+        if gcode == 'G1':
+            coords = (args['X'], args['Y'], args['Z'])
+            return coords
+        return None
+
+    def is_new_layer(self, dst, gcode, comment):
+        if self.marker_layer in comment:
+            return True
+
+        if gcode in ('G1', 'G2', 'G3') and dst[2] - self.src[2] > 0.1:
+            return True
+
+        return False
 
 
 if __name__ == '__main__':
     import sys
     p = GcodeLexer()
-    p.load(sys.argv[1])
+    with open(sys.argv[1], 'r') as f:
+        p.load(f)
     p.scan()

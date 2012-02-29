@@ -53,13 +53,26 @@ class GcodeLexerTest(unittest.TestCase):
         self.compare_output(line, expected)
 
     def test_slic3r_file(self):
-        self.lexer.load('tests/data/gcode/slic3r.gcode')
-        self.lexer.scan()
+        fname = 'tests/data/gcode/slic3r.gcode'
+        with open(fname, 'r') as f:
+            self.lexer.load(f)
+        result = list(self.lexer.scan())
 
     def test_skeinforge_file(self):
-        self.lexer.load('tests/data/gcode/top.gcode')
-        self.lexer.scan()
+        fname = 'tests/data/gcode/top.gcode'
+        with open(fname, 'r') as f:
+            self.lexer.load(f)
+        result = list(self.lexer.scan())
 
+    def test_string_input(self):
+        s = """
+        M108 S255 (set extruder speed to maximum)
+        M104 S205 T0 (set extruder temperature)
+        M109 S105 T0 (set heated-build-platform temperature)
+        """
+        self.lexer.load(s)
+        result = list(self.lexer.scan())
+        self.assertEqual(len(result), 3)
 
 if __name__ == '__main__':
     unittest.main()
