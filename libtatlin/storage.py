@@ -17,15 +17,14 @@
 
 
 """
-Module for loading and writing of files.
+Module for loading from and writing to files.
 """
 from __future__ import division
 
 import os
 
-from .gcodeparser2 import GcodeParser, GcodeParserError
+from .gcodeparser import GcodeParser, GcodeParserError
 from .stlparser import StlParser, StlParseError
-from .vector3 import Vector3
 from .actors import StlModel, GcodeModel
 
 

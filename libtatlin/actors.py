@@ -28,7 +28,7 @@ from OpenGL.GLE import *
 from OpenGL.arrays.vbo import VBO
 
 import vector
-from gcodeparser2 import Movement
+from gcodeparser import Movement
 
 
 def compile_display_list(func, *options):
