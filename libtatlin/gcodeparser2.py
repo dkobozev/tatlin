@@ -14,13 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 """
 Gcode parser.
 """
 
+from __future__ import division
+
 import time
 import logging
+import math
 
 
 class GcodeParserError(Exception):
@@ -28,6 +30,15 @@ class GcodeParserError(Exception):
 
 class GcodeArgumentError(GcodeParserError):
     pass
+
+
+class ArgsDict(dict):
+    """
+    Dictionary that returns None on missing keys instead of throwing a
+    KeyError.
+    """
+    def __missing__(self, key):
+        return None
 
 
 class GcodeLexer(object):
@@ -85,7 +96,7 @@ class GcodeLexer(object):
         if parts:
             return (parts[0], self.scan_args(parts[1:]), comment)
         else:
-            return ('', {}, comment)
+            return ('', ArgsDict(), comment)
 
     def split_comment(self, line):
         """
@@ -110,7 +121,7 @@ class GcodeLexer(object):
         """
         Build a map of axis names to axis values.
         """
-        d = {}
+        d = ArgsDict()
         for arg in args:
             try:
                 # argument consists of an axis name and an optional number
@@ -126,7 +137,7 @@ class GcodeLexer(object):
         """
         Return true if tokens does not contain any information.
         """
-        return tokens == ('', {}, '')
+        return tokens == ('', ArgsDict(), '')
 
 
 class Movement(object):
@@ -148,6 +159,22 @@ class Movement(object):
         self.feedrate = feedrate
         self.flags    = flags
 
+    def angle(self, precision=0):
+        x = self.dst[0] - self.src[0]
+        y = self.dst[1] - self.src[1]
+        angle = math.degrees(math.atan2(y, -x)) # negate x for clockwise rotation angle
+        return round(angle, precision)
+
+    def __str__(self):
+        s = "(%s => %s)" % (self.src, self.dst)
+        return s
+
+    def __repr__(self):
+        s = "Movement(%s, %s, %s, %s, %s)" % (
+            self.src, self.dst, self.delta_e, self.feedrate, self.flags
+        )
+        return s
+
 
 class GcodeParser(object):
 
@@ -161,9 +188,11 @@ class GcodeParser(object):
 
     def __init__(self):
         self.lexer = GcodeLexer()
-        self.src   = None
-        self.e_len = 0
-        self.flags = 0
+
+        self.src       = (None, )
+        self.e_len     = 0
+        self.flags     = 0
+        self.prev_args = ArgsDict()
 
     def load(self, src):
         self.lexer.load(src)
@@ -175,13 +204,20 @@ class GcodeParser(object):
         movements = []
 
         for command in self.lexer.scan():
-            gcode, args, comment = command
-            dst = self.command_coords(command)
-            e_len    = args['E']
+            gcode, newargs, comment = command
+            args = self.update_args(newargs)
+            dst  = self.command_coords(gcode, args)
+
+            e_len = args['E']
+            if self.e_len is None or e_len is None:
+                delta_e = 0
+            else:
+                delta_e = e_len - self.e_len
+
             feedrate = args['F']
             self.set_flags(command)
 
-            if self.src and dst and self.src != dst:
+            if None not in self.src and None not in dst and self.src != dst:
                 move = Movement(self.src, dst, delta_e, feedrate, self.flags)
                 movements.append(move)
 
@@ -189,8 +225,9 @@ class GcodeParser(object):
                     layers.append(movements)
                     movements = []
 
-            if dst:
+            if None not in dst:
                 self.src = dst
+            self.prev_args = args
             self.e_len = e_len
 
         # don't forget leftover movements
@@ -201,9 +238,16 @@ class GcodeParser(object):
         logging.info('Parsed Gcode file in %.2f seconds' % (t_end - t_start))
 
         if len(layers) < 1:
-            raise GcodeParseError("File does not contain valid Gcode")
+            raise GcodeParserError("File does not contain valid Gcode")
+
+        logging.info('Layers: %d' % len(layers))
 
         return layers
+
+    def update_args(self, args):
+        prev_args = self.prev_args.copy()
+        prev_args.update(args)
+        return ArgsDict(prev_args)
 
     def set_flags(self, command):
         """
@@ -232,25 +276,26 @@ class GcodeParser(object):
         elif self.marker_surrounding_loop_end in comment:
             self.flags &= ~Movement.FLAG_SURROUND_LOOP
 
-        elif gcode == 'M101':
+        elif gcode == 'M101': # turn on extruder
             self.flags |= Movement.FLAG_EXTRUDER_ON
 
-        elif gcode == 'M103':
+        elif gcode == 'M103': # turn off extruder
             self.flags &= ~Movement.FLAG_EXTRUDER_ON
 
-    def command_coords(self, command):
-        gcode, args, comment = command
+    def command_coords(self, gcode, args):
         if gcode == 'G1':
             coords = (args['X'], args['Y'], args['Z'])
             return coords
-        return None
+        return (None, )
 
     def is_new_layer(self, dst, gcode, comment):
         if self.marker_layer in comment:
             return True
 
-        if gcode in ('G1', 'G2', 'G3') and dst[2] - self.src[2] > 0.1:
-            return True
+        if gcode in ('G1', 'G2', 'G3'):
+            delta_z = dst[2] - self.src[2]
+            if delta_z > 0.1:
+                return True
 
         return False
 

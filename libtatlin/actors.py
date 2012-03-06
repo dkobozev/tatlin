@@ -28,6 +28,7 @@ from OpenGL.GLE import *
 from OpenGL.arrays.vbo import VBO
 
 import vector
+from gcodeparser2 import Movement
 
 
 def compile_display_list(func, *options):
@@ -185,15 +186,6 @@ class GcodeModel(Model):
     """
     Model for displaying Gcode data.
     """
-    # define color names for different types of extruder movements
-    color_map = {
-        'red':    [1.0, 0.0,   0.0,   0.6],
-        'yellow': [1.0, 0.875, 0.0,   0.6],
-        'green':  [0.0, 1.0,   0.0,   0.6],
-        'cyan':   [0.0, 0.875, 0.875, 0.6],
-        'gray':   [0.6, 0.6,   0.6,   0.6],
-    }
-
     # vertices for arrow to display the direction of movement
     arrow = numpy.require([
         [0.0, 0.0, 0.0],
@@ -222,16 +214,15 @@ class GcodeModel(Model):
         """
         Construct vertex lists from gcode data.
         """
-        vertex_list = []
-        color_list = []
+        vertex_list      = []
+        color_list       = []
         self.layer_stops = [0]
-        arrow_list = []
+        arrow_list       = []
 
         for layer in model_data:
             for movement in layer:
-                a, b = movement.point_a, movement.point_b
-                vertex_list.append([a.x, a.y, a.z])
-                vertex_list.append([b.x, b.y, b.z])
+                vertex_list.append(movement.src)
+                vertex_list.append(movement.dst)
 
                 arrow = self.arrow
                 # position the arrow with respect to movement
@@ -244,8 +235,9 @@ class GcodeModel(Model):
             self.layer_stops.append(len(vertex_list))
 
         self.vertices = numpy.array(vertex_list, 'f')
-        self.colors = numpy.array(color_list, 'f')
-        self.arrows = numpy.array(arrow_list, 'f')
+        self.colors   = numpy.array(color_list,  'f')
+        self.arrows   = numpy.array(arrow_list,  'f')
+
         # by translating the arrow vertices outside of the loop, we achieve a
         # significant performance gain thanks to numpy. it would be really nice
         # if we could rotate in a similar fashion...
@@ -255,20 +247,26 @@ class GcodeModel(Model):
         assert len(self.arrows) == ((len(self.vertices) // 2) * 3), \
             'The 2:3 ratio of model vertices to arrow vertices does not hold.'
 
-    def movement_color(self, movement):
+    def movement_color(self, move):
         """
         Return the color to use for particular type of movement.
         """
-        if not movement.extruder_on:
-            color = self.color_map['gray']
-        elif movement.is_loop:
-            color = self.color_map['yellow']
-        elif movement.is_perimeter and movement.is_perimeter_outer:
-            color = self.color_map['cyan']
-        elif movement.is_perimeter:
-            color = self.color_map['green']
-        else:
-            color = self.color_map['red']
+        # default movement color is gray
+        color = [0.6, 0.6, 0.6, 0.6]
+
+        extruder_on = (move.flags & Movement.FLAG_EXTRUDER_ON or
+                       move.delta_e > 0)
+        outer_perimeter = (move.flags & Movement.FLAG_PERIMETER and
+                           move.flags & Movement.FLAG_PERIMETER_OUTER)
+
+        if extruder_on and outer_perimeter:
+            color = [0.0, 0.875, 0.875, 0.6] # cyan
+        elif extruder_on and move.flags & Movement.FLAG_PERIMETER:
+            color = [0.0, 1.0, 0.0, 0.6] # green
+        elif extruder_on and move.flags & Movement.FLAG_LOOP:
+            color = [1.0, 0.875, 0.0, 0.6] # yellow
+        elif extruder_on:
+            color = [1.0, 0.0, 0.0, 0.6] # red
 
         return color
 

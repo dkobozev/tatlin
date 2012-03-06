@@ -23,7 +23,7 @@ from __future__ import division
 
 import os
 
-from .gcodeparser import GcodeParser, GcodeParseError
+from .gcodeparser2 import GcodeParser, GcodeParserError
 from .stlparser import StlParser, StlParseError
 from .vector3 import Vector3
 from .actors import StlModel, GcodeModel
@@ -91,13 +91,15 @@ class ModelFile(object):
         return model
 
     def _load_gcode_model(self):
-        parser = GcodeParser(self.path)
-        try:
-            model = GcodeModel(parser.parse())
-            return model
-        except GcodeParseError, e:
-            # rethrow as generic file error
-            raise ModelFileError("Parsing error: %s" % e.message)
+        parser = GcodeParser()
+        with open(self.path, 'r') as gcodefile:
+            parser.load(gcodefile)
+            try:
+                model = GcodeModel(parser.parse())
+                return model
+            except GcodeParserError, e:
+                # rethrow as generic file error
+                raise ModelFileError("Parsing error: %s" % e.message)
 
     def _load_stl_model(self):
         parser = StlParser(self.path)

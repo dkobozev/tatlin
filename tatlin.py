@@ -26,7 +26,6 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
-from libtatlin.stlparser import StlParser
 from libtatlin.actors import Platform
 from libtatlin.scene import Scene, SceneArea
 from libtatlin.ui import StlPanel, GcodePanel, MainWindow, \
