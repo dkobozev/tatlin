@@ -1,5 +1,5 @@
 import unittest
-from libtatlin.gcodeparser2 import GcodeLexer
+from libtatlin.gcodeparser import GcodeLexer
 
 
 class GcodeLexerTest(unittest.TestCase):

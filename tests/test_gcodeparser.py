@@ -1,5 +1,5 @@
 import unittest
-from libtatlin.gcodeparser2 import GcodeParser, Movement, ArgsDict
+from libtatlin.gcodeparser import GcodeParser, Movement, ArgsDict
 
 
 class GcodeParserTest(unittest.TestCase):
