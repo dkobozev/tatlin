@@ -214,12 +214,7 @@ class GcodeParser(object):
             args = self.update_args(newargs)
             dst  = self.command_coords(gcode, args)
 
-            e_len = args['E']
-            if self.e_len is None or e_len is None:
-                delta_e = 0
-            else:
-                delta_e = e_len - self.e_len
-
+            e_len, delta_e = self.process_e_axis(gcode, args)
             feedrate = args['F']
             self.set_flags(command)
 
@@ -297,7 +292,10 @@ class GcodeParser(object):
         gcode, args, comment = command
 
         if 'perimeter' in comment:
-            self.flags |= Movement.FLAG_PERIMETER
+            self.flags |= (Movement.FLAG_PERIMETER |
+                           Movement.FLAG_PERIMETER_OUTER)
+        elif 'skirt' in comment:
+            self.flags |= Movement.FLAG_LOOP
         else:
             self.flags = 0
 
@@ -317,6 +315,19 @@ class GcodeParser(object):
                 return True
 
         return False
+
+    def process_e_axis(self, gcode, args):
+        e_len = args['E']
+        if gcode == 'G92' and e_len == 0:
+            # reset the extruder
+            self.e_len = None
+            delta_e = 0
+        elif self.e_len is None or e_len is None:
+            delta_e = 0
+        else:
+            delta_e = e_len - self.e_len
+
+        return (e_len, delta_e)
 
 
 if __name__ == '__main__':
