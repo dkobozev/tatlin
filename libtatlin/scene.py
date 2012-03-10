@@ -214,7 +214,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             self.current_view.rotate(delta_x * self.ROTATE_SPEED / 100,
                                      delta_y * self.ROTATE_SPEED / 100)
         elif event.state & gtk.gdk.BUTTON2_MASK: # middle mouse button
-            self.current_view.zoom(delta_x, delta_y)
+            if hasattr(self.current_view, 'offset'):
+                self.current_view.offset(delta_x * self.PAN_SPEED / 100,
+                                         delta_y * self.PAN_SPEED / 100)
         elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
             self.current_view.pan(delta_x * self.PAN_SPEED / 100,
                                   delta_y * self.PAN_SPEED / 100)

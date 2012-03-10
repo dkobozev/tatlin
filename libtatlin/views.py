@@ -20,6 +20,7 @@ from __future__ import division
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GLUT import *
 
 
 class ViewMode(object):
@@ -159,11 +160,13 @@ class View3D(ViewMode):
         self.zoom_factor = 1.0
         self.azimuth     = 0.0
         self.elevation   = -20.0
+        self.offset_x = self.offset_y = 0.0
 
         self.supports_ortho = True
         self.ortho          = False
 
-        self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth', 'elevation'])
+        self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth',
+                                'elevation', 'offset_x', 'offset_y'])
         self.push_state()
 
     def begin(self, w, h):
@@ -207,6 +210,36 @@ class View3D(ViewMode):
         glTranslate(self.x, 0.0, self.z)
         glRotate(-self.elevation, 1.0, 0.0, 0.0)
         glRotate(self.azimuth, 0.0, 0.0, 1.0)
+        self._draw_rotation_center_bead()
+        glTranslate(self.offset_x, self.offset_y, 0)
+
+    def _draw_rotation_center_bead(self):
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
+        glEnable(GL_LIGHT1)
+        glShadeModel(GL_SMOOTH)
+
+        # material properties (white plastic)
+        glMaterial(GL_FRONT, GL_AMBIENT, (0.0, 0.0, 0.0, 1.0))
+        glMaterial(GL_FRONT, GL_DIFFUSE, (0.55, 0.55, 0.55, 1.0))
+        glMaterial(GL_FRONT, GL_SPECULAR, (0.7, 0.7, 0.7, 1.0))
+        glMaterial(GL_FRONT, GL_SHININESS, 32.0)
+
+        # lights properties
+        glLight(GL_LIGHT0, GL_AMBIENT, (0.3, 0.3, 0.3, 1.0))
+        glLight(GL_LIGHT0, GL_DIFFUSE, (0.3, 0.3, 0.3, 1.0))
+        glLight(GL_LIGHT1, GL_DIFFUSE, (0.3, 0.3, 0.3, 1.0))
+
+        # lights position
+        glLightfv(GL_LIGHT0, GL_POSITION, (20.0, 20.0, 20.0))
+        glLightfv(GL_LIGHT1, GL_POSITION, (-20.0, -20.0, 20.0))
+
+        glColor(1.0, 0.0, 0.0)
+        glutSolidSphere(0.8, 100, 100)
+
+        glDisable(GL_LIGHT1)
+        glDisable(GL_LIGHT0)
+        glDisable(GL_LIGHTING)
 
     def ui_transform(self, length):
         glRotate(-90, 1.0, 0.0, 0.0) # make z point up
@@ -222,3 +255,6 @@ class View3D(ViewMode):
         self.x += delta_x / self.zoom_factor
         self.z -= delta_y / self.zoom_factor
 
+    def offset(self, delta_x, delta_y):
+        self.offset_x += delta_x / self.zoom_factor
+        self.offset_y -= delta_y / self.zoom_factor
