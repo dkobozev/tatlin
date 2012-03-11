@@ -145,6 +145,14 @@ class View2D(ViewMode):
         self.x += delta_x * self.PAN_FACTOR
         self.y -= delta_y * self.PAN_FACTOR
 
+    def zoom(self, delta_x, delta_y):
+        old_zoom = self.zoom_factor
+        super(View2D, self).zoom(delta_x, delta_y)
+
+        # adjust panning for new zoom level
+        self.x *= self.zoom_factor / old_zoom
+        self.y *= self.zoom_factor / old_zoom
+
 
 class View3D(ViewMode):
     """
