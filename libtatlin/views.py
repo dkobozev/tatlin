@@ -28,7 +28,7 @@ class ViewMode(object):
     Base class for projection transformations.
     """
     ZOOM_MIN = 0.1
-    ZOOM_MAX = 1000
+    ZOOM_MAX = 800
 
     def __init__(self):
         self._stack = []
@@ -160,6 +160,8 @@ class View3D(ViewMode):
     """
     FOVY = 80.0
     ZOOM_ORTHO_ADJ = 4.5
+    NEAR = 1
+    FAR  = 100000
 
     def __init__(self):
         super(View3D, self).__init__()
@@ -184,13 +186,9 @@ class View3D(ViewMode):
 
         if self.ortho:
             x, y = w / 2, h / 2
-            near = -9000
-            far  =  9000
-            glOrtho(-x, x, -y, y, near, far)
+            glOrtho(-x, x, -y, y, -self.FAR, self.FAR)
         else:
-            near = 0.1
-            far  = 9000
-            gluPerspective(self.FOVY, w / h, near, far)
+            gluPerspective(self.FOVY, w / h, self.NEAR, self.FAR)
 
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
