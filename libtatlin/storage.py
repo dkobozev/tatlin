@@ -85,22 +85,22 @@ class ModelFile(object):
 
         return self.extension[1:]
 
-    def load_model(self):
-        model = self._loaders[self.filetype]()
+    def load_model(self, callback=None):
+        model = self._loaders[self.filetype](callback)
         return model
 
-    def _load_gcode_model(self):
+    def _load_gcode_model(self, callback=None):
         parser = GcodeParser()
         with open(self.path, 'r') as gcodefile:
             parser.load(gcodefile)
             try:
-                model = GcodeModel(parser.parse())
+                model = GcodeModel(parser.parse(callback))
                 return model
             except GcodeParserError, e:
                 # rethrow as generic file error
                 raise ModelFileError("Parsing error: %s" % e.message)
 
-    def _load_stl_model(self):
+    def _load_stl_model(self, callback=None):
         parser = StlParser(self.path)
         try:
             model = StlModel(parser.parse())

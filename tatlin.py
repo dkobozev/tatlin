@@ -29,7 +29,7 @@ import gtk
 from libtatlin.actors import Platform
 from libtatlin.scene import Scene, SceneArea
 from libtatlin.ui import StlPanel, GcodePanel, MainWindow, \
-SaveDialog, OpenDialog, OpenErrorAlert, QuitDialog
+SaveDialog, OpenDialog, OpenErrorAlert, QuitDialog, ProgressDialog
 from libtatlin.storage import ModelFile, ModelFileError
 from libtatlin.config import Config
 
@@ -388,7 +388,11 @@ class App(object):
 
     def add_file_to_scene(self, f):
         self.scene.clear()
-        self.scene.load_file(f)
+
+        dialog = ProgressDialog(self.window)
+        dialog.show()
+        self.scene.load_model(f.load_model(dialog.step))
+        dialog.destroy()
 
         # platform needs to be added last to be translucent
         platform_w = self.config.read('machine.platform_w', int)
@@ -413,8 +417,8 @@ if __name__ == '__main__':
     logging.basicConfig(format='--- [%(levelname)s] %(message)s', level=logging.DEBUG)
 
     app = App()
+    app.show_window()
     if len(sys.argv) > 1:
         app.open_and_display_file(sys.argv[1])
-    app.show_window()
     gtk.main()
 
