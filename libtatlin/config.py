@@ -11,6 +11,8 @@ class Config(object):
             # makerbot thing-o-matic platform size
             'machine.platform_w': 120,
             'machine.platform_d': 100,
+            'ui.window_w': 640,
+            'ui.window_h': 480,
         }
 
         self.fname = fname
