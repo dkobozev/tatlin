@@ -193,33 +193,16 @@ class GcodeModel(Model):
         [0.4, 0.1, 0.0],
     ], 'f')
 
-    def __init__(self, model_data):
-        Model.__init__(self)
-
+    def load_data(self, model_data, callback=None):
         t_start = time.time()
 
-        self.create_vertex_arrays(model_data)
-
-        self.max_layers         = len(self.layer_stops) - 1
-        self.num_layers_to_draw = self.max_layers
-        self.arrows_enabled     = True
-        self.initialized        = False
-
-        t_end = time.time()
-
-        logging.info('Initialized Gcode model in %.2f seconds' % (t_end - t_start))
-        logging.info('Vertex count: %d' % len(self.vertices))
-
-    def create_vertex_arrays(self, model_data):
-        """
-        Construct vertex lists from gcode data.
-        """
         vertex_list      = []
         color_list       = []
         self.layer_stops = [0]
         arrow_list       = []
+        num_layers       = len(model_data)
 
-        for layer in model_data:
+        for layer_idx, layer in enumerate(model_data):
             for movement in layer:
                 vertex_list.append(movement.src)
                 vertex_list.append(movement.dst)
@@ -234,6 +217,9 @@ class GcodeModel(Model):
 
             self.layer_stops.append(len(vertex_list))
 
+            if callback:
+                callback(layer_idx + 1, num_layers)
+
         self.vertices = numpy.array(vertex_list, 'f')
         self.colors   = numpy.array(color_list,  'f')
         self.arrows   = numpy.array(arrow_list,  'f')
@@ -246,6 +232,16 @@ class GcodeModel(Model):
         # for every pair of vertices of the model, there are 3 vertices for the arrow
         assert len(self.arrows) == ((len(self.vertices) // 2) * 3), \
             'The 2:3 ratio of model vertices to arrow vertices does not hold.'
+
+        self.max_layers         = len(self.layer_stops) - 1
+        self.num_layers_to_draw = self.max_layers
+        self.arrows_enabled     = True
+        self.initialized        = False
+
+        t_end = time.time()
+
+        logging.info('Initialized Gcode model in %.2f seconds' % (t_end - t_start))
+        logging.info('Vertex count: %d' % len(self.vertices))
 
     def movement_color(self, move):
         """
@@ -336,10 +332,7 @@ class StlModel(Model):
     """
     Model for displaying and manipulating STL data.
     """
-
-    def __init__(self, model_data):
-        Model.__init__(self)
-
+    def load_data(self, model_data, callback=None):
         t_start = time.time()
 
         vertices, normals = model_data

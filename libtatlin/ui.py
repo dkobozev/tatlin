@@ -557,18 +557,20 @@ class QuitDialog(gtk.Dialog):
 
 
 class ProgressDialog(gtk.Dialog):
-    def __init__(self, parent=None):
-        super(ProgressDialog, self).__init__(None, parent,
+    def __init__(self, title=None, parent=None):
+        super(ProgressDialog, self).__init__(title, parent,
             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
 
-        label = gtk.Label('Loading file...')
+        self.label = gtk.Label()
         self.progressbar = gtk.ProgressBar()
         self.progressbar.set_fraction(0)
 
-        self.vbox.pack_start(label)
+        self.vbox.pack_start(self.label)
         self.vbox.pack_start(self.progressbar)
-        label.show()
-        self.progressbar.show()
+        self.show_all()
+
+    def set_text(self, text):
+        self.label.set_text(text)
 
     def step(self, count, limit):
         self.progressbar.set_fraction(max(0, min(count / limit, 1)))

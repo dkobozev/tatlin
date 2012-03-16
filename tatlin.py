@@ -205,6 +205,10 @@ class App(object):
     # EVENT HANDLERS
     # -------------------------------------------------------------------------
 
+    def command_line(self):
+        if len(sys.argv) > 1:
+            self.open_and_display_file(sys.argv[1])
+
     def save_file(self, action=None):
         """
         Save changes to the same file.
@@ -389,9 +393,14 @@ class App(object):
     def add_file_to_scene(self, f):
         self.scene.clear()
 
-        dialog = ProgressDialog(self.window)
+        dialog = ProgressDialog('Loading', self.window)
+        dialog.set_text('Reading file...')
         dialog.show()
-        self.scene.load_model(f.load_model(dialog.step))
+        model, model_data = f.read(dialog.step)
+
+        dialog.set_text('Loading model...')
+        model.load_data(model_data, dialog.step)
+        self.scene.add_model(model)
         dialog.destroy()
 
         # platform needs to be added last to be translucent
@@ -418,7 +427,6 @@ if __name__ == '__main__':
 
     app = App()
     app.show_window()
-    if len(sys.argv) > 1:
-        app.open_and_display_file(sys.argv[1])
+    app.command_line()
     gtk.main()
 

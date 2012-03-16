@@ -94,7 +94,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             'rotation-z':     lambda: self.model.rotation_angle[self.model.AXIS_Z],
         }
 
-    def load_model(self, model):
+    def add_model(self, model):
         self.model = model
         self.actors.append(self.model)
 
