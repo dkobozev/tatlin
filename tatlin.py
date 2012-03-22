@@ -359,6 +359,9 @@ class App(object):
     # -------------------------------------------------------------------------
 
     def open_and_display_file(self, fpath):
+        progress_dialog = ProgressDialog('Loading', self.window)
+        self.window.set_cursor(gtk.gdk.WATCH)
+
         try:
             self.model_file = ModelFile(fpath)
 
@@ -366,7 +369,21 @@ class App(object):
                 self.scene = Scene()
                 self.glarea = SceneArea(self.scene)
 
-            self.add_file_to_scene(self.model_file)
+            progress_dialog.set_text('Reading file...')
+            progress_dialog.show()
+            model, model_data = self.model_file.read(progress_dialog.step)
+
+            progress_dialog.set_text('Loading model...')
+            model.load_data(model_data, progress_dialog.step)
+
+            self.scene.clear()
+            self.scene.add_model(model)
+
+            # platform needs to be added last to be translucent
+            platform_w = self.config.read('machine.platform_w', int)
+            platform_d = self.config.read('machine.platform_d', int)
+            platform = Platform(platform_w, platform_d)
+            self.scene.add_supporting_actor(platform)
 
             if self.panel is None or not self.panel_matches_file():
                 self.panel = self.create_panel()
@@ -382,32 +399,18 @@ class App(object):
             self.window.filename = self.model_file.basename
             self.menu_enable_file_items(self.model_file.filetype != 'gcode')
         except IOError, e:
-            dialog = OpenErrorAlert(self.window, fpath, e.strerror)
-            dialog.run()
-            dialog.destroy()
+            self.window.window.set_cursor(None)
+            error_dialog = OpenErrorAlert(self.window, fpath, e.strerror)
+            error_dialog.run()
+            error_dialog.destroy()
         except ModelFileError, e:
-            dialog = OpenErrorAlert(self.window, fpath, e.message)
-            dialog.run()
-            dialog.destroy()
-
-    def add_file_to_scene(self, f):
-        self.scene.clear()
-
-        dialog = ProgressDialog('Loading', self.window)
-        dialog.set_text('Reading file...')
-        dialog.show()
-        model, model_data = f.read(dialog.step)
-
-        dialog.set_text('Loading model...')
-        model.load_data(model_data, dialog.step)
-        self.scene.add_model(model)
-        dialog.destroy()
-
-        # platform needs to be added last to be translucent
-        platform_w = self.config.read('machine.platform_w', int)
-        platform_d = self.config.read('machine.platform_d', int)
-        platform = Platform(platform_w, platform_d)
-        self.scene.add_supporting_actor(platform)
+            self.window.window.set_cursor(None)
+            error_dialog = OpenErrorAlert(self.window, fpath, e.message)
+            error_dialog.run()
+            error_dialog.destroy()
+        finally:
+            progress_dialog.destroy()
+            self.window.window.set_cursor(None)
 
     def create_panel(self):
         if self.model_file.filetype == 'gcode':

@@ -500,6 +500,12 @@ class MainWindow(gtk.Window):
 
         self.set_title(title)
 
+    def set_cursor(self, cursor):
+        if cursor:
+            self.window.set_cursor(gtk.gdk.Cursor(cursor))
+        else:
+            self.window.set_cursor(cursor)
+
 
 class SaveDialog(gtk.FileChooserDialog):
     """
@@ -530,10 +536,10 @@ class OpenDialog(gtk.FileChooserDialog):
 
 class OpenErrorAlert(gtk.MessageDialog):
     def __init__(self, parent, fpath, error):
+        msg = "Error opening file %s: %s" % (fpath, error)
         gtk.MessageDialog.__init__(self, parent,
             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-            "Error opening file %s: %s" % (fpath, error))
+            gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, msg)
 
 
 class QuitDialog(gtk.Dialog):
