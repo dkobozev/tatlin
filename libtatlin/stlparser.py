@@ -81,17 +81,32 @@ class StlAsciiParser(object):
         line = line.strip().split()
         return line
 
-    def parse(self):
+    def _count_lines(self):
+        count = 0
+        for line in self.finput:
+            count += 1
+        self.finput.seek(0)
+        return count
+
+    def parse(self, callback=None):
         """
         Parse the file into a tuple of normal and facet lists.
         """
         t_start = time.time()
 
+        self.callback = callback
         self.finput = open(self.fname, 'r')
         try:
+            self.line_count = self._count_lines()
+            self.callback_every = self.line_count // 50 # every 2 percent
+            self.callback_next = self.callback_every
+
             self._solid()
         finally:
             self.finput.close()
+
+        if self.callback:
+            self.callback(self.line_no, self.line_count)
 
         t_end = time.time()
         logging.info('Parsed STL ASCII file in %.2f seconds' % (t_end - t_start))
@@ -140,6 +155,10 @@ class StlAsciiParser(object):
         self.facet_list.extend(self.vertex_list)
         self.normal_list.extend([self.facet_normal] * len(self.vertex_list))
 
+        if self.callback and self.line_no >= self.callback_next:
+            self.callback_next += self.callback_every
+            self.callback(self.line_no, self.line_count)
+
     def _outer_loop(self):
         line = self.next_line()
         if ' '.join(line) != 'outer loop':
@@ -179,7 +198,7 @@ class StlBinaryParser(object):
     def __init__(self, fname):
         self.fname = fname
 
-    def parse(self):
+    def parse(self, callback=None):
         """
         Parse the file into a tuple of normal and facet lists.
         """
@@ -190,12 +209,20 @@ class StlBinaryParser(object):
 
         fp = open(self.fname, 'rb')
         self._skip_header(fp)
-        for facet_idx in xrange(self._facet_count(fp)):
+        fcount = self._facet_count(fp)
+        callback_every = fcount // 50
+        for facet_idx in xrange(fcount):
             vertices, normal = self._parse_facet(fp)
             facet_list.extend(vertices)
             normal_list.extend([normal] * len(vertices)) # one normal per vertex
 
+            if callback and (facet_idx + 1) % callback_every == 0:
+                callback(facet_idx + 1, fcount)
+
         fp.close()
+
+        if callback:
+            callback(facet_idx + 1, fcount)
 
         t_end = time.time()
         logging.info('Parsed STL binary file in %.2f seconds' % (t_end - t_start))

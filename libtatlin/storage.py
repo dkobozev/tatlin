@@ -102,7 +102,7 @@ class ModelFile(object):
     def _load_stl_model(self, callback=None):
         parser = StlParser(self.path)
         try:
-            data = parser.parse()
+            data = parser.parse(callback)
             return StlModel(), data
         except StlParseError, e:
             # rethrow as generic file error
