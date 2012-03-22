@@ -234,9 +234,15 @@ class App(object):
     def open_file_dialog(self, action=None):
         if self.save_changes_dialog():
             dialog = OpenDialog(self.current_dir)
+            show_again = True
 
-            if dialog.run() == gtk.RESPONSE_ACCEPT:
-                self.open_and_display_file(dialog.get_filename())
+            while show_again:
+                if dialog.run() == gtk.RESPONSE_ACCEPT:
+                    dialog.hide()
+                    fname = dialog.get_filename()
+                    show_again = not self.open_and_display_file(fname)
+                else:
+                    show_again = False
 
             dialog.destroy()
 
@@ -361,6 +367,7 @@ class App(object):
     def open_and_display_file(self, fpath):
         progress_dialog = ProgressDialog('Loading', self.window)
         self.window.set_cursor(gtk.gdk.WATCH)
+        success = True
 
         try:
             self.model_file = ModelFile(fpath)
@@ -400,17 +407,23 @@ class App(object):
             self.menu_enable_file_items(self.model_file.filetype != 'gcode')
         except IOError, e:
             self.window.window.set_cursor(None)
+            progress_dialog.hide()
             error_dialog = OpenErrorAlert(self.window, fpath, e.strerror)
             error_dialog.run()
             error_dialog.destroy()
+            success = False
         except ModelFileError, e:
             self.window.window.set_cursor(None)
+            progress_dialog.hide()
             error_dialog = OpenErrorAlert(self.window, fpath, e.message)
             error_dialog.run()
             error_dialog.destroy()
+            success = False
         finally:
             progress_dialog.destroy()
             self.window.window.set_cursor(None)
+
+        return success
 
     def create_panel(self):
         if self.model_file.filetype == 'gcode':

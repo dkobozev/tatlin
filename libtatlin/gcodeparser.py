@@ -86,8 +86,12 @@ class GcodeLexer(object):
                 if not self.is_blank(tokens):
                     yield tokens
         except GcodeArgumentError as e:
-            raise GcodeParserError('Error parsing arguments: %s on line %d\n'
-                '\t%s' % (str(e), self.line_no, self.current_line))
+            error_msg = str(e).strip()
+            if error_msg.endswith(':'):
+                error_msg = error_msg[:-1]
+
+            raise GcodeParserError('Error parsing arguments: %s on line %d\n' % (
+                error_msg, self.line_no))
 
     def scan_line(self, line):
         """

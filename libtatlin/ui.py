@@ -530,6 +530,8 @@ class OpenDialog(gtk.FileChooserDialog):
             action=gtk.FILE_CHOOSER_ACTION_OPEN,
             buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
 
+        self.set_keep_above(True)
+
         if directory is not None:
             self.set_current_folder(directory)
 
@@ -540,6 +542,8 @@ class OpenErrorAlert(gtk.MessageDialog):
         gtk.MessageDialog.__init__(self, parent,
             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
             gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, msg)
+
+        self.set_keep_above(True)
 
 
 class QuitDialog(gtk.Dialog):
