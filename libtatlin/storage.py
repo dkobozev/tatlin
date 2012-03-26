@@ -100,13 +100,15 @@ class ModelFile(object):
                 raise ModelFileError("Parsing error: %s" % e.message)
 
     def _load_stl_model(self, callback=None):
-        parser = StlParser(self.path)
-        try:
-            data = parser.parse(callback)
-            return StlModel(), data
-        except StlParseError, e:
-            # rethrow as generic file error
-            raise ModelFileError("Parsing error: %s" % e.message)
+        with open(self.path, 'rb') as stlfile:
+            parser = StlParser(stlfile)
+            parser.load(stlfile)
+            try:
+                data = parser.parse(callback)
+                return StlModel(), data
+            except StlParseError, e:
+                # rethrow as generic file error
+                raise ModelFileError("Parsing error: %s" % e.message)
 
     def write_stl(self, stl_model):
         assert self.filetype == 'stl'
