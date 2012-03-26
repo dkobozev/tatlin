@@ -191,7 +191,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             glColor(*color)
             # add padding to labels
             glRasterPos(axis[0] + 2, axis[1] + 2, axis[2] + 2)
-            glutBitmapString(GLUT_BITMAP_8_BY_13, label);
+            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(label));
 
         glPopMatrix()
 
