@@ -22,6 +22,7 @@ Parser for STL (stereolithography) files.
 import struct
 import time
 import logging
+from cStringIO import StringIO
 
 
 class StlParseError(Exception):
@@ -47,14 +48,24 @@ class StlAsciiParser(object):
 
     The rest is boring parser stuff.
     """
-    def __init__(self, fname):
-        self.fname = fname
-
+    def __init__(self):
+        self.line_count = 0
         self.line_no = 0
         self.tokenized_peek_line = None
 
+    def load(self, stl):
+        if hasattr(stl, 'read'):
+            for line in stl:
+                self.line_count += 1
+            stl.seek(0)
+        else:
+            stl = stl.split('\n')
+            self.line_count = len(stl)
+
+        self.stl = iter(stl)
+
     def readline(self):
-        line = self.finput.readline()
+        line = self.stl.next()
         if line == '':
             raise ParseEOF
         return line
@@ -81,17 +92,20 @@ class StlAsciiParser(object):
         line = line.strip().split()
         return line
 
-    def parse(self):
+    def parse(self, callback=None):
         """
         Parse the file into a tuple of normal and facet lists.
         """
         t_start = time.time()
 
-        self.finput = open(self.fname, 'r')
-        try:
-            self._solid()
-        finally:
-            self.finput.close()
+        self.callback = callback
+        self.callback_every = self.line_count // 50 # every 2 percent
+        self.callback_next = self.callback_every
+
+        self._solid()
+
+        if self.callback:
+            self.callback(self.line_no, self.line_count)
 
         t_end = time.time()
         logging.info('Parsed STL ASCII file in %.2f seconds' % (t_end - t_start))
@@ -140,6 +154,10 @@ class StlAsciiParser(object):
         self.facet_list.extend(self.vertex_list)
         self.normal_list.extend([self.facet_normal] * len(self.vertex_list))
 
+        if self.callback and self.line_no >= self.callback_next:
+            self.callback_next += self.callback_every
+            self.callback(self.line_no, self.line_count)
+
     def _outer_loop(self):
         line = self.next_line()
         if ' '.join(line) != 'outer loop':
@@ -176,10 +194,13 @@ class StlBinaryParser(object):
     FACET_COUNT_LEN = 4  # one 32-bit unsigned int
     FACET_LEN       = 50 # twelve 32-bit floats + one 16-bit short unsigned int
 
-    def __init__(self, fname):
-        self.fname = fname
+    def load(self, stl):
+        if not hasattr(stl, 'read'):
+            stl = StringIO(stl)
 
-    def parse(self):
+        self.stl = stl
+
+    def parse(self, callback=None):
         """
         Parse the file into a tuple of normal and facet lists.
         """
@@ -188,14 +209,19 @@ class StlBinaryParser(object):
         normal_list = []
         facet_list  = []
 
-        fp = open(self.fname, 'rb')
-        self._skip_header(fp)
-        for facet_idx in xrange(self._facet_count(fp)):
-            vertices, normal = self._parse_facet(fp)
+        self._skip_header(self.stl)
+        fcount = self._facet_count(self.stl)
+        callback_every = fcount // 50
+        for facet_idx in xrange(fcount):
+            vertices, normal = self._parse_facet(self.stl)
             facet_list.extend(vertices)
             normal_list.extend([normal] * len(vertices)) # one normal per vertex
 
-        fp.close()
+            if callback and (facet_idx + 1) % callback_every == 0:
+                callback(facet_idx + 1, fcount)
+
+        if callback:
+            callback(facet_idx + 1, fcount)
 
         t_end = time.time()
         logging.info('Parsed STL binary file in %.2f seconds' % (t_end - t_start))
@@ -229,42 +255,44 @@ class StlBinaryParser(object):
             raise StlParseError("Error unpacking binary STL data")
 
 
-def is_stl_ascii(fname):
+def is_stl_ascii(fp):
     """
     Guess whether file with the given name is plain ASCII STL file.
     """
-    fp = open(fname, 'rb')
     is_ascii = fp.readline().strip().startswith('solid')
-    fp.close()
+    fp.seek(0)
     return is_ascii
 
 
-def StlParser(fname):
+def StlParser(fp):
     """
     STL parser that handles both ASCII and binary formats.
     """
-    parser = StlAsciiParser if is_stl_ascii(fname) else StlBinaryParser
-    return parser(fname)
+    parser = StlAsciiParser if is_stl_ascii(fp) else StlBinaryParser
+    return parser()
 
 
 if __name__ == '__main__':
     import sys
-    parser = StlParser(sys.argv[1])
-    vertices, normals = parser.parse()
 
-    print '[ OK   ] Parsed %d vertices' % len(vertices)
+    with open(sys.argv[1], 'rb') as stl:
+        parser = StlParser(stl)
+        parser.load(stl)
+        vertices, normals = parser.parse()
 
-    print '[ INFO ] First vertices:'
-    for vertex in vertices[:3]:
-        print vertex
-    print '[ INFO ] First normals:'
-    for normal in normals[:3]:
-        print normal
+        print '[ OK   ] Parsed %d vertices' % len(vertices)
 
-    print '[ INFO ] Last vertices:'
-    for vertex in vertices[-3:]:
-        print vertex
-    print '[ INFO ] Last normals:'
-    for normal in normals[-3:]:
-        print normal
+        print '[ INFO ] First vertices:'
+        for vertex in vertices[:3]:
+            print vertex
+        print '[ INFO ] First normals:'
+        for normal in normals[:3]:
+            print normal
+
+        print '[ INFO ] Last vertices:'
+        for vertex in vertices[-3:]:
+            print vertex
+        print '[ INFO ] Last normals:'
+        for normal in normals[-3:]:
+            print normal
 

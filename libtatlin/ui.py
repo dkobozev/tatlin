@@ -500,6 +500,12 @@ class MainWindow(gtk.Window):
 
         self.set_title(title)
 
+    def set_cursor(self, cursor):
+        if cursor:
+            self.window.set_cursor(gtk.gdk.Cursor(cursor))
+        else:
+            self.window.set_cursor(cursor)
+
 
 class SaveDialog(gtk.FileChooserDialog):
     """
@@ -524,16 +530,20 @@ class OpenDialog(gtk.FileChooserDialog):
             action=gtk.FILE_CHOOSER_ACTION_OPEN,
             buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT))
 
+        self.set_keep_above(True)
+
         if directory is not None:
             self.set_current_folder(directory)
 
 
 class OpenErrorAlert(gtk.MessageDialog):
     def __init__(self, parent, fpath, error):
+        msg = "Error opening file %s: %s" % (fpath, error)
         gtk.MessageDialog.__init__(self, parent,
             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-            "Error opening file %s: %s" % (fpath, error))
+            gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, msg)
+
+        self.set_keep_above(True)
 
 
 class QuitDialog(gtk.Dialog):
@@ -555,3 +565,25 @@ class QuitDialog(gtk.Dialog):
         self.vbox.pack_start(label)
         label.show()
 
+
+class ProgressDialog(gtk.Dialog):
+    def __init__(self, title=None, parent=None):
+        super(ProgressDialog, self).__init__(title, parent,
+            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
+
+        self.label = gtk.Label()
+        self.progressbar = gtk.ProgressBar()
+        self.progressbar.set_fraction(0)
+
+        self.vbox.pack_start(self.label)
+        self.vbox.pack_start(self.progressbar)
+        self.show_all()
+
+    def set_text(self, text):
+        self.label.set_text(text)
+
+    def step(self, count, limit):
+        self.progressbar.set_fraction(max(0, min(count / limit, 1)))
+
+        while gtk.events_pending():
+            gtk.main_iteration()

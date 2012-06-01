@@ -49,10 +49,12 @@ class GcodeLexer(object):
         self.lines = []
         self.line_no = None
         self.current_line = None
+        self.line_count = 0
 
     def load(self, gcode):
         content = self.read_input(gcode)
         self.lines = self.split_lines(content)
+        self.line_count = len(self.lines)
 
     def read_input(self, src):
         """
@@ -84,8 +86,12 @@ class GcodeLexer(object):
                 if not self.is_blank(tokens):
                     yield tokens
         except GcodeArgumentError as e:
-            raise GcodeParserError('Error parsing arguments: %s on line %d\n'
-                '\t%s' % (str(e), self.line_no, self.current_line))
+            error_msg = str(e).strip()
+            if error_msg.endswith(':'):
+                error_msg = error_msg[:-1]
+
+            raise GcodeParserError('Error parsing arguments: %s on line %d\n' % (
+                error_msg, self.line_no))
 
     def scan_line(self, line):
         """
@@ -198,13 +204,15 @@ class GcodeParser(object):
     def load(self, src):
         self.lexer.load(src)
 
-    def parse(self):
+    def parse(self, callback=None):
         t_start = time.time()
 
         layers = []
         movements = []
+        line_count = self.lexer.line_count
+        callback_every = round(line_count / 50)
 
-        for command in self.lexer.scan():
+        for command_idx, command in enumerate(self.lexer.scan()):
             gcode, newargs, comment = command
 
             if 'Slic3r' in comment:
@@ -231,9 +239,15 @@ class GcodeParser(object):
             self.prev_args = args
             self.e_len = e_len
 
+            if callback and command_idx % callback_every == 0:
+                callback(command_idx + 1, line_count)
+
         # don't forget leftover movements
         if len(movements) > 0:
             layers.append(movements)
+
+        if callback:
+            callback(command_idx + 1, line_count)
 
         t_end = time.time()
         logging.info('Parsed Gcode file in %.2f seconds' % (t_end - t_start))

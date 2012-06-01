@@ -94,8 +94,8 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             'rotation-z':     lambda: self.model.rotation_angle[self.model.AXIS_Z],
         }
 
-    def load_file(self, model_file):
-        self.model = model_file.load_model()
+    def add_model(self, model):
+        self.model = model
         self.actors.append(self.model)
 
     def export_to_file(self, model_file):
@@ -191,7 +191,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             glColor(*color)
             # add padding to labels
             glRasterPos(axis[0] + 2, axis[1] + 2, axis[2] + 2)
-            glutBitmapString(GLUT_BITMAP_8_BY_13, label);
+            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(label));
 
         glPopMatrix()
 

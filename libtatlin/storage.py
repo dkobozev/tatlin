@@ -85,29 +85,30 @@ class ModelFile(object):
 
         return self.extension[1:]
 
-    def load_model(self):
-        model = self._loaders[self.filetype]()
-        return model
+    def read(self, callback=None):
+        return self._loaders[self.filetype](callback)
 
-    def _load_gcode_model(self):
+    def _load_gcode_model(self, callback=None):
         parser = GcodeParser()
         with open(self.path, 'r') as gcodefile:
             parser.load(gcodefile)
             try:
-                model = GcodeModel(parser.parse())
-                return model
+                data = parser.parse(callback)
+                return GcodeModel(), data
             except GcodeParserError, e:
                 # rethrow as generic file error
                 raise ModelFileError("Parsing error: %s" % e.message)
 
-    def _load_stl_model(self):
-        parser = StlParser(self.path)
-        try:
-            model = StlModel(parser.parse())
-            return model
-        except StlParseError, e:
-            # rethrow as generic file error
-            raise ModelFileError("Parsing error: %s" % e.message)
+    def _load_stl_model(self, callback=None):
+        with open(self.path, 'rb') as stlfile:
+            parser = StlParser(stlfile)
+            parser.load(stlfile)
+            try:
+                data = parser.parse(callback)
+                return StlModel(), data
+            except StlParseError, e:
+                # rethrow as generic file error
+                raise ModelFileError("Parsing error: %s" % e.message)
 
     def write_stl(self, stl_model):
         assert self.filetype == 'stl'
