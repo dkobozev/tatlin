@@ -71,6 +71,11 @@ class App(object):
         # ---------------------------------------------------------------------
 
         self.init_config()
+
+        window_w = self.config.read('ui.window_w', int)
+        window_h = self.config.read('ui.window_h', int)
+        self.window.set_default_size(window_w, window_h)
+
         self.init_scene()
 
     def init_config(self):
@@ -400,7 +405,10 @@ class App(object):
             self.panel.connect_handlers()
             # always start with the same view on the scene
             self.scene.reset_view(True)
-            self.scene.mode_2d = False
+            if self.model_file.filetype == 'gcode':
+                self.scene.mode_2d = self.config.read('ui.gcode_2d', bool)
+            else:
+                self.scene.mode_2d = False
 
             self.window.set_file_widgets(self.glarea, self.panel)
             self.window.filename = self.model_file.basename
