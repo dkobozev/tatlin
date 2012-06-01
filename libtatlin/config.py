@@ -13,6 +13,7 @@ class Config(object):
             'machine.platform_d': 100,
             'ui.window_w': 640,
             'ui.window_h': 480,
+            'ui.gcode_2d': False,
         }
 
         self.fname = fname
