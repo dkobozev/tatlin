@@ -7,6 +7,5 @@ stl:
 * custom offset
 
 long-term:
-* multi-threading for better responsiveness & speed (low)
-* rewrite VBO loading in C for better performance
+* speed up model loading and initialization
 * undo/redo (low)
