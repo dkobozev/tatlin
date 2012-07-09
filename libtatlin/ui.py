@@ -148,7 +148,7 @@ class GcodePanel(gtk.VBox):
 
         self.check_arrows.set_active(True) # check the box
 
-        self.check_3d.set_active(True) # check the box
+        self.check_3d.set_active(self.app.scene.mode_2d) # check the box, maybe
 
         self.label_width_value.set_text(self.app.get_property('width'))
         self.label_depth_value.set_text(self.app.get_property('depth'))
