@@ -314,7 +314,7 @@ class GcodeParser(object):
             self.flags = 0
 
     def command_coords(self, gcode, args):
-        if gcode == 'G1':
+        if gcode == 'G1' or gcode == 'G01':
             coords = (args['X'], args['Y'], args['Z'])
             return coords
         return (None, )
@@ -323,7 +323,7 @@ class GcodeParser(object):
         if self.marker_layer in comment:
             return True
 
-        if gcode in ('G1', 'G2', 'G3'):
+        if gcode in ('G1', 'G01', 'G2', 'G02', 'G3', 'G03'):
             delta_z = dst[2] - self.src[2]
             if delta_z > 0.1:
                 return True
