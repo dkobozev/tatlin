@@ -41,3 +41,8 @@ your home directory with the following contents:
     [machine]
     platform_w = 300
     platform_d = 300
+
+Thanks
+-------
+
+* Bartosz Zaborowski for the two digit Gcode patch
