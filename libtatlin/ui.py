@@ -148,7 +148,7 @@ class GcodePanel(gtk.VBox):
 
         self.check_arrows.set_active(True) # check the box
 
-        self.check_3d.set_active(True) # check the box
+        self.check_3d.set_active(True)
 
         self.label_width_value.set_text(self.app.get_property('width'))
         self.label_depth_value.set_text(self.app.get_property('depth'))
@@ -160,6 +160,9 @@ class GcodePanel(gtk.VBox):
         """
         self.check_ortho.set_sensitive(widget.get_active())
         self.app.on_set_mode(widget)
+
+    def set_3d_view(self, value):
+        self.check_3d.set_active(value)
 
 
 class StlPanel(gtk.VBox):

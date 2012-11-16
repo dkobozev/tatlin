@@ -341,7 +341,8 @@ class App(object):
 
     def on_set_mode(self, widget):
         self.scene.mode_2d = not widget.get_active()
-        self.scene.invalidate()
+        if self.scene.is_initialized():
+            self.scene.invalidate()
 
     def on_set_ortho(self, widget):
         self.scene.mode_ortho = widget.get_active()
@@ -409,6 +410,9 @@ class App(object):
                 self.scene.mode_2d = self.config.read('ui.gcode_2d', bool)
             else:
                 self.scene.mode_2d = False
+
+            if hasattr(self.panel, 'set_3d_view'):
+                self.panel.set_3d_view(not self.scene.mode_2d)
 
             self.window.set_file_widgets(self.glarea, self.panel)
             self.window.filename = self.model_file.basename

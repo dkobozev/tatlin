@@ -111,6 +111,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     def clear(self):
         self.actors = []
 
+    def is_initialized(self):
+        return self.glarea.window is not None
+
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
