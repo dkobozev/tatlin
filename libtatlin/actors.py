@@ -135,7 +135,10 @@ class Model(object):
 
     axis_letter_map = dict([(v, k) for k, v in letter_axis_map.items()])
 
-    def __init__(self):
+    def __init__(self, offset_x=0, offset_y=0):
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+
         self.init_model_attributes()
 
     def init_model_attributes(self):
@@ -281,6 +284,8 @@ class GcodeModel(Model):
         self.initialized = True
 
     def display(self, mode_2d=False):
+        glPushMatrix()
+        glTranslate(self.offset_x, self.offset_y, 0)
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
 
@@ -291,6 +296,7 @@ class GcodeModel(Model):
 
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY)
+        glPopMatrix()
 
     def _display_movements(self, mode_2d=False):
         self.vertex_buffer.bind()

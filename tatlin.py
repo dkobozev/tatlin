@@ -390,6 +390,8 @@ class App(object):
             model.load_data(model_data, progress_dialog.step)
 
             self.scene.clear()
+            model.offset_x = self.config.read('machine.platform_offset_x', int)
+            model.offset_y = self.config.read('machine.platform_offset_y', int)
             self.scene.add_model(model)
 
             # platform needs to be added last to be translucent
