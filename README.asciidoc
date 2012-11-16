@@ -45,4 +45,5 @@ your home directory with the following contents:
 Thanks
 -------
 
+* Lenbok for config file options
 * Bartosz Zaborowski for the two digit Gcode patch
