@@ -22,11 +22,11 @@ Usage
 
 To launch Tatlin from the command line:
 
-    $ python tatlin.py
+    $ ./tatlin [--hide-panel]
 
 You can also provide a filename to load:
 
-    $ python tatlin.py foobar.stl
+    $ ./tatlin [--hide-panel] foobar.stl
 
 Mouse navigation
 
@@ -43,7 +43,20 @@ your home directory with the following contents:
     platform_d = 300
 
 Thanks
--------
+------
 
 * Lenbok for config file options
 * Bartosz Zaborowski for the two digit Gcode patch
+
+Remark
+------
+
+This is a friendly fork of the original tatlin application by Denis Kobozev
+(https://github.com/dkobozev/tatlin) with a few additional quirks, to make it
+fit more perfectly to my primary use.
+
+As I don't really like the GUI of OpenSCAD (especially I'm missing a few 
+features in the built-in source code editor), I switched to edit the source 
+in gEdit and use OpenSCAD on the command line to export STL files. I also 
+perfer the looks of tatlin rendering my files, I use it as the (pre-)viewer and
+not OpenSCAD.
