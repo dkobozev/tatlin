@@ -127,6 +127,13 @@ class App(object):
         action_quit.connect('activate', self.quit)
         actiongroup.add_action_with_accel(action_quit, '<Control>q')
 
+        actiongroup.add_action(gtk.Action('view', '_View', 'View', None))
+
+        action_toggle_panel = gtk.ToggleAction('toggle_panel', '_Side Panel', 'Side Panel', None)
+        action_toggle_panel.set_active(True)
+        action_toggle_panel.connect('toggled', self.toggle_panel)
+        actiongroup.add_action_with_accel(action_toggle_panel, 'F9')
+
         accelgroup = gtk.AccelGroup()
         for action in actiongroup.list_actions():
             action.set_accel_group(accelgroup)
@@ -150,8 +157,14 @@ class App(object):
         item_file = actiongroup.menu_item('file')
         item_file.set_submenu(file_menu)
 
+        view_menu = gtk.Menu()
+        view_menu.append(actiongroup.menu_item('toggle_panel'))
+
+        item_view = actiongroup.menu_item('view')
+        item_view.set_submenu(view_menu)
+
         self.menu_items_file = [save_item, save_as_item]
-        self.menu_items = [item_file]
+        self.menu_items = [item_file, item_view]
 
     def menu_enable_file_items(self, enable=True):
         for menu_item in self.menu_items_file:
@@ -212,7 +225,14 @@ class App(object):
 
     def command_line(self):
         if len(sys.argv) > 1:
-            self.open_and_display_file(sys.argv[1])
+            if sys.argv[1] == '--hide-panel':
+                if len(sys.argv) > 2:
+                    self.open_and_display_file(sys.argv[2])
+                    action = self.actiongroup.get_action('toggle_panel')
+                    action.set_active(False)
+                    action.emit('toggled')
+            else:
+                self.open_and_display_file(sys.argv[1])
 
     def save_file(self, action=None):
         """
@@ -258,6 +278,12 @@ class App(object):
         """
         if self.save_changes_dialog():
             gtk.main_quit()
+
+    def toggle_panel(self, action=None):
+        if action.get_active():
+            self.panel.show()
+        else:
+            self.panel.hide()
 
     def save_changes_dialog(self):
         proceed = True
