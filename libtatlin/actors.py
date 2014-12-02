@@ -251,7 +251,7 @@ class GcodeModel(Model):
         Return the color to use for particular type of movement.
         """
         # default movement color is gray
-        color = [0.6, 0.6, 0.6, 0.6]
+        color = (0.6, 0.6, 0.6, 0.6)
 
         extruder_on = (move.flags & Movement.FLAG_EXTRUDER_ON or
                        move.delta_e > 0)
@@ -259,13 +259,13 @@ class GcodeModel(Model):
                            move.flags & Movement.FLAG_PERIMETER_OUTER)
 
         if extruder_on and outer_perimeter:
-            color = [0.0, 0.875, 0.875, 0.6] # cyan
+            color = (0.0, 0.875, 0.875, 0.6) # cyan
         elif extruder_on and move.flags & Movement.FLAG_PERIMETER:
-            color = [0.0, 1.0, 0.0, 0.6] # green
+            color = (0.0, 1.0, 0.0, 0.6) # green
         elif extruder_on and move.flags & Movement.FLAG_LOOP:
-            color = [1.0, 0.875, 0.0, 0.6] # yellow
+            color = (1.0, 0.875, 0.0, 0.6) # yellow
         elif extruder_on:
-            color = [1.0, 0.0, 0.0, 0.6] # red
+            color = (1.0, 0.0, 0.0, 0.6) # red
 
         return color
 

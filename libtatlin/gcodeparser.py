@@ -23,6 +23,7 @@ from __future__ import division
 import time
 import logging
 import math
+import array
 
 
 class GcodeParserError(Exception):
@@ -46,40 +47,40 @@ class GcodeLexer(object):
     Load gcode and split commands into tokens.
     """
     def __init__(self):
-        self.lines = []
         self.line_no = None
         self.current_line = None
         self.line_count = 0
 
     def load(self, gcode):
-        content = self.read_input(gcode)
-        self.lines = self.split_lines(content)
-        self.line_count = len(self.lines)
+        if isinstance(gcode, str):
+            lines = gcode.replace('\r', '\n').replace('\n\n', '\n').split('\n')
+            self.line_count = len(self._lines)
 
-    def read_input(self, src):
-        """
-        Accept string or a file-like object to read input from.
-        """
-        if hasattr(src, 'read'):
-            content = src.read()
+            def _getlines():
+                for line in lines:
+                    yield line
+
+            self.getlines = _getlines
         else:
-            content = src
-        return content
+            for line in gcode:
+                self.line_count += 1
 
-    def split_lines(self, content):
-        """
-        Break input into lines.
-        """
-        lines = content.replace('\r', '\n').replace('\n\n', '\n').split('\n')
-        return lines
+            gcode.seek(0)
+
+            def _getlines():
+                for line in gcode:
+                    yield line.replace('\r', '\n').replace('\n\n', '\n')
+
+            self.getlines = _getlines
 
     def scan(self):
         """
         Return a generator for commands split into tokens.
         """
         try:
-            for line_idx, line in enumerate(self.lines):
-                self.line_no = line_idx + 1
+            self.line_no = 0
+            for line in self.getlines():
+                self.line_no += 1
                 self.current_line = line
                 tokens = self.scan_line(line)
 
@@ -157,6 +158,9 @@ class Movement(object):
     FLAG_SURROUND_LOOP   = 8
     FLAG_EXTRUDER_ON     = 16
 
+    # tell the python interpreter to only allocate memory for the following attributes
+    __slots__ = ['src', 'dst', 'delta_e', 'feedrate', 'flags']
+
     def __init__(self, src, dst, delta_e, feedrate, flags=0):
         self.src = src
         self.dst = dst
@@ -227,7 +231,7 @@ class GcodeParser(object):
             self.set_flags(command)
 
             if None not in self.src and None not in dst and self.src != dst:
-                move = Movement(self.src, dst, delta_e, feedrate, self.flags)
+                move = Movement(array.array('f', self.src), array.array('f', dst), delta_e, feedrate, self.flags)
                 movements.append(move)
 
                 if self.is_new_layer(dst, gcode, comment):
