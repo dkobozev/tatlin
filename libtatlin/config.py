@@ -13,6 +13,7 @@ class Config(object):
             'machine.platform_d': 100,
             'machine.platform_offset_x': 0,
             'machine.platform_offset_y': 0,
+            'ui.recent_files': None,
             'ui.window_w': 640,
             'ui.window_h': 480,
             'ui.gcode_2d': False,
@@ -46,7 +47,7 @@ class Config(object):
         if not self.config.has_section(section):
             self.config.add_section(section)
 
-        self.config.set(section, key, val)
+        self.config.set(section, option, val)
 
         with open(self.fname, 'wb') as conf_file:
             self.config.write(conf_file)

@@ -65,6 +65,7 @@ class ActionGroup(gtk.ActionGroup):
 
 
 class App(object):
+    RECENT_FILE_LIMIT = 10
 
     def __init__(self):
         # ---------------------------------------------------------------------
@@ -88,6 +89,14 @@ class App(object):
         # ---------------------------------------------------------------------
 
         self.init_config()
+
+        recent_files = self.config.read('ui.recent_files')
+        if recent_files:
+            self.recent_files = [(os.path.basename(f), f) for f in recent_files.split(':')
+                                 if os.path.exists(f)][:RECENT_FILE_LIMIT]
+        else:
+            self.recent_files = []
+        self.update_recent_files_menu()
 
         window_w = self.config.read('ui.window_w', int)
         window_h = self.config.read('ui.window_h', int)
@@ -163,12 +172,16 @@ class App(object):
         file_menu = gtk.Menu()
         file_menu.append(actiongroup.menu_item('open'))
 
+        self.recent_files_menu = gtk.Menu()
+        self.recent_item = gtk.MenuItem("_Recent Files")
+        self.recent_item.set_submenu(self.recent_files_menu)
+        self.recent_item.set_sensitive(False)
+        file_menu.append(self.recent_item)
+
         save_item = actiongroup.menu_item('save')
         file_menu.append(save_item)
-
         save_as_item = actiongroup.menu_item('save-as')
         file_menu.append(save_as_item)
-
         file_menu.append(actiongroup.menu_item('quit'))
 
         item_file = actiongroup.menu_item('file')
@@ -285,9 +298,14 @@ class App(object):
 
     def quit(self, action=None):
         """
-        On quit, show a dialog proposing to save the changes if the scene has
-        been modified.
+        On quit, write config settings and show a dialog proposing to save the
+        changes if the scene has been modified.
         """
+        try:
+            self.config.write('ui.recent_files', ':'.join([f[1] for f in self.recent_files]))
+        except IOError:
+            logging.warning('Could not write settings to config file %s' % self.config.fname)
+
         if self.save_changes_dialog():
             gtk.main_quit()
 
@@ -417,12 +435,35 @@ class App(object):
     # FILE OPERATIONS
     # -------------------------------------------------------------------------
 
+    def update_recent_files(self, fpath):
+        self.recent_files = [f for f in self.recent_files if f[1] != fpath]
+        self.recent_files.insert(0, (os.path.basename(fpath), fpath))
+        self.recent_files = self.recent_files[:self.RECENT_FILE_LIMIT]
+        self.update_recent_files_menu()
+
+    def update_recent_files_menu(self):
+        for menu_item in self.recent_files_menu.get_children():
+            self.recent_files_menu.remove(menu_item)
+
+        for recent_file in self.recent_files:
+            menu_item = gtk.MenuItem(recent_file[0])
+
+            def callback(f):
+                return lambda x: self.open_and_display_file(f)
+
+            menu_item.connect('activate', callback(recent_file[1]))
+            self.recent_files_menu.append(menu_item)
+            menu_item.show()
+
+        self.recent_item.set_sensitive(len(self.recent_files) > 0)
+
     def open_and_display_file(self, fpath):
         progress_dialog = ProgressDialog('Loading', self.window)
         self.window.set_cursor(gtk.gdk.WATCH)
         success = True
 
         try:
+            self.update_recent_files(fpath)
             self.model_file = ModelFile(fpath)
 
             if self.scene is None:
