@@ -34,6 +34,23 @@ from libtatlin.storage import ModelFile, ModelFileError
 from libtatlin.config import Config
 
 
+TATLIN_VERSION = '0.1'
+TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software Foundation,
+Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+
+
 def format_float(f):
     return "%.2f" % f
 
@@ -127,6 +144,12 @@ class App(object):
         action_quit.connect('activate', self.quit)
         actiongroup.add_action_with_accel(action_quit, '<Control>q')
 
+        actiongroup.add_action(gtk.Action('help', '_Help', 'Help', None))
+
+        action_about = gtk.Action('about', '_About Tatlin', 'About Tatlin', gtk.STOCK_ABOUT)
+        action_about.connect('activate', self.open_about_dialog)
+        actiongroup.add_action(action_about)
+
         accelgroup = gtk.AccelGroup()
         for action in actiongroup.list_actions():
             action.set_accel_group(accelgroup)
@@ -136,6 +159,7 @@ class App(object):
         return actiongroup
 
     def create_menu_items(self, actiongroup):
+        # File
         file_menu = gtk.Menu()
         file_menu.append(actiongroup.menu_item('open'))
 
@@ -151,7 +175,15 @@ class App(object):
         item_file.set_submenu(file_menu)
 
         self.menu_items_file = [save_item, save_as_item]
-        self.menu_items = [item_file]
+
+        # Help
+        help_menu = gtk.Menu()
+        help_menu.append(actiongroup.menu_item('about'))
+
+        item_help = actiongroup.menu_item('help')
+        item_help.set_submenu(help_menu)
+
+        self.menu_items = [item_file, item_help]
 
     def menu_enable_file_items(self, enable=True):
         for menu_item in self.menu_items_file:
@@ -282,6 +314,21 @@ class App(object):
             dialog.destroy()
 
         return proceed
+
+    def open_about_dialog(self, action=None):
+        from datetime import datetime
+        dialog = gtk.AboutDialog()
+
+        dialog.set_name('Tatlin')
+        dialog.set_comments('Gcode and STL viewer for 3D printing')
+        dialog.set_copyright('© 2011-%s Denis Kobozev' % datetime.strftime(datetime.now(), '%Y'))
+        dialog.set_website('http://dkobozev.github.io/tatlin/')
+        dialog.set_authors(['Denis Kobozev <d.v.kobozev@gmail.com>'])
+        dialog.set_version('v%s' % TATLIN_VERSION)
+        dialog.set_license(TATLIN_LICENSE)
+
+        dialog.run()
+        dialog.destroy()
 
     def scaling_factor_changed(self, factor):
         try:
