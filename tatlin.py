@@ -93,7 +93,7 @@ class App(object):
         recent_files = self.config.read('ui.recent_files')
         if recent_files:
             self.recent_files = [(os.path.basename(f), f) for f in recent_files.split(':')
-                                 if os.path.exists(f)][:RECENT_FILE_LIMIT]
+                                 if os.path.exists(f)][:self.RECENT_FILE_LIMIT]
         else:
             self.recent_files = []
         self.update_recent_files_menu()
@@ -247,8 +247,11 @@ class App(object):
         """
         if self.model_file is not None:
             dur = self.model_file.dirname
+        elif len(self.recent_files) > 0:
+            dur = os.path.dirname(self.recent_files[0][1])
         else:
             dur = os.getcwd()
+
         return dur
 
     # -------------------------------------------------------------------------
