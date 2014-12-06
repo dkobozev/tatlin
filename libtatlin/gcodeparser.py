@@ -159,30 +159,27 @@ class Movement(object):
     FLAG_EXTRUDER_ON     = 16
 
     # tell the python interpreter to only allocate memory for the following attributes
-    __slots__ = ['src', 'dst', 'delta_e', 'feedrate', 'flags']
+    __slots__ = ['v', 'delta_e', 'feedrate', 'flags']
 
-    def __init__(self, src, dst, delta_e, feedrate, flags=0):
-        self.src = src
-        self.dst = dst
+    def __init__(self, v, delta_e, feedrate, flags=0):
+        self.v = v
 
         self.delta_e  = delta_e
         self.feedrate = feedrate
         self.flags    = flags
 
-    def angle(self, precision=0):
-        x = self.dst[0] - self.src[0]
-        y = self.dst[1] - self.src[1]
+    def angle(self, start, precision=0):
+        x = self.v[0] - start[0]
+        y = self.v[1] - start[1]
         angle = math.degrees(math.atan2(y, -x)) # negate x for clockwise rotation angle
         return round(angle, precision)
 
     def __str__(self):
-        s = "(%s => %s)" % (self.src, self.dst)
+        s = "(%s)" % (self.v)
         return s
 
     def __repr__(self):
-        s = "Movement(%s, %s, %s, %s, %s)" % (
-            self.src, self.dst, self.delta_e, self.feedrate, self.flags
-        )
+        s = "Movement(%s, %s, %s, %s)" % (self.v, self.delta_e, self.feedrate, self.flags)
         return s
 
 
@@ -230,16 +227,20 @@ class GcodeParser(object):
             feedrate = args['F']
             self.set_flags(command)
 
-            if None not in self.src and None not in dst and self.src != dst:
-                move = Movement(array.array('f', self.src), array.array('f', dst), delta_e, feedrate, self.flags)
+            # create a new movement if the gcode contains a valid coordinate
+            if None not in dst and self.src != dst:
+                move = Movement(array.array('f', dst), delta_e, feedrate, self.flags)
                 movements.append(move)
 
-                if self.is_new_layer(dst, gcode, comment):
+                if None not in self.src and self.is_new_layer(dst, gcode, comment):
                     layers.append(movements)
                     movements = []
 
+            # if gcode contains a valid coordinate, update the previous point
+            # with the new coordinate
             if None not in dst:
                 self.src = dst
+
             self.prev_args = args
             self.e_len = e_len
 

@@ -205,18 +205,24 @@ class GcodeModel(Model):
         arrow_list       = []
         num_layers       = len(model_data)
 
+        # the first movement designates the starting point
+        prev = model_data[0][0]
+        del model_data[0][0]
+
         for layer_idx, layer in enumerate(model_data):
             for movement in layer:
-                vertex_list.append(movement.src)
-                vertex_list.append(movement.dst)
+                vertex_list.append(prev.v)
+                vertex_list.append(movement.v)
 
                 arrow = self.arrow
                 # position the arrow with respect to movement
-                arrow = vector.rotate(arrow, movement.angle(), 0.0, 0.0, 1.0)
+                arrow = vector.rotate(arrow, movement.angle(prev.v), 0.0, 0.0, 1.0)
                 arrow_list.extend(arrow)
 
                 vertex_color = self.movement_color(movement)
                 color_list.append(vertex_color)
+
+                prev = movement
 
             self.layer_stops.append(len(vertex_list))
 

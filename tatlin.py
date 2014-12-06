@@ -312,7 +312,7 @@ class App(object):
             self.config.write('ui.window_h', h)
 
             if self.scene:
-                self.config.write('ui.gcode_2d', self.scene.mode_2d)
+                self.config.write('ui.gcode_2d', int(self.scene.mode_2d))
 
             self.config.commit()
         except IOError:
@@ -509,7 +509,7 @@ class App(object):
             # always start with the same view on the scene
             self.scene.reset_view(True)
             if self.model_file.filetype == 'gcode':
-                self.scene.mode_2d = self.config.read('ui.gcode_2d', bool)
+                self.scene.mode_2d = bool(self.config.read('ui.gcode_2d', int))
             else:
                 self.scene.mode_2d = False
 
