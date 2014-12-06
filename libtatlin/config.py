@@ -49,6 +49,7 @@ class Config(object):
 
         self.config.set(section, option, val)
 
+    def commit(self):
         with open(self.fname, 'wb') as conf_file:
             self.config.write(conf_file)
 

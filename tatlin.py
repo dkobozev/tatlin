@@ -306,6 +306,15 @@ class App(object):
         """
         try:
             self.config.write('ui.recent_files', ':'.join([f[1] for f in self.recent_files]))
+
+            w, h = self.window.get_size()
+            self.config.write('ui.window_w', w)
+            self.config.write('ui.window_h', h)
+
+            if self.scene:
+                self.config.write('ui.gcode_2d', self.scene.mode_2d)
+
+            self.config.commit()
         except IOError:
             logging.warning('Could not write settings to config file %s' % self.config.fname)
 
