@@ -1,11 +1,16 @@
 ui:
-* status bar
-* legend in glscene
+* more file stats either in the 3D window or the status bar
+* settings dialog
+
+gcode:
+* color legend in 3D window
+* show layer entry/exit points
+* tooltips with gcode info - would be nice to display the full gcode line, but that seems too memory-intensive
 
 stl:
+* better lighting
 * lay flat on platform (medium)
 * custom offset
 
 long-term:
-* speed up model loading and initialization
 * undo/redo (low)
