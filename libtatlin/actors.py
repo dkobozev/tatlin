@@ -195,16 +195,32 @@ class GcodeModel(Model):
         [0.4, -0.1, 0.0],
         [0.4, 0.1, 0.0],
     ], 'f')
+    layer_entry_marker = numpy.require([
+        [ 0.23, -0.14, 0.0],
+        [ 0.0,   0.26, 0.0],
+        [-0.23, -0.14, 0.0],
+    ], 'f')
+    layer_exit_marker = numpy.require([
+        [-0.23, -0.23, 0.0],
+        [ 0.23, -0.23, 0.0],
+        [ 0.23,  0.23, 0.0],
+        [ 0.23,  0.23, 0.0],
+        [-0.23,  0.23, 0.0],
+        [-0.23, -0.23, 0.0],
+    ], 'f')
 
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
-        vertex_list      = []
-        color_list       = []
-        self.layer_stops = [0]
-        arrow_list       = []
-        num_layers       = len(model_data)
-        callback_every   = max(1, int(math.floor(num_layers / 100)))
+        vertex_list             = []
+        color_list              = []
+        self.layer_stops        = [0]
+        arrow_list              = []
+        layer_markers_list      = []
+        self.layer_marker_stops = [0]
+
+        num_layers     = len(model_data)
+        callback_every = max(1, int(math.floor(num_layers / 100)))
 
         # the first movement designates the starting point
         prev = model_data[0][0]
@@ -227,12 +243,25 @@ class GcodeModel(Model):
 
             self.layer_stops.append(len(vertex_list))
 
+            # add the layer entry marker
+            if layer_idx > 0 and len(model_data[layer_idx - 1]) > 0:
+                layer_markers_list.extend(self.layer_entry_marker + model_data[layer_idx-1][-1].v)
+            elif layer_idx == 0 and len(layer) > 0:
+                layer_markers_list.extend(self.layer_entry_marker + layer[0].v)
+
+            # add the layer exit marker
+            if len(layer) > 1:
+                layer_markers_list.extend(self.layer_exit_marker + layer[-1].v)
+
+            self.layer_marker_stops.append(len(layer_markers_list))
+
             if callback and layer_idx % callback_every == 0:
                 callback(layer_idx + 1, num_layers)
 
-        self.vertices = numpy.array(vertex_list, 'f')
-        self.colors   = numpy.array(color_list,  'f')
-        self.arrows   = numpy.array(arrow_list,  'f')
+        self.vertices      = numpy.array(vertex_list,        'f')
+        self.colors        = numpy.array(color_list,         'f')
+        self.arrows        = numpy.array(arrow_list,         'f')
+        self.layer_markers = numpy.array(layer_markers_list, 'f')
 
         # by translating the arrow vertices outside of the loop, we achieve a
         # significant performance gain thanks to numpy. it would be really nice
@@ -288,6 +317,8 @@ class GcodeModel(Model):
             self.arrow_buffer       = VBO(self.arrows, 'GL_STATIC_DRAW')
             self.arrow_color_buffer = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
 
+        self.layer_marker_buffer = VBO(self.layer_markers, 'GL_STATIC_DRAW')
+
         self.initialized = True
 
     def display(self, mode_2d=False):
@@ -302,6 +333,9 @@ class GcodeModel(Model):
             self._display_arrows()
 
         glDisableClientState(GL_COLOR_ARRAY)
+
+        self._display_layer_markers()
+
         glDisableClientState(GL_VERTEX_ARRAY)
         glPopMatrix()
 
@@ -339,6 +373,18 @@ class GcodeModel(Model):
 
         self.arrow_buffer.unbind()
         self.arrow_color_buffer.unbind()
+
+    def _display_layer_markers(self):
+        self.layer_marker_buffer.bind()
+        glVertexPointer(3, GL_FLOAT, 0, None)
+
+        start = self.layer_marker_stops[self.num_layers_to_draw - 1]
+        end   = self.layer_marker_stops[self.num_layers_to_draw]
+
+        glColor4f(0.6, 0.6, 0.6, 0.6)
+        glDrawArrays(GL_TRIANGLES, start, end - start)
+
+        self.layer_marker_buffer.unbind()
 
 
 class StlModel(Model):

@@ -4,7 +4,6 @@ ui:
 
 gcode:
 * color legend in 3D window
-* show layer entry/exit points
 * tooltips with gcode info - would be nice to display the full gcode line, but that seems too memory-intensive
 
 stl:
