@@ -211,7 +211,7 @@ class GcodeParser(object):
         layers = []
         movements = []
         line_count = self.lexer.line_count
-        callback_every = round(line_count / 50)
+        callback_every = max(1, int(math.floor(line_count / 100)))
 
         for command_idx, command in enumerate(self.lexer.scan()):
             gcode, newargs, comment = command

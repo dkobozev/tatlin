@@ -204,6 +204,7 @@ class GcodeModel(Model):
         self.layer_stops = [0]
         arrow_list       = []
         num_layers       = len(model_data)
+        callback_every   = max(1, int(math.floor(num_layers / 100)))
 
         # the first movement designates the starting point
         prev = model_data[0][0]
@@ -226,7 +227,7 @@ class GcodeModel(Model):
 
             self.layer_stops.append(len(vertex_list))
 
-            if callback:
+            if callback and layer_idx % callback_every == 0:
                 callback(layer_idx + 1, num_layers)
 
         self.vertices = numpy.array(vertex_list, 'f')
