@@ -276,11 +276,12 @@ class GcodeModel(Model):
         self.num_layers_to_draw = self.max_layers
         self.arrows_enabled     = True
         self.initialized        = False
+        self.vertex_count       = len(self.vertices)
 
         t_end = time.time()
 
         logging.info('Initialized Gcode model in %.2f seconds' % (t_end - t_start))
-        logging.info('Vertex count: %d' % len(self.vertices))
+        logging.info('Vertex count: %d' % self.vertex_count)
 
     def movement_color(self, move):
         """
@@ -410,12 +411,13 @@ class StlModel(Model):
         self.mat_shininess  = 50.0
         self.light_position = (20.0, 20.0, 20.0)
 
+        self.vertex_count = len(self.vertices)
         self.initialized = False
 
         t_end = time.time()
 
         logging.info('Initialized STL model in %.2f seconds' % (t_end - t_start))
-        logging.info('Vertex count: %d' % len(self.vertices))
+        logging.info('Vertex count: %d' % self.vertex_count)
 
     def normal_data_empty(self):
         """

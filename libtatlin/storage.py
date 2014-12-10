@@ -21,7 +21,7 @@ Module for loading from and writing to files.
 """
 from __future__ import division
 
-import os
+import os, os.path
 
 from .gcodeparser import GcodeParser, GcodeParserError
 from .stlparser import StlParser, StlParseError
@@ -47,6 +47,7 @@ class ModelFile(object):
         self._dirname   = None
         self._basename  = None
         self._extension = None
+        self._size      = None
 
     @property
     def path(self):
@@ -84,6 +85,15 @@ class ModelFile(object):
             raise ModelFileError('Unsupported file extension: %s' % self.extension)
 
         return self.extension[1:]
+
+    @property
+    def size(self):
+        """
+        File size in bytes.
+        """
+        if self._size is None:
+            self._size = os.path.getsize(self.path)
+        return self._size
 
     def read(self, callback=None):
         return self._loaders[self.filetype](callback)

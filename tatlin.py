@@ -34,7 +34,7 @@ from libtatlin.storage import ModelFile, ModelFileError
 from libtatlin.config import Config
 
 
-TATLIN_VERSION = '0.1.0'
+TATLIN_VERSION = '0.1.1'
 TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -522,6 +522,23 @@ class App(object):
             self.window.set_file_widgets(self.glarea, self.panel)
             self.window.filename = self.model_file.basename
             self.menu_enable_file_items(self.model_file.filetype != 'gcode')
+
+            if self.model_file.size > 2**30:
+                size = self.model_file.size / 2**30
+                units = 'GB'
+            elif self.model_file.size > 2**20:
+                size = self.model_file.size / 2**20
+                units = 'MB'
+            elif self.model_file.size > 2**10:
+                size = self.model_file.size / 2**10
+                units = 'KB'
+            else:
+                size = self.model_file.size
+                units = 'B'
+
+            vertex_plural = 'vertex' if int(str(model.vertex_count)[-1]) == 1 else 'vertices'
+            self.window.update_status(' %s (%.1f%s, %d %s)' % (
+                self.model_file.basename, size, units, model.vertex_count, vertex_plural))
         except IOError, e:
             self.window.window.set_cursor(None)
             progress_dialog.hide()

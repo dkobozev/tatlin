@@ -443,9 +443,20 @@ class MainWindow(gtk.Window):
         self.panel_startup = StartupPanel()
         self.panel_startup.connect('open-clicked', self.on_startup_open_clicked)
 
+        self.label_file_info = gtk.Label()
+        self.statusbar = gtk.Statusbar()
+        self.statusbar.set_has_resize_grip(True)
+        # statusbar contains a gtk.Frame by default; we don't need that, the
+        # only reason we're using the statusbar widget in the first place is
+        # for the resize grip
+        for child in self.statusbar.get_children():
+            self.statusbar.remove(child)
+        self.statusbar.pack_start(self.label_file_info, False)
+
         self.box_main = gtk.VBox()
         self.box_main.pack_start(self.menubar, False)
         self.box_main.pack_start(self.panel_startup)
+        self.box_main.pack_start(self.statusbar, False)
 
         self.add(self.box_main)
 
@@ -456,7 +467,10 @@ class MainWindow(gtk.Window):
         # remove startup panel if present
         if self.box_scene.parent is None:
             self.box_main.remove(self.panel_startup)
+            self.box_main.remove(self.statusbar)
+
             self.box_main.pack_start(self.box_scene)
+            self.box_main.pack_start(self.statusbar, False)
 
         # NOTE: Removing glarea from parent widget causes it to free previously
         # allocated resources. There doesn't seem to be anything about it in
@@ -508,6 +522,9 @@ class MainWindow(gtk.Window):
             self.window.set_cursor(gtk.gdk.Cursor(cursor))
         else:
             self.window.set_cursor(cursor)
+
+    def update_status(self, status):
+        self.label_file_info.set_text(status)
 
 
 class SaveDialog(gtk.FileChooserDialog):
