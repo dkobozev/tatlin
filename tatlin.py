@@ -34,7 +34,7 @@ from libtatlin.storage import ModelFile, ModelFileError
 from libtatlin.config import Config
 
 
-TATLIN_VERSION = '0.1'
+TATLIN_VERSION = '0.1.0'
 TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -71,8 +71,10 @@ class App(object):
         # ---------------------------------------------------------------------
         # WINDOW SETUP
         # ---------------------------------------------------------------------
-
         self.window = MainWindow()
+
+        self.icon = gtk.gdk.pixbuf_new_from_file('tatlin-logo.png')
+        self.window.set_icon(self.icon)
 
         self.actiongroup = self.set_up_actions()
         self.create_menu_items(self.actiongroup)
@@ -350,6 +352,7 @@ class App(object):
         dialog = gtk.AboutDialog()
 
         dialog.set_name('Tatlin')
+        dialog.set_logo(self.icon)
         dialog.set_comments('Gcode and STL viewer for 3D printing')
         dialog.set_copyright('© 2011-%s Denis Kobozev' % datetime.strftime(datetime.now(), '%Y'))
         dialog.set_website('http://dkobozev.github.io/tatlin/')
