@@ -115,7 +115,7 @@ class Platform(object):
 
         glPopMatrix()
 
-    def display(self, mode_2d=False):
+    def display(self, *args, **kwargs):
         glCallList(self.display_list)
 
 
@@ -215,6 +215,7 @@ class GcodeModel(Model):
         vertex_list             = []
         color_list              = []
         self.layer_stops        = [0]
+        self.layer_heights      = []
         arrow_list              = []
         layer_markers_list      = []
         self.layer_marker_stops = [0]
@@ -223,10 +224,11 @@ class GcodeModel(Model):
         callback_every = max(1, int(math.floor(num_layers / 100)))
 
         # the first movement designates the starting point
-        prev = model_data[0][0]
+        start = prev = model_data[0][0]
         del model_data[0][0]
 
         for layer_idx, layer in enumerate(model_data):
+            first = layer[0]
             for movement in layer:
                 vertex_list.append(prev.v)
                 vertex_list.append(movement.v)
@@ -242,6 +244,7 @@ class GcodeModel(Model):
                 prev = movement
 
             self.layer_stops.append(len(vertex_list))
+            self.layer_heights.append(first.v[2])
 
             # add the layer entry marker
             if layer_idx > 0 and len(model_data[layer_idx - 1]) > 0:
@@ -258,8 +261,30 @@ class GcodeModel(Model):
             if callback and layer_idx % callback_every == 0:
                 callback(layer_idx + 1, num_layers)
 
+        model_data[0].insert(0, start) # re-insert the starting position
+        reversed_vertex_list = []
+        reversed_color_list = []
+        self.reversed_layer_stops = [0]
+        prev = None
+
+        for layer in reversed(model_data):
+            for movement in layer:
+                if prev:
+                    reversed_vertex_list.append(prev.v)
+                    reversed_vertex_list.append(movement.v)
+
+                    vertex_color = self.movement_color(movement)
+                    reversed_color_list.append(vertex_color)
+
+                prev = movement
+
+            prev = None
+            self.reversed_layer_stops.append(len(reversed_vertex_list))
+
         self.vertices      = numpy.array(vertex_list,        'f')
+        self.reversed_vertices = numpy.array(reversed_vertex_list, 'f')
         self.colors        = numpy.array(color_list,         'f')
+        self.reversed_colors        = numpy.array(reversed_color_list,         'f')
         self.arrows        = numpy.array(arrow_list,         'f')
         self.layer_markers = numpy.array(layer_markers_list, 'f')
 
@@ -314,6 +339,9 @@ class GcodeModel(Model):
         self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
         self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
 
+        self.reversed_vertex_buffer       = VBO(self.reversed_vertices, 'GL_STATIC_DRAW')
+        self.reversed_vertex_color_buffer = VBO(self.reversed_colors.repeat(2, 0), 'GL_STATIC_DRAW')
+
         if self.arrows_enabled:
             self.arrow_buffer       = VBO(self.arrows, 'GL_STATIC_DRAW')
             self.arrow_color_buffer = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
@@ -322,13 +350,13 @@ class GcodeModel(Model):
 
         self.initialized = True
 
-    def display(self, mode_2d=False):
+    def display(self, elevation=0, eye_height=0, mode_ortho=False, mode_2d=False):
         glPushMatrix()
         glTranslate(self.offset_x, self.offset_y, 0)
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
 
-        self._display_movements(mode_2d)
+        self._display_movements(elevation, eye_height, mode_ortho, mode_2d)
 
         if self.arrows_enabled:
             self._display_arrows()
@@ -340,25 +368,95 @@ class GcodeModel(Model):
         glDisableClientState(GL_VERTEX_ARRAY)
         glPopMatrix()
 
-    def _display_movements(self, mode_2d=False):
-        self.vertex_buffer.bind()
-        glVertexPointer(3, GL_FLOAT, 0, None)
-
-        self.vertex_color_buffer.bind()
-        glColorPointer(4, GL_FLOAT, 0, None)
-
+    def _display_movements(self, elevation=0, eye_height=0, mode_ortho=False, mode_2d=False):
         if mode_2d:
+            self.vertex_buffer.bind()
+            glVertexPointer(3, GL_FLOAT, 0, None)
+
+            self.vertex_color_buffer.bind()
+            glColorPointer(4, GL_FLOAT, 0, None)
+
             glScale(1.0, 1.0, 0.0) # discard z coordinates
             start = self.layer_stops[self.num_layers_to_draw - 1]
-            end   = self.layer_stops[self.num_layers_to_draw] - start
-        else: # 3d
-            start = 0
             end   = self.layer_stops[self.num_layers_to_draw]
 
-        glDrawArrays(GL_LINES, start, end)
+            glDrawArrays(GL_LINES, start, end - start)
 
-        self.vertex_buffer.unbind()
-        self.vertex_color_buffer.unbind()
+            self.vertex_buffer.unbind()
+            self.vertex_color_buffer.unbind()
+        elif mode_ortho:
+            if elevation < 0:
+                self.reversed_vertex_buffer.bind()
+            else:
+                self.vertex_buffer.bind()
+            glVertexPointer(3, GL_FLOAT, 0, None)
+
+            if elevation < 0:
+                self.reversed_vertex_color_buffer.bind()
+            else:
+                self.vertex_color_buffer.bind()
+            glColorPointer(4, GL_FLOAT, 0, None)
+
+            if elevation < 0:
+                start = self.reversed_layer_stops[self.max_layers - self.num_layers_to_draw]
+                end = self.reversed_layer_stops[self.max_layers]
+            else:
+                start = 0
+                end   = self.layer_stops[self.num_layers_to_draw]
+
+            glDrawArrays(GL_LINES, start, end - start)
+
+            if elevation < 0:
+                self.reversed_vertex_buffer.unbind()
+                self.reversed_vertex_color_buffer.unbind()
+            else:
+                self.vertex_buffer.unbind()
+                self.vertex_color_buffer.unbind()
+        else: # 3d projection mode
+            reverse_threshold_layer = self._layer_up_to_height(eye_height)
+
+            if reverse_threshold_layer > 0:
+                # draw layers in normal order, bottom to top
+                self.vertex_buffer.bind()
+                glVertexPointer(3, GL_FLOAT, 0, None)
+
+                self.vertex_color_buffer.bind()
+                glColorPointer(4, GL_FLOAT, 0, None)
+
+                normal_layers_to_draw = min(self.num_layers_to_draw, reverse_threshold_layer + 1)
+                start = 0
+                end   = self.layer_stops[normal_layers_to_draw]
+
+                glDrawArrays(GL_LINES, start, end - start)
+
+                self.vertex_buffer.unbind()
+                self.vertex_color_buffer.unbind()
+
+            if reverse_threshold_layer + 1 < self.num_layers_to_draw:
+                # draw layers in reverse order, top to bottom
+                self.reversed_vertex_buffer.bind()
+                glVertexPointer(3, GL_FLOAT, 0, None)
+
+                self.reversed_vertex_color_buffer.bind()
+                glColorPointer(4, GL_FLOAT, 0, None)
+
+                start = self.reversed_layer_stops[self.max_layers - self.num_layers_to_draw]
+                end = self.reversed_layer_stops[self.max_layers - (reverse_threshold_layer + 1)]
+
+                glDrawArrays(GL_LINES, start, end - start)
+
+                self.reversed_vertex_buffer.unbind()
+                self.reversed_vertex_color_buffer.unbind()
+
+    def _layer_up_to_height(self, height):
+        """Return the index of the last layer lower than height."""
+        prev = 0
+        for layer_idx, h in enumerate(self.layer_heights):
+            if h > height:
+                break
+            prev = layer_idx
+
+        return prev
 
     def _display_arrows(self):
         self.arrow_buffer.bind()
@@ -507,7 +605,7 @@ class StlModel(Model):
 
         glPopMatrix()
 
-    def display(self, mode_2d=False):
+    def display(self, *args, **kwargs):
         glEnable(GL_LIGHTING)
         self.draw_facets()
         glDisable(GL_LIGHTING)

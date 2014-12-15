@@ -27,6 +27,8 @@ pygtk.require('2.0')
 import gtk
 from gtk.gtkgl.apputils import GLArea, GLScene, GLSceneButton, GLSceneButtonMotion
 
+import math
+
 from .actors import Model
 from .views import View2D, View3D
 
@@ -155,8 +157,26 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.current_view.begin(w, h)
         self.current_view.display_transform()
-        for actor in self.actors:
-            actor.display(self.mode_2d)
+
+        if self.mode_ortho:
+            for actor in self.actors:
+                actor.display(elevation=-self.current_view.elevation,
+                              mode_ortho=self.mode_ortho,
+                              mode_2d=self.mode_2d)
+        else:
+            # actors may use eye height to perform rendering optimizations
+            # in the simplest terms, in the most convenient definitions, eye height in the perspective projection
+            # divides the screen into two horizontal halves - one seen from above, the other from below
+            y = self.current_view.y / self.current_view.zoom_factor
+            z = self.current_view.z
+            angle = -math.degrees(math.atan2(z, y)) - self.current_view.elevation
+            eye_height = math.sqrt(y**2 + z**2) * math.sin(math.radians(angle))
+
+            for actor in self.actors:
+                actor.display(eye_height=eye_height,
+                              mode_ortho=self.mode_ortho,
+                              mode_2d=self.mode_2d)
+
         self.current_view.end()
 
     def reshape(self, w, h):
