@@ -34,7 +34,7 @@ from libtatlin.storage import ModelFile, ModelFileError
 from libtatlin.config import Config
 
 
-TATLIN_VERSION = '0.1.1'
+TATLIN_VERSION = '0.1.2'
 TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -461,7 +461,7 @@ class App(object):
             self.recent_files_menu.remove(menu_item)
 
         for recent_file in self.recent_files:
-            menu_item = gtk.MenuItem(recent_file[0])
+            menu_item = gtk.MenuItem(recent_file[0].replace('_', '__'))
 
             def callback(f):
                 return lambda x: self.open_and_display_file(f)
