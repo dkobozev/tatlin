@@ -22,13 +22,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-from gtk.gtkgl.apputils import GLArea, GLScene, GLSceneButton, GLSceneButtonMotion
-
 import math
 
+from .wxui import BaseScene
 from .actors import Model
 from .views import View2D, View3D
 
@@ -47,18 +43,7 @@ def html_color(color):
     return parsed
 
 
-class SceneArea(GLArea):
-    """
-    Extend GLScene to provide mouse wheel support.
-    """
-    def __init__(self, *args, **kwargs):
-        super(SceneArea, self).__init__(*args, **kwargs)
-
-        self.connect('scroll-event', self.glscene.wheel_scroll)
-        self.add_events(gtk.gdk.SCROLL_MASK)
-
-
-class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
+class Scene(BaseScene):
     """
     A scene is responsible for displaying a model and accompanying objects (actors).
 
@@ -69,10 +54,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     PAN_SPEED    = 25
     ROTATE_SPEED = 25
 
-    def __init__(self):
-        super(Scene, self).__init__(gtk.gdkgl.MODE_RGB |
-                                    gtk.gdkgl.MODE_DEPTH |
-                                    gtk.gdkgl.MODE_DOUBLE)
+    def __init__(self, parent):
+        super(Scene, self).__init__(parent)
+
         self.model    = None
         self.actors   = []
         self.cursor_x = 0
@@ -81,8 +65,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.view_ortho = View2D()
         self.view_perspective = View3D()
         self.current_view = self.view_perspective
-
-        self.initialized = False
 
         # dict of scene properties
         self._scene_properties = {
@@ -113,9 +95,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     def clear(self):
         self.actors = []
 
-    def is_initialized(self):
-        return self.glarea.window is not None
-
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
@@ -133,6 +112,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         self.init_actors()
+
         self.initialized = True
 
     def init_actors(self):
@@ -222,37 +202,37 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     # VIEWING MANIPULATIONS
     # ------------------------------------------------------------------------
 
-    def button_press(self, width, height, event):
-        self.cursor_x = event.x
-        self.cursor_y = event.y
+    def button_press(self, x, y):
+        self.cursor_x = x
+        self.cursor_y = y
 
-    def button_release(self, width, height, event):
-        pass
+    def button_motion(self, x, y, left, middle, right):
+        delta_x = x - self.cursor_x
+        delta_y = y - self.cursor_y
 
-    def button_motion(self, width, height, event):
-        delta_x = event.x - self.cursor_x
-        delta_y = event.y - self.cursor_y
-
-        if event.state & gtk.gdk.BUTTON1_MASK: # left mouse button
+        if left:
             self.current_view.rotate(delta_x * self.ROTATE_SPEED / 100,
                                      delta_y * self.ROTATE_SPEED / 100)
-        elif event.state & gtk.gdk.BUTTON2_MASK: # middle mouse button
+        elif middle:
             if hasattr(self.current_view, 'offset'):
                 self.current_view.offset(delta_x * self.PAN_SPEED / 100,
                                          delta_y * self.PAN_SPEED / 100)
-        elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
+        elif right:
             self.current_view.pan(delta_x * self.PAN_SPEED / 100,
                                   delta_y * self.PAN_SPEED / 100)
 
-        self.cursor_x = event.x
-        self.cursor_y = event.y
+        self.cursor_x = x
+        self.cursor_y = y
 
         self.invalidate()
 
-    def wheel_scroll(self, widget, event):
+    def wheel_scroll(self, direction):
         delta_y = 30.0
-        if event.direction == gtk.gdk.SCROLL_DOWN:
-            delta_y = -delta_y
+        if direction < 0:
+            direction = -1
+        else:
+            direction = 1
+        delta_y = direction * delta_y
 
         self.current_view.zoom(0, delta_y)
         self.invalidate()

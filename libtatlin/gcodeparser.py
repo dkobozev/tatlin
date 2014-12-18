@@ -211,6 +211,7 @@ class GcodeParser(object):
         layers = []
         movements = []
         line_count = self.lexer.line_count
+        command_idx = None
         callback_every = max(1, int(math.floor(line_count / 100)))
 
         for command_idx, command in enumerate(self.lexer.scan()):
@@ -251,7 +252,7 @@ class GcodeParser(object):
         if len(movements) > 0:
             layers.append(movements)
 
-        if callback:
+        if callback and command_idx is not None:
             callback(command_idx + 1, line_count)
 
         t_end = time.time()
