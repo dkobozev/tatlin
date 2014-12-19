@@ -451,8 +451,8 @@ class StartupPanel(wx.Panel):
 
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add((0, 0),        1, wx.EXPAND)
-        box.Add(text,          0, wx.ALIGN_CENTER)
-        box.Add(self.btn_open, 0, wx.ALIGN_CENTER)
+        box.Add(text,          0, wx.ALIGN_CENTER | wx.ALL,                         border=5)
+        box.Add(self.btn_open, 0, wx.ALIGN_CENTER | wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
         box.Add((0, 0),        1, wx.EXPAND)
 
         self.SetSizer(box)
@@ -463,17 +463,16 @@ class MainWindow(wx.Frame):
     def __init__(self):
         self._app_name = 'Tatlin'
 
-        super(MainWindow, self).__init__(None, title=self._app_name, size=(640, 480))
+        super(MainWindow, self).__init__(None, title=self._app_name)
 
         self._file_modified = False
         self._filename = None
 
-        self.Center()
-
         file_menu = wx.Menu()
         item_open = file_menu.Append(wx.ID_OPEN, '&Open', 'Open file')
         self.recent_files_menu = wx.Menu()
-        self.recent_files_item = file_menu.AppendMenu(wx.ID_ANY, '&Recent files', self.recent_files_menu)
+        self.recent_files_item = file_menu.AppendMenu(wx.ID_ANY, '&Recent files',
+                self.recent_files_menu)
         item_save = file_menu.Append(wx.ID_SAVE, '&Save', 'Save changes')
         item_save.Enable(False)
         item_save_as = file_menu.Append(wx.ID_SAVEAS, 'Save As...\tShift+Ctrl+S',
@@ -505,20 +504,35 @@ class MainWindow(wx.Frame):
         self.box_main.Add(self.panel_startup, 1, wx.EXPAND)
 
         self.SetMenuBar(self.menubar)
-        self.SetSizer(self.box_main)
         self.statusbar = self.CreateStatusBar()
+        self.SetSizer(self.box_main)
+
+        # Set minimum frame size so that the widgets contained within are not squashed.
+        # I wish there was a reliable way to set the minimum size based on minimum
+        # sizes of widgets contained in the frame, but wxPython ignores the dimensions
+        # of window decorations (borders and titlebar) in addition to other minor quirks.
+        # Hardcoding the minimum size seems no less portable and reliable, and also
+        # much easier.
+        self.SetSizeHints(400, 700, self.GetMaxWidth(), self.GetMaxHeight())
+        self.Center()
+
+        self.Bind(wx.EVT_CLOSE, app.on_quit)
+        self.Bind(wx.EVT_ICONIZE, self.on_iconize)
 
     def set_icon(self, icon):
         self.SetIcon(icon)
 
     def quit(self):
-        self.Close()
+        self.Destroy()
 
     def show_all(self):
         self.Show()
 
     def get_size(self):
         return self.GetSize()
+
+    def set_size(self, size):
+        self.SetSize(size)
 
     def set_file_widgets(self, scene, panel):
         # remove startup panel if present
@@ -557,8 +571,12 @@ class MainWindow(wx.Frame):
     def update_status(self, text):
         self.statusbar.SetStatusText(text)
 
-    def set_default_size(self, size):
-        self.SetInitialSize(size)
+    def on_iconize(self, event):
+        if not self.IsIconized():
+            # call Layout() when the frame is unminimized; otherwise the window
+            # will be blank if the frame was minimized while the model was loading
+            self.Layout()
+        event.Skip()
 
     @property
     def file_modified(self):
@@ -731,7 +749,7 @@ class AboutDialog(object):
 class BaseScene(glcanvas.GLCanvas):
 
     def __init__(self, parent):
-        super(BaseScene, self).__init__(parent, -1)
+        super(BaseScene, self).__init__(parent, -1, size=(128, 128))
         self.Hide()
 
         self.initialized = False

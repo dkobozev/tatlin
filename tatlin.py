@@ -80,7 +80,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
         window_w = self.config.read('ui.window_w', int)
         window_h = self.config.read('ui.window_h', int)
-        self.window.set_default_size((window_w, window_h))
+        self.window.set_size((window_w, window_h))
 
         self.init_scene()
 
