@@ -24,7 +24,7 @@ from OpenGL.GLUT import *
 
 import math
 
-from .wxui import BaseScene
+from .ui import BaseScene
 from .actors import Model
 from .views import View2D, View3D
 
