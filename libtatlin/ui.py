@@ -787,7 +787,7 @@ class BaseScene(glcanvas.GLCanvas):
         self.Refresh(False)
 
     def _on_erase_background(self, event):
-        pass # Do nothing, to avoid flashing on MSW. Don't know if necessary, copied from the wx demo.
+        pass # Do nothing, to avoid flashing on MSW. Doesn't seem to be working, though :(
 
     def _on_size(self, event):
         wx.CallAfter(self._set_viewport)

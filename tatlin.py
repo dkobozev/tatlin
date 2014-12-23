@@ -72,7 +72,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
         recent_files = self.config.read('ui.recent_files')
         if recent_files:
-            self.recent_files = [(os.path.basename(f), f) for f in recent_files.split(':')
+            self.recent_files = [(os.path.basename(f), f) for f in recent_files.split(os.path.pathsep)
                                  if os.path.exists(f)][:self.RECENT_FILE_LIMIT]
         else:
             self.recent_files = []
@@ -207,7 +207,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         changes if the scene has been modified.
         """
         try:
-            self.config.write('ui.recent_files', ':'.join([f[1] for f in self.recent_files]))
+            self.config.write('ui.recent_files', os.path.pathsep.join([f[1] for f in self.recent_files]))
 
             w, h = self.window.get_size()
             self.config.write('ui.window_w', w)
