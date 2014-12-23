@@ -226,10 +226,10 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     def save_changes_dialog(self):
         proceed = True
         if self.scene and self.scene.model_modified:
-            dialog = QuitDialog(self.window)
             ask_again = True
 
             while ask_again:
+                dialog = QuitDialog(self.window)
                 response = dialog.show()
                 if response == QuitDialog.RESPONSE_SAVE:
                     self.on_file_save()
@@ -242,8 +242,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
                     proceed = False
                 elif response == QuitDialog.RESPONSE_DISCARD:
                     ask_again = False
-
-            dialog.destroy()
+                else:
+                    raise Exception('Unknown dialog response: %s' % response)
 
         return proceed
 

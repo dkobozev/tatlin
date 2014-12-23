@@ -666,8 +666,6 @@ class QuitDialog(wx.Dialog):
     def __init__(self, parent):
         super(QuitDialog, self).__init__(parent, title='Save changes?')
 
-        self.response = None
-
         label = wx.StaticText(self, label='Save changes to the file before closing?')
 
         self.btn_discard = wx.Button(self, label='Discard')
@@ -694,27 +692,19 @@ class QuitDialog(wx.Dialog):
         self.btn_save.Bind(   wx.EVT_BUTTON, self.on_save)
 
     def on_discard(self, event):
-        self.response = self.RESPONSE_DISCARD
-        self.Hide()
+        self.EndModal(self.RESPONSE_DISCARD)
 
     def on_cancel(self, event):
-        self.response = self.RESPONSE_CANCEL
-        self.Hide()
+        self.EndModal(self.RESPONSE_CANCEL)
 
     def on_save_as(self, event):
-        self.response = self.RESPONSE_SAVE_AS
-        self.Hide()
+        self.EndModal(self.RESPONSE_SAVE_AS)
 
     def on_save(self, event):
-        self.response = self.RESPONSE_SAVE
-        self.Hide()
+        self.EndModal(self.RESPONSE_SAVE)
 
     def show(self):
-        self.ShowModal()
-        return self.response
-
-    def destroy(self):
-        self.Destroy()
+        return self.ShowModal()
 
 
 class ProgressDialog(wx.ProgressDialog):
