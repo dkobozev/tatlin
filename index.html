@@ -30,7 +30,7 @@
         color: #111;
     }
     h2 { font-size: 1.5em; color: #000; }
-    h3 { text-align: center; color: #0b4272; }
+    h3 { color: #000; }
     a { color: #0b4272; }
     .description {
         font-size: 1.2em;
@@ -100,31 +100,48 @@
     </p>
 
     <h2>Install</h2>
-    <p>Tatlin depends on the following packages:</p>
+    <p>Tatlin runs on Linux, Windows and should run on MacOS X. It depends on the following packages:</p>
     <ul>
         <li>Python 2.6+</li>
-        <li>PyGTK 2.24</li>
+        <li>WxPython 2.9+</li>
         <li>PyOpenGL</li>
-        <li>Python bindings for GtkGLExt</li>
         <li>NumPy</li>
     </ul>
 
-    <h2>Run</h2>
+    <h3>Arch Linux</h3>
+    <p>Install dependencies:</p>
+    <pre><code>$ sudo pacman -S python2 wxpython python2-opengl python2-numpy</code></pre>
 
-    <p>To launch Tatlin from the command line:</p>
+    <p>Run:</p>
     <pre><code>$ python tatlin.py</code></pre>
 
     <p>You can also provide a filename to load:</p>
     <pre><code>$ python tatlin.py foobar.stl</code></pre>
 
+    <h3>Windows</h3>
+
+    <ol>
+        <li>Download and install the latest Python 2 interpreter from <a target="_blank" href="https://www.python.org/downloads/windows/">Python.org</a></li>
+        <li>Download and install <a href="http://wxpython.org/download.php#msw" target="_blank">wxPython</a></li>
+        <li>Download and install PyOpenGL and PyOpenGL-accelerate. You can try installing these packages using pip:
+            <pre><code>pip.exe install PyOpenGL PyOpenGL_accelerate</code></pre>
+
+            or, if that doesn't work, download the unofficial installers from <a href="http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopengl" target="_blank">www.lfd.uci.edu/~gohlke/pythonlibs/</a></li>
+        <li>Download and install the latest NumPy superpack from <a href="http://sourceforge.net/projects/numpy/files/NumPy/" target="_blank">SourceForge</a></li>
+    </ol>
+
+    <p>Run:</p>
+    <pre><code>python.exe tatlin.py</code></pre>
 
     <h2>License</h2>
     <p>Tatlin is licensed under GPLv2 or later.</p>
 
 
     <h2>Contact me</h2>
-    <p>Denis Kobozev (d.v.kobozev at gmail.com)</p>
-
+    <ul>
+        <li>Open a new issue on <a href="https://github.com/dkobozev/tatlin/issues">GitHub</a></li>
+        <li>Denis Kobozev (d.v.kobozev at gmail.com)</li>
+    </ul>
 
     <div class="footer">
       get the source code on GitHub : <a href="https://github.com/dkobozev/tatlin">dkobozev/tatlin</a>
