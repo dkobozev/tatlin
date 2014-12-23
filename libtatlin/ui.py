@@ -30,6 +30,7 @@ app = None
 def load_icon(fpath):
     return wx.Icon(fpath)
 
+
 class ViewButtons(wx.FlexGridSizer):
 
     def __init__(self, parent):
@@ -262,27 +263,34 @@ class StlPanel(wx.Panel):
 
     def on_entry_x_focus_out(self, event):
         app.dimension_changed('width', self.entry_x.GetValue())
+        event.Skip()
 
     def on_entry_y_focus_out(self, event):
         app.dimension_changed('depth', self.entry_y.GetValue())
+        event.Skip()
 
     def on_entry_z_focus_out(self, event):
         app.dimension_changed('height', self.entry_z.GetValue())
+        event.Skip()
 
     def on_entry_factor_focus_out(self, event):
         app.scaling_factor_changed(self.entry_factor.GetValue())
+        event.Skip()
 
     def on_entry_rotate_x_focus_out(self, event):
         app.rotation_changed('x', self.entry_rotate_x.GetValue())
         self.model_angle_changed()
+        event.Skip()
 
     def on_entry_rotate_y_focus_out(self, event):
         app.rotation_changed('y', self.entry_rotate_y.GetValue())
         self.model_angle_changed()
+        event.Skip()
 
     def on_entry_rotate_z_focus_out(self, event):
         app.rotation_changed('z', self.entry_rotate_z.GetValue())
         self.model_angle_changed()
+        event.Skip()
 
     def on_x_90_clicked(self, event):
         self.rotate_relative('x', 90)
@@ -738,7 +746,7 @@ class AboutDialog(object):
         info.SetVersion('v%s' % app.TATLIN_VERSION)
         info.SetIcon(app.icon)
         info.SetDescription('Gcode and STL viewer for 3D printing')
-        info.SetCopyright('© 2011-%s Denis Kobozev' % datetime.strftime(datetime.now(), '%Y'))
+        info.SetCopyright('(C) 2011-%s Denis Kobozev' % datetime.strftime(datetime.now(), '%Y'))
         info.SetWebSite('http://dkobozev.github.io/tatlin/')
         info.AddDeveloper('Denis Kobozev <d.v.kobozev@gmail.com>')
         info.SetLicence(app.TATLIN_LICENSE)
@@ -760,7 +768,15 @@ class BaseScene(glcanvas.GLCanvas):
         self.Bind(wx.EVT_PAINT,            self._on_paint)
         self.Bind(wx.EVT_LEFT_DOWN,        self._on_mouse_down)
         self.Bind(wx.EVT_MOTION,           self._on_mouse_motion)
-        self.Bind(wx.EVT_MOUSEWHEEL,       self._on_mouse_wheel)
+
+        # make it unnecessary for the scene to be in focus to respond to the
+        # mouse wheel by binding the mouse wheel event to the parent; if we
+        # bound the event to the scene itself, the user would have to click on
+        # the scene before scrolling each time the scene loses focus (users who
+        # have the fortune of being able to use a window manager that has a
+        # setting for focus-follows-mouse wouldn't care either way, since their
+        # wm would handle it for them)
+        parent.Bind(wx.EVT_MOUSEWHEEL, self._on_mouse_wheel)
 
         methods = ['init', 'display', 'reshape', 'button_press', 'button_motion', 'wheel_scroll']
         for method in methods:
@@ -771,7 +787,7 @@ class BaseScene(glcanvas.GLCanvas):
         self.Refresh(False)
 
     def _on_erase_background(self, event):
-        pass # Do nothing, to avoid flashing on MSW.
+        pass # Do nothing, to avoid flashing on MSW. Don't know if necessary, copied from the wx demo.
 
     def _on_size(self, event):
         wx.CallAfter(self._set_viewport)
@@ -796,6 +812,7 @@ class BaseScene(glcanvas.GLCanvas):
         self.SwapBuffers()
 
     def _on_mouse_down(self, event):
+        self.SetFocus()
         x, y = event.GetPosition()
         self.button_press(x, y)
 
