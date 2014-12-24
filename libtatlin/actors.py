@@ -339,7 +339,8 @@ class GcodeModel(Model):
 
         glDisableClientState(GL_COLOR_ARRAY)
 
-        self._display_layer_markers()
+        if self.arrows_enabled:
+            self._display_layer_markers()
 
         glDisableClientState(GL_VERTEX_ARRAY)
         glPopMatrix()

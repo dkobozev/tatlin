@@ -157,6 +157,7 @@ class Movement(object):
     FLAG_LOOP            = 4
     FLAG_SURROUND_LOOP   = 8
     FLAG_EXTRUDER_ON     = 16
+    FLAG_INCHES          = 32
 
     # tell the python interpreter to only allocate memory for the following attributes
     __slots__ = ['v', 'delta_e', 'feedrate', 'flags']
@@ -213,6 +214,7 @@ class GcodeParser(object):
         line_count = self.lexer.line_count
         command_idx = None
         callback_every = max(1, int(math.floor(line_count / 100)))
+        mm_in_inch = 25.4
 
         for command_idx, command in enumerate(self.lexer.scan()):
             gcode, newargs, comment = command
@@ -230,6 +232,9 @@ class GcodeParser(object):
 
             # create a new movement if the gcode contains a valid coordinate
             if None not in dst and self.src != dst:
+                if self.flags & Movement.FLAG_INCHES:
+                    dst = (dst[0] * mm_in_inch, dst[1] * mm_in_inch, dst[2] * mm_in_inch)
+
                 move = Movement(array.array('f', dst), delta_e, feedrate, self.flags)
                 movements.append(move)
 
@@ -298,11 +303,17 @@ class GcodeParser(object):
         elif self.marker_surrounding_loop_end in comment:
             self.flags &= ~Movement.FLAG_SURROUND_LOOP
 
-        elif gcode == 'M101': # turn on extruder
+        elif gcode in ('M101', 'M3', 'M03', 'M4', 'M04'): # turn on extruder/spindle
             self.flags |= Movement.FLAG_EXTRUDER_ON
 
-        elif gcode == 'M103': # turn off extruder
+        elif gcode in ('M103', 'M5', 'M05'): # turn off extruder/spindle
             self.flags &= ~Movement.FLAG_EXTRUDER_ON
+
+        elif gcode == 'G20':
+            self.flags |= Movement.FLAG_INCHES
+
+        elif gcode == 'G21':
+            self.flags &= ~Movement.FLAG_INCHES
 
     def set_flags_slic3r(self, command):
         """
@@ -320,7 +331,7 @@ class GcodeParser(object):
             self.flags = 0
 
     def command_coords(self, gcode, args, newargs):
-        if gcode == 'G1' or gcode == 'G01': # controlled move
+        if gcode in ('G0', 'G00', 'G1', 'G01'): # move
             coords = (args['X'], args['Y'], args['Z'])
             return coords
         elif gcode == 'G28': # move to origin
@@ -340,7 +351,7 @@ class GcodeParser(object):
         if self.marker_layer in comment:
             return True
 
-        if gcode in ('G1', 'G01', 'G2', 'G02', 'G3', 'G03'):
+        if gcode in ('G0', 'G00', 'G1', 'G01', 'G2', 'G02', 'G3', 'G03'):
             delta_z = dst[2] - self.src[2]
             if delta_z > 0.1:
                 return True

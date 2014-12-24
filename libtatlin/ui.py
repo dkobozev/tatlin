@@ -435,8 +435,13 @@ class GcodePanel(wx.Panel):
         app.on_set_ortho(event.GetEventObject().GetValue())
 
     def set_initial_values(self):
-        self.slider_layers.SetRange(1, app.get_property('layers_range_max'))
-        self.slider_layers.SetValue(app.get_property('layers_value'))
+        layers_max = app.get_property('layers_range_max')
+        if layers_max > 1:
+            self.slider_layers.SetRange(1, layers_max)
+            self.slider_layers.SetValue(app.get_property('layers_value'))
+            self.slider_layers.Show()
+        else:
+            self.slider_layers.Hide()
 
         self.check_arrows.SetValue(True) # check the box
         self.check_3d.SetValue(True)
