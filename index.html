@@ -70,7 +70,7 @@
     <h1><a href="https://github.com/dkobozev/tatlin">Татлин</a></h1>
 
     <div class="description">
-      Tatlin is a Gcode and STL viewer for 3D printing
+      Tatlin is a multiplatform Gcode and STL viewer for 3D printing
     </div>
 
     <h2>See</h2>
@@ -100,10 +100,10 @@
     </p>
 
     <h2>Install</h2>
-    <p>Tatlin runs on Linux, Windows and should run on MacOS X. It depends on the following packages:</p>
+    <p>Tatlin runs on Linux, Windows and MacOS X. It depends on the following packages:</p>
     <ul>
         <li>Python 2.6+</li>
-        <li>WxPython 2.9+</li>
+        <li>wxPython 2.9+</li>
         <li>PyOpenGL</li>
         <li>NumPy</li>
     </ul>
@@ -131,6 +131,23 @@
 
     <p>Run:</p>
     <pre><code>python.exe tatlin.py</code></pre>
+
+    <h3>Mac OS X</h3>
+
+    <p>I was able to install Tatlin on Mac OS X Mountain Lion using the preinstalled Python 2.7.2 and NumPy 1.6.1.</p>
+
+    <ol>
+        <li>Download and install <a href="http://www.wxpython.org/download.php#osx" target="_blank">wxPython</a>. If you're not sure which package you need, download the Cocoa version. Because the installer is not signed, you need to turn off Gatekeeper (System Preferences -&gt; Security &amp; Privacy -&gt; General, select "Allow app downloads from: Anywhere") prior to the installation. Check out <a href="http://stackoverflow.com/questions/21223717/install-wxpython-on-mac-os-mavericks" target="_blank">StackOverflow</a> for more info.</li>
+        <li>Install PyOpenGL using <a href="https://pip.pypa.io/en/latest/installing.html" target="_blank">pip</a>:
+            <pre><code>$ pip install PyOpenGL</code></pre>
+
+            To install PyOpenGL-accelerate, first download Command Line Tools for Xcode or Xcode from the <a href="http://developer.apple.com/downloads" target="_blank">Apple Developer portal</a>.
+            <pre><code>$ pip install PyOpenGL_accelerate</code></pre>
+        </li>
+    </ol>
+
+    <p>Run:</p>
+    <pre><code>$ python tatlin.py</code></pre>
 
     <h2>License</h2>
     <p>Tatlin is licensed under GPLv2 or later.</p>
