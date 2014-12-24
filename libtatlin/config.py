@@ -13,9 +13,10 @@ class Config(object):
             'machine.platform_d': 100,
             'machine.platform_offset_x': 0,
             'machine.platform_offset_y': 0,
+            'machine.platform_offset_z': 0,
             'ui.recent_files': None,
             'ui.window_w': 640,
-            'ui.window_h': 480,
+            'ui.window_h': 700,
             'ui.gcode_2d': False,
         }
 

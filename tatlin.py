@@ -36,7 +36,7 @@ def format_float(f):
 
 class App(BaseApp):
 
-    TATLIN_VERSION = '0.2.1'
+    TATLIN_VERSION = '0.2.2'
     TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -361,6 +361,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.scene.clear()
             model.offset_x = self.config.read('machine.platform_offset_x', int)
             model.offset_y = self.config.read('machine.platform_offset_y', int)
+            model.offset_z = self.config.read('machine.platform_offset_z', int)
             self.scene.add_model(model)
 
             # platform needs to be added last to be translucent

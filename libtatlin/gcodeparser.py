@@ -222,7 +222,7 @@ class GcodeParser(object):
                 self.set_flags = self.set_flags_slic3r
 
             args = self.update_args(newargs)
-            dst  = self.command_coords(gcode, args)
+            dst  = self.command_coords(gcode, args, newargs)
 
             e_len, delta_e = self.process_e_axis(gcode, args)
             feedrate = args['F']
@@ -319,10 +319,21 @@ class GcodeParser(object):
         else:
             self.flags = 0
 
-    def command_coords(self, gcode, args):
-        if gcode == 'G1' or gcode == 'G01':
+    def command_coords(self, gcode, args, newargs):
+        if gcode == 'G1' or gcode == 'G01': # controlled move
             coords = (args['X'], args['Y'], args['Z'])
             return coords
+        elif gcode == 'G28': # move to origin
+            if newargs['X'] is None and newargs['Y'] is None and newargs['Z'] is None:
+                # if no coordinates specified, move all axes to 0 endstops
+                return (0.0, 0.0, 0.0)
+            else:
+                # if any coordinates are specified, zero just the axes
+                # specified; the actual coordinate values are ignored
+                x = 0.0 if newargs['X'] is not None else self.prev_args['X']
+                y = 0.0 if newargs['Y'] is not None else self.prev_args['Y']
+                z = 0.0 if newargs['Z'] is not None else self.prev_args['Z']
+                return (x, y, z)
         return (None, )
 
     def is_new_layer(self, dst, gcode, comment):
