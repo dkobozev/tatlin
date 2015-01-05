@@ -19,7 +19,7 @@
 from __future__ import division
 
 import sys
-import os
+import os, os.path
 import logging
 
 from libtatlin.actors import Platform
@@ -32,6 +32,19 @@ from libtatlin.config import Config
 
 def format_float(f):
     return "%.2f" % f
+
+def resolve_path(fpath):
+    if os.path.isabs(fpath):
+        return fpath
+
+    if getattr(sys, 'frozen', False):
+        # we are running in a PyInstaller bundle
+        basedir = sys._MEIPASS
+    else:
+        # we are running in a normal Python environment
+        basedir = os.path.dirname(__file__)
+
+    return os.path.join(basedir, fpath)
 
 
 class App(BaseApp):
@@ -61,7 +74,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         # ---------------------------------------------------------------------
         self.window = MainWindow()
 
-        self.icon = load_icon('tatlin-logo.png')
+        self.icon = load_icon(resolve_path('tatlin-logo.png'))
         self.window.set_icon(self.icon)
 
         # ---------------------------------------------------------------------
