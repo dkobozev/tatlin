@@ -1,6 +1,6 @@
 # -*- mode: python -*-
 a = Analysis(['tatlin.py'],
-             pathex=['E:\\tatlin'],
+             pathex=['.'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None)
