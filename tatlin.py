@@ -49,7 +49,7 @@ def resolve_path(fpath):
 
 class App(BaseApp):
 
-    TATLIN_VERSION = '0.2.4'
+    TATLIN_VERSION = '0.2.5'
     TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -176,7 +176,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
     def command_line(self):
         if len(sys.argv) > 1:
-            self.open_and_display_file(sys.argv[1])
+            self.open_and_display_file(os.path.abspath(sys.argv[1]))
 
     # -------------------------------------------------------------------------
     # EVENT HANDLERS
@@ -355,7 +355,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
     def open_and_display_file(self, fpath):
         self.set_wait_cursor()
-        progress_dialog = None
+        progress_dialog_read = None
+        progress_dialog_load = None
         success = True
 
         try:
@@ -364,12 +365,11 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
             self.scene = Scene(self.window)
 
-            progress_dialog = ProgressDialog('Reading file...')
-            model, model_data = self.model_file.read(progress_dialog.step)
-            progress_dialog.destroy()
+            progress_dialog_read = ProgressDialog('Reading file...')
+            model, model_data = self.model_file.read(progress_dialog_read.step)
 
-            progress_dialog = ProgressDialog('Loading model...')
-            model.load_data(model_data, progress_dialog.step)
+            progress_dialog_load = ProgressDialog('Loading model...')
+            model.load_data(model_data, progress_dialog_load.step)
 
             self.scene.clear()
             model.offset_x = self.config.read('machine.platform_offset_x', int)
@@ -403,6 +403,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.window.file_modified = False
             self.window.menu_enable_file_items(self.model_file.filetype != 'gcode')
 
+
             if self.model_file.size > 2**30:
                 size = self.model_file.size / 2**30
                 units = 'GB'
@@ -430,8 +431,10 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             error_dialog.show()
             success = False
         finally:
-            if progress_dialog:
-                progress_dialog.destroy()
+            if progress_dialog_read:
+                progress_dialog_read.destroy()
+            if progress_dialog_load:
+                progress_dialog_load.destroy()
             self.set_normal_cursor()
 
         return success
