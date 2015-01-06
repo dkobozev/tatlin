@@ -105,7 +105,11 @@
 
         <h4>Self-contained executable</h4>
 
-            <p>The self-contained archive contains all of the dependencies, including the Python interpreter. Download <a href="tatlin-win32-0.2.4.zip">tatlin-win32-0.2.4.zip</a>, unpack and run <code>tatlin.exe</code>.</p>
+            <ul>
+                <li><a href="tatlin-win32-0.2.4.zip">tatlin-win32-0.2.4.zip</a></li>
+            </ul>
+
+            <p>The self-contained archive contains all of the dependencies, including the Python interpreter. Download, unpack and run <code>tatlin.exe</code>.</p>
 
         <h4>Manual installation</h4>
 
@@ -123,20 +127,30 @@
 
     <h3 id="h-mac">Mac OS X</h3>
 
-    <p>I was able to install Tatlin on Mac OS X Mountain Lion using the preinstalled Python 2.7.2 and NumPy 1.6.1.</p>
+    <h4>Application bundle</h4>
 
-    <ol>
-        <li>Download and install <a href="http://www.wxpython.org/download.php#osx" target="_blank">wxPython</a>. If you're not sure which package you need, download the Cocoa version. Because the installer is not signed, you need to turn off Gatekeeper (System Preferences -&gt; Security &amp; Privacy -&gt; General, select "Allow app downloads from: Anywhere") prior to the installation. Check out <a href="http://stackoverflow.com/questions/21223717/install-wxpython-on-mac-os-mavericks" target="_blank">StackOverflow</a> for more info.</li>
-        <li>Install PyOpenGL using <a href="https://pip.pypa.io/en/latest/installing.html" target="_blank">pip</a>:
-            <pre><code>$ pip install PyOpenGL</code></pre>
+        <ul>
+            <li><a href="tatlin-MacOS-X-10.6+-0.2.5.zip">tatlin-MacOS-X-10.6+-0.2.5.zip</a></li>
+        </ul>
 
-            To install PyOpenGL-accelerate, first download Command Line Tools for Xcode or Xcode from the <a href="http://developer.apple.com/downloads" target="_blank">Apple Developer portal</a>.
-            <pre><code>$ pip install PyOpenGL_accelerate</code></pre>
-        </li>
-    </ol>
+        <p>Self-contained executable that includes all the dependencies. Unzip and run <code>tatlin.app</code>.</p>
 
-    <p>Run:</p>
-    <pre><code>$ python tatlin.py</code></pre>
+    <h4>Manual installation</h4>
+
+        <p>I was able to install Tatlin on Mac OS X Mountain Lion using the preinstalled Python 2.7.2 and NumPy 1.6.1.</p>
+
+        <ol>
+            <li>Download and install <a href="http://www.wxpython.org/download.php#osx" target="_blank">wxPython</a>. If you're not sure which package you need, download the Cocoa version. Because the installer is not signed, you need to turn off Gatekeeper (System Preferences -&gt; Security &amp; Privacy -&gt; General, select "Allow app downloads from: Anywhere") prior to the installation. Check out <a href="http://stackoverflow.com/questions/21223717/install-wxpython-on-mac-os-mavericks" target="_blank">StackOverflow</a> for more info.</li>
+            <li>Install PyOpenGL using <a href="https://pip.pypa.io/en/latest/installing.html" target="_blank">pip</a>:
+                <pre><code>$ pip install PyOpenGL</code></pre>
+
+                To install PyOpenGL-accelerate, first download Command Line Tools for Xcode or Xcode from the <a href="http://developer.apple.com/downloads" target="_blank">Apple Developer portal</a>.
+                <pre><code>$ pip install PyOpenGL_accelerate</code></pre>
+            </li>
+        </ol>
+
+        <p>Run:</p>
+        <pre><code>$ python tatlin.py</code></pre>
 
     <div class="download">
       <a href="https://github.com/dkobozev/tatlin/zipball/master">
