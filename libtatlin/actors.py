@@ -379,7 +379,7 @@ class GcodeModel(Model):
                     stop_idx -= 1
 
         else: # 3d projection mode
-            reverse_threshold_layer = self._layer_up_to_height(eye_height)
+            reverse_threshold_layer = self._layer_up_to_height(eye_height - self.offset_z)
 
             if reverse_threshold_layer >= 0:
                 # draw layers up to (and including) the threshold in normal order, bottom to top

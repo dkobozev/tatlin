@@ -197,11 +197,12 @@ class GcodeParser(object):
     def __init__(self):
         self.lexer = GcodeLexer()
 
-        self.src       = (None, )
-        self.e_len     = 0
+        self.args      = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'F': 0, 'E': 0})
+        self.offset    = {'X': 0, 'Y': 0, 'Z': 0, 'E': 0}
+        self.src       = None
         self.flags     = 0
-        self.prev_args = ArgsDict()
         self.set_flags = self.set_flags_skeinforge
+        self.relative  = False
 
     def load(self, src):
         self.lexer.load(src)
@@ -223,32 +224,28 @@ class GcodeParser(object):
                 # switch mode to slic3r
                 self.set_flags = self.set_flags_slic3r
 
-            args = self.update_args(newargs)
+            args = self.update_args(self.args, newargs)
             dst  = self.command_coords(gcode, args, newargs)
-
-            e_len, delta_e = self.process_e_axis(gcode, args)
-            feedrate = args['F']
+            delta_e = args['E'] - self.args['E']
             self.set_flags(command)
 
             # create a new movement if the gcode contains a valid coordinate
-            if None not in dst and self.src != dst:
+            if dst is not None and self.src != dst:
                 if self.flags & Movement.FLAG_INCHES:
                     dst = (dst[0] * mm_in_inch, dst[1] * mm_in_inch, dst[2] * mm_in_inch)
 
-                move = Movement(array.array('f', dst), delta_e, feedrate, self.flags)
+                move = Movement(array.array('f', dst), delta_e, args['F'], self.flags)
                 movements.append(move)
 
-                if None not in self.src and self.is_new_layer(dst, gcode, comment):
+                if self.src is not None and self.is_new_layer(dst, gcode, comment):
                     layers.append(movements)
                     movements = []
 
             # if gcode contains a valid coordinate, update the previous point
             # with the new coordinate
-            if None not in dst:
+            if dst is not None:
                 self.src = dst
-
-            self.prev_args = args
-            self.e_len = e_len
+            self.args = args
 
             if callback and command_idx % callback_every == 0:
                 callback(command_idx + 1, line_count)
@@ -270,10 +267,61 @@ class GcodeParser(object):
 
         return layers
 
-    def update_args(self, args):
-        prev_args = self.prev_args.copy()
-        prev_args.update(args)
-        return ArgsDict(prev_args)
+    def update_args(self, oldargs, newargs):
+        args = oldargs.copy()
+
+        for axis in newargs.keys():
+            if args.has_key(axis) and newargs[axis] is not None:
+                if self.relative:
+                    args[axis] += newargs[axis]
+                else:
+                    args[axis] = newargs[axis]
+
+        return args
+
+    def command_coords(self, gcode, args, newargs):
+        if gcode in ('G0', 'G00', 'G1', 'G01'): # move
+            coords = (self.offset['X'] + args['X'],
+                      self.offset['Y'] + args['Y'],
+                      self.offset['Z'] + args['Z'])
+            return coords
+        elif gcode == 'G28': # move to origin
+            if newargs['X'] is None and newargs['Y'] is None and newargs['Z'] is None:
+                # if no coordinates specified, move all axes to origin
+                return (self.offset['X'], self.offset['Y'], self.offset['Z'])
+            else:
+                # if any coordinates are specified, reset just the axes
+                # specified; the actual coordinate values are ignored
+                x = self.offset['X'] if newargs['X'] is not None else args['X']
+                y = self.offset['Y'] if newargs['Y'] is not None else args['Y']
+                z = self.offset['Z'] if newargs['Z'] is not None else args['Z']
+                return (x, y, z)
+        elif gcode == 'G90': # set to absolute positioning
+            self.relative = False
+        elif gcode == 'G91': # set to relative positioning
+            self.relative = True
+        elif gcode == 'G92': # set position
+            # G92 without coordinates resets all axes to zero
+            if len(newargs) < 1:
+                newargs = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'E': 0})
+
+            for axis in newargs.keys():
+                if self.offset.has_key(axis):
+                    self.offset[axis] += self.args[axis] - newargs[axis]
+                    self.args[axis] = newargs[axis]
+
+        return None
+
+    def is_new_layer(self, dst, gcode, comment):
+        if self.marker_layer in comment:
+            return True
+
+        if gcode in ('G0', 'G00', 'G1', 'G01', 'G2', 'G02', 'G3', 'G03'):
+            delta_z = dst[2] - self.src[2]
+            if delta_z > 0.1:
+                return True
+
+        return False
 
     def set_flags_skeinforge(self, command):
         """
@@ -329,47 +377,6 @@ class GcodeParser(object):
             self.flags |= Movement.FLAG_LOOP
         else:
             self.flags = 0
-
-    def command_coords(self, gcode, args, newargs):
-        if gcode in ('G0', 'G00', 'G1', 'G01'): # move
-            coords = (args['X'], args['Y'], args['Z'])
-            return coords
-        elif gcode == 'G28': # move to origin
-            if newargs['X'] is None and newargs['Y'] is None and newargs['Z'] is None:
-                # if no coordinates specified, move all axes to 0 endstops
-                return (0.0, 0.0, 0.0)
-            else:
-                # if any coordinates are specified, zero just the axes
-                # specified; the actual coordinate values are ignored
-                x = 0.0 if newargs['X'] is not None else self.prev_args['X']
-                y = 0.0 if newargs['Y'] is not None else self.prev_args['Y']
-                z = 0.0 if newargs['Z'] is not None else self.prev_args['Z']
-                return (x, y, z)
-        return (None, )
-
-    def is_new_layer(self, dst, gcode, comment):
-        if self.marker_layer in comment:
-            return True
-
-        if gcode in ('G0', 'G00', 'G1', 'G01', 'G2', 'G02', 'G3', 'G03'):
-            delta_z = dst[2] - self.src[2]
-            if delta_z > 0.1:
-                return True
-
-        return False
-
-    def process_e_axis(self, gcode, args):
-        e_len = args['E']
-        if gcode == 'G92' and e_len == 0:
-            # reset the extruder
-            self.e_len = None
-            delta_e = 0
-        elif self.e_len is None or e_len is None:
-            delta_e = 0
-        else:
-            delta_e = e_len - self.e_len
-
-        return (e_len, delta_e)
 
 
 if __name__ == '__main__':

@@ -11,9 +11,9 @@ class Config(object):
             # makerbot thing-o-matic platform size
             'machine.platform_w': 120,
             'machine.platform_d': 100,
-            'machine.platform_offset_x': 0,
-            'machine.platform_offset_y': 0,
-            'machine.platform_offset_z': 0,
+            'machine.platform_offset_x': None,
+            'machine.platform_offset_y': None,
+            'machine.platform_offset_z': None,
             'ui.recent_files': None,
             'ui.window_w': 640,
             'ui.window_h': 700,

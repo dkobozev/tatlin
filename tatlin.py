@@ -372,14 +372,26 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             model.load_data(model_data, progress_dialog_load.step)
 
             self.scene.clear()
-            model.offset_x = self.config.read('machine.platform_offset_x', int)
-            model.offset_y = self.config.read('machine.platform_offset_y', int)
-            model.offset_z = self.config.read('machine.platform_offset_z', int)
             self.scene.add_model(model)
 
+            if self.model_file.filetype == 'gcode':
+                offset_x = self.config.read('machine.platform_offset_x', float)
+                offset_y = self.config.read('machine.platform_offset_y', float)
+                offset_z = self.config.read('machine.platform_offset_z', float)
+
+                if offset_x is None and offset_y is None and offset_z is None:
+                    self.scene.view_model_center()
+                    logging.info('Platform offsets not set, showing model in the center')
+                else:
+                    model.offset_x = offset_x if offset_x is not None else 0
+                    model.offset_y = offset_y if offset_y is not None else 0
+                    model.offset_z = offset_z if offset_z is not None else 0
+                    logging.info('Using platform offsets: (%s, %s, %s)' % (
+                        model.offset_x, model.offset_y, model.offset_z))
+
             # platform needs to be added last to be translucent
-            platform_w = self.config.read('machine.platform_w', int)
-            platform_d = self.config.read('machine.platform_d', int)
+            platform_w = self.config.read('machine.platform_w', float)
+            platform_d = self.config.read('machine.platform_d', float)
             platform = Platform(platform_w, platform_d)
             self.scene.add_supporting_actor(platform)
 

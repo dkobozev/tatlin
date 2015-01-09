@@ -144,9 +144,10 @@ class Scene(BaseScene):
                               mode_ortho=self.mode_ortho,
                               mode_2d=self.mode_2d)
         else:
-            # actors may use eye height to perform rendering optimizations
-            # in the simplest terms, in the most convenient definitions, eye height in the perspective projection
-            # divides the screen into two horizontal halves - one seen from above, the other from below
+            # actors may use eye height to perform rendering optimizations; in
+            # the simplest terms, in the most convenient definitions, eye
+            # height in the perspective projection divides the screen into two
+            # horizontal halves - one seen from above, the other from below
             y = self.current_view.y / self.current_view.zoom_factor
             z = self.current_view.z
             angle = -math.degrees(math.atan2(z, y)) - self.current_view.elevation
@@ -266,6 +267,17 @@ class Scene(BaseScene):
             self.current_view.azimuth = azimuth
             self.current_view.elevation = elevation
             self.invalidate()
+
+    def view_model_center(self):
+        """
+        Display the model in the center of the scene without modifying the vertices.
+        """
+        bounding_box = self.model.bounding_box
+        lower_corner = bounding_box.lower_corner
+        upper_corner = bounding_box.upper_corner
+        self.model.offset_x = -(upper_corner[0] + lower_corner[0]) / 2
+        self.model.offset_y = -(upper_corner[1] + lower_corner[1]) / 2
+        self.model.offset_z = -lower_corner[2]
 
     # ------------------------------------------------------------------------
     # MODEL MANIPULATION
