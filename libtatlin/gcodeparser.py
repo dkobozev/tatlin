@@ -54,7 +54,7 @@ class GcodeLexer(object):
     def load(self, gcode):
         if isinstance(gcode, str):
             lines = gcode.replace('\r', '\n').replace('\n\n', '\n').split('\n')
-            self.line_count = len(self._lines)
+            self.line_count = len(lines)
 
             def _getlines():
                 for line in lines:
@@ -101,7 +101,17 @@ class GcodeLexer(object):
         command, comment = self.split_comment(line)
         parts = command.split()
         if parts:
-            return (parts[0], self.scan_args(parts[1:]), comment)
+            args = ArgsDict()
+            for part in reversed(parts[1:]):
+                if len(part) > 1:
+                    try:
+                        args[part[0]] = float(part[1:])
+                    except ValueError as e:
+                        comment = part + ' ' + comment
+                else:
+                    args[part[0]] = None
+
+            return (parts[0], args, comment)
         else:
             return ('', ArgsDict(), comment)
 
@@ -123,22 +133,6 @@ class GcodeLexer(object):
                                 command[idx_paren:] + comment)
 
         return (command, comment)
-
-    def scan_args(self, args):
-        """
-        Build a map of axis names to axis values.
-        """
-        d = ArgsDict()
-        for arg in args:
-            try:
-                # argument consists of an axis name and an optional number
-                if arg[1:]:
-                    d[arg[0]] = float(arg[1:])
-                else:
-                    d[arg[0]] = None
-            except ValueError as e:
-                raise GcodeArgumentError(str(e))
-        return d
 
     def is_blank(self, tokens):
         """

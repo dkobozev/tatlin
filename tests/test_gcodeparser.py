@@ -1,10 +1,11 @@
 import unittest
-from libtatlin.gcodeparser import GcodeParser, Movement, ArgsDict
+from libtatlin.gcodeparser import GcodeParser, GcodeLexer, Movement, ArgsDict
 
 
 class GcodeParserTest(unittest.TestCase):
     def setUp(self):
         self.parser = GcodeParser()
+        self.lexer = GcodeLexer()
 
     def test_args_dict(self):
         xyz = (7.27, 2.67, 0.91)
@@ -22,12 +23,12 @@ class GcodeParserTest(unittest.TestCase):
 
         gcode = 'G1'
         args = ArgsDict({'X': x, 'Y': y, 'Z': z})
-        coords = self.parser.command_coords(gcode, args)
+        coords = self.parser.command_coords(gcode, args, args)
         self.assertEqual(coords, xyz)
 
         gcode = ''
-        coords = self.parser.command_coords(gcode, args)
-        self.assertIn(None, coords)
+        coords = self.parser.command_coords(gcode, args, args)
+        self.assertIsNone(coords)
 
     def test_is_new_layer(self):
         dst = (0, 0, 0)
@@ -67,16 +68,13 @@ class GcodeParserTest(unittest.TestCase):
         """
         self.parser.load(gcode)
         result = self.parser.parse()
+
         self.assertEqual(len(result), 1)
-        self.assertEqual(len(result[0]), 1)
+        self.assertEqual(len(result[0]), 3)
 
     def test_update_args(self):
-        self.parser.prev_args = {'X': 0, 'Y': 0, 'F': 12000}
-        args = self.parser.update_args({'X': 1, 'Y': 1})
-
-        self.assertEqual(self.parser.prev_args['X'], 0)
-        self.assertEqual(self.parser.prev_args['Y'], 0)
-        self.assertEqual(self.parser.prev_args['F'], 12000)
+        oldargs = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'F': 12000, 'E': 0})
+        args = self.parser.update_args(oldargs, {'X': 1, 'Y': 1})
 
         self.assertEqual(args['X'], 1)
         self.assertEqual(args['Y'], 1)
@@ -94,8 +92,18 @@ class GcodeParserTest(unittest.TestCase):
         self.parser.load(gcode)
         result = self.parser.parse()
         self.assertEqual(len(result), 2)
-        self.assertEqual(len(result[0]), 2)
+        self.assertEqual(len(result[0]), 3)
         self.assertEqual(len(result[1]), 1)
+
+    def test_cura(self):
+        gcode = """
+        M117 Printing stuff now...
+        """
+        self.lexer.load(gcode)
+        for command, args, comment in self.lexer.scan():
+            self.assertEqual(command, 'M117')
+            self.assertEqual(len(args), 0)
+            self.assertEqual(comment.strip(), 'Printing stuff now...')
 
 if __name__ == '__main__':
     unittest.main()
