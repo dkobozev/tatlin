@@ -153,6 +153,23 @@ class Scene(BaseScene):
             angle = -math.degrees(math.atan2(z, y)) - self.current_view.elevation
             eye_height = math.sqrt(y**2 + z**2) * math.sin(math.radians(angle))
 
+            # draw line of sight plane
+            #plane_size = 200
+            #glBegin(GL_LINES)
+            #glColor(1.0, 0.0, 0.0)
+            #glVertex(-plane_size/2, plane_size/2, eye_height)
+            #glVertex(plane_size/2, plane_size/2, eye_height)
+
+            #glVertex(plane_size/2, plane_size/2, eye_height)
+            #glVertex(plane_size/2, -plane_size/2, eye_height)
+
+            #glVertex(plane_size/2, -plane_size/2, eye_height)
+            #glVertex(-plane_size/2, -plane_size/2, eye_height)
+
+            #glVertex(-plane_size/2, -plane_size/2, eye_height)
+            #glVertex(-plane_size/2, plane_size/2, eye_height)
+            #glEnd()
+
             for actor in self.actors:
                 actor.display(eye_height=eye_height,
                               mode_ortho=self.mode_ortho,

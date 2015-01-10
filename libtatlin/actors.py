@@ -408,13 +408,11 @@ class GcodeModel(Model):
 
     def _layer_up_to_height(self, height):
         """Return the index of the last layer lower than height."""
-        prev = 0
-        for layer_idx, h in enumerate(self.layer_heights):
-            if h > height:
-                break
-            prev = layer_idx
+        for idx in range(len(self.layer_heights) - 1, -1, -1):
+            if self.layer_heights[idx] < height:
+                return idx
 
-        return prev
+        return 0
 
     def _display_arrows(self):
         self.arrow_buffer.bind()
