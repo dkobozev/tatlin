@@ -180,13 +180,13 @@ class Movement(object):
 
 class GcodeParser(object):
 
-    marker_layer                  = '(<layer>'
-    marker_perimeter_start        = '(<perimeter>'
-    marker_perimeter_end          = '(</perimeter>)'
-    marker_loop_start             = '(<loop>'
-    marker_loop_end               = '(</loop>)'
-    marker_surrounding_loop_start = '(<surroundingLoop>)'
-    marker_surrounding_loop_end   = '(</surroundingLoop>)'
+    marker_layer                  = '</layer>'
+    marker_perimeter_start        = '<perimeter>'
+    marker_perimeter_end          = '</perimeter>)'
+    marker_loop_start             = '<loop>'
+    marker_loop_end               = '</loop>'
+    marker_surrounding_loop_start = '<surroundingLoop>'
+    marker_surrounding_loop_end   = '</surroundingLoop>'
 
     def __init__(self):
         self.lexer = GcodeLexer()
@@ -210,6 +210,8 @@ class GcodeParser(object):
         command_idx = None
         callback_every = max(1, int(math.floor(line_count / 100)))
         mm_in_inch = 25.4
+        new_layer = False
+        current_layer_z = 0
 
         for command_idx, command in enumerate(self.lexer.scan()):
             gcode, newargs, comment = command
@@ -223,17 +225,24 @@ class GcodeParser(object):
             delta_e = args['E'] - self.args['E']
             self.set_flags(command)
 
+            if self.marker_layer in comment:
+                new_layer = True
+            if delta_e > 0 and args['Z'] != current_layer_z:
+                current_layer_z = args['Z']
+                new_layer = True
+
             # create a new movement if the gcode contains a valid coordinate
             if dst is not None and self.src != dst:
+                if self.src is not None and new_layer:
+                    layers.append(movements)
+                    movements = []
+                    new_layer = False
+
                 if self.flags & Movement.FLAG_INCHES:
                     dst = (dst[0] * mm_in_inch, dst[1] * mm_in_inch, dst[2] * mm_in_inch)
 
                 move = Movement(array.array('f', dst), delta_e, args['F'], self.flags)
                 movements.append(move)
-
-                if self.src is not None and self.is_new_layer(dst, gcode, comment):
-                    layers.append(movements)
-                    movements = []
 
             # if gcode contains a valid coordinate, update the previous point
             # with the new coordinate
@@ -305,17 +314,6 @@ class GcodeParser(object):
                     self.args[axis] = newargs[axis]
 
         return None
-
-    def is_new_layer(self, dst, gcode, comment):
-        if self.marker_layer in comment:
-            return True
-
-        if gcode in ('G0', 'G00', 'G1', 'G01', 'G2', 'G02', 'G3', 'G03'):
-            delta_z = dst[2] - self.src[2]
-            if delta_z > 0.1:
-                return True
-
-        return False
 
     def set_flags_skeinforge(self, command):
         """

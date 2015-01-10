@@ -328,7 +328,10 @@ class GcodeModel(Model):
 
     def display(self, elevation=0, eye_height=0, mode_ortho=False, mode_2d=False):
         glPushMatrix()
-        glTranslate(self.offset_x, self.offset_y, self.offset_z)
+
+        offset_z = self.offset_z if not mode_2d else 0
+        glTranslate(self.offset_x, self.offset_y, offset_z)
+
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
 
