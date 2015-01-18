@@ -12,9 +12,8 @@ Dependencies
 Tatlin requires the following packages:
 
 - Python 2.6+
-- PyGTK 2.24
+- wxPython 2.9+
 - PyOpenGL
-- Python bindings for GtkGLExt
 - NumPy
 
 Usage

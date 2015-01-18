@@ -1,2 +1,5 @@
 *.pyc
 *.prof
+.idea
+tests/data/gcode/*
+tests/data/stl/*

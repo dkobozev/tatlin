@@ -19,17 +19,13 @@
 from __future__ import division
 
 import sys
-import os
+import os, os.path
 import logging
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-
 from libtatlin.actors import Platform
-from libtatlin.scene import Scene, SceneArea
-from libtatlin.ui import StlPanel, GcodePanel, MainWindow, \
-SaveDialog, OpenDialog, OpenErrorAlert, QuitDialog, ProgressDialog
+from libtatlin.scene import Scene
+from libtatlin.ui import load_icon, BaseApp, MainWindow, StlPanel, GcodePanel, \
+        OpenDialog, OpenErrorAlert, ProgressDialog, SaveDialog, QuitDialog, AboutDialog
 from libtatlin.storage import ModelFile, ModelFileError
 from libtatlin.config import Config
 
@@ -37,34 +33,49 @@ from libtatlin.config import Config
 def format_float(f):
     return "%.2f" % f
 
+def resolve_path(fpath):
+    if os.path.isabs(fpath):
+        return fpath
 
-class ActionGroup(gtk.ActionGroup):
-    def __init__(self, *args, **kwargs):
-        gtk.ActionGroup.__init__(self, *args, **kwargs)
+    if getattr(sys, 'frozen', False):
+        # we are running in a PyInstaller bundle
+        basedir = sys._MEIPASS
+    else:
+        # we are running in a normal Python environment
+        basedir = os.path.dirname(__file__)
 
-    def menu_item(self, action_name):
-        item = self.get_action(action_name).create_menu_item()
-        return item
+    return os.path.join(basedir, fpath)
 
 
-class App(object):
+class App(BaseApp):
+
+    TATLIN_VERSION = '0.2.5'
+    TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software Foundation,
+Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""
+    RECENT_FILE_LIMIT = 10
 
     def __init__(self):
+        super(App, self).__init__()
+
         # ---------------------------------------------------------------------
         # WINDOW SETUP
         # ---------------------------------------------------------------------
-
         self.window = MainWindow()
 
-        self.actiongroup = self.set_up_actions()
-        self.create_menu_items(self.actiongroup)
-        for menu_item in self.menu_items:
-            self.window.append_menu_item(menu_item)
-
-        self.menu_enable_file_items(False)
-
-        self.window.connect('destroy',      self.quit)
-        self.window.connect('open-clicked', self.open_file_dialog)
+        self.icon = load_icon(resolve_path('tatlin-logo.png'))
+        self.window.set_icon(self.icon)
 
         # ---------------------------------------------------------------------
         # APP SETUP
@@ -72,9 +83,17 @@ class App(object):
 
         self.init_config()
 
+        recent_files = self.config.read('ui.recent_files')
+        if recent_files:
+            self.recent_files = [(os.path.basename(f), f) for f in recent_files.split(os.path.pathsep)
+                                 if os.path.exists(f)][:self.RECENT_FILE_LIMIT]
+        else:
+            self.recent_files = []
+        self.window.update_recent_files_menu(self.recent_files)
+
         window_w = self.config.read('ui.window_w', int)
         window_h = self.config.read('ui.window_h', int)
-        self.window.set_default_size(window_w, window_h)
+        self.window.set_size((window_w, window_h))
 
         self.init_scene()
 
@@ -215,13 +234,12 @@ class App(object):
         """
         if self.model_file is not None:
             dur = self.model_file.dirname
+        elif len(self.recent_files) > 0:
+            dur = os.path.dirname(self.recent_files[0][1])
         else:
             dur = os.getcwd()
-        return dur
 
-    # -------------------------------------------------------------------------
-    # EVENT HANDLERS
-    # -------------------------------------------------------------------------
+        return dur
 
     def command_line(self):
         if len(sys.argv) > 1:
@@ -234,50 +252,63 @@ class App(object):
             else:
                 self.open_and_display_file(sys.argv[1])
 
-    def save_file(self, action=None):
+    # -------------------------------------------------------------------------
+    # EVENT HANDLERS
+    # -------------------------------------------------------------------------
+
+    def on_file_open(self, event=None):
+        if self.save_changes_dialog():
+            show_again = True
+
+            while show_again:
+                dialog = OpenDialog(self.window, self.current_dir)
+                fpath = dialog.get_path()
+                if fpath:
+                    show_again = not self.open_and_display_file(fpath)
+                else:
+                    show_again = False
+
+    def on_file_save(self, event=None):
         """
         Save changes to the same file.
         """
         self.scene.export_to_file(self.model_file)
         self.window.file_modified = False
 
-    def save_file_as(self, action=None):
+    def on_file_save_as(self, event=None):
         """
         Save changes to a new file.
         """
-        dialog = SaveDialog(self.current_dir)
-
-        if dialog.run() == gtk.RESPONSE_ACCEPT:
-            stl_file = ModelFile(dialog.get_filename())
+        dialog = SaveDialog(self.window, self.current_dir)
+        fpath = dialog.get_path()
+        if fpath:
+            stl_file = ModelFile(fpath)
             self.scene.export_to_file(stl_file)
             self.model_file = stl_file
             self.window.filename = stl_file.basename
             self.window.file_modified = False
 
-        dialog.destroy()
-
-    def open_file_dialog(self, action=None):
-        if self.save_changes_dialog():
-            dialog = OpenDialog(self.current_dir)
-            show_again = True
-
-            while show_again:
-                if dialog.run() == gtk.RESPONSE_ACCEPT:
-                    dialog.hide()
-                    fname = dialog.get_filename()
-                    show_again = not self.open_and_display_file(fname)
-                else:
-                    show_again = False
-
-            dialog.destroy()
-
-    def quit(self, action=None):
+    def on_quit(self, event=None):
         """
-        On quit, show a dialog proposing to save the changes if the scene has
-        been modified.
+        On quit, write config settings and show a dialog proposing to save the
+        changes if the scene has been modified.
         """
+        try:
+            self.config.write('ui.recent_files', os.path.pathsep.join([f[1] for f in self.recent_files]))
+
+            w, h = self.window.get_size()
+            self.config.write('ui.window_w', w)
+            self.config.write('ui.window_h', h)
+
+            if self.scene:
+                self.config.write('ui.gcode_2d', int(self.scene.mode_2d))
+
+            self.config.commit()
+        except IOError:
+            logging.warning('Could not write settings to config file %s' % self.config.fname)
+
         if self.save_changes_dialog():
-            gtk.main_quit()
+            self.window.quit()
 
     def toggle_panel(self, action=None):
         if action.get_active():
@@ -288,31 +319,33 @@ class App(object):
     def save_changes_dialog(self):
         proceed = True
         if self.scene and self.scene.model_modified:
-            dialog = QuitDialog(self.window)
             ask_again = True
 
             while ask_again:
-                response = dialog.run()
+                dialog = QuitDialog(self.window)
+                response = dialog.show()
                 if response == QuitDialog.RESPONSE_SAVE:
-                    self.save_file()
+                    self.on_file_save()
                     ask_again = False
                 elif response == QuitDialog.RESPONSE_SAVE_AS:
-                    self.save_file_as()
+                    self.on_file_save_as()
                     ask_again = self.scene.model_modified
-                elif response in [QuitDialog.RESPONSE_CANCEL, gtk.RESPONSE_DELETE_EVENT]:
+                elif response == QuitDialog.RESPONSE_CANCEL:
                     ask_again = False
                     proceed = False
                 elif response == QuitDialog.RESPONSE_DISCARD:
                     ask_again = False
-
-            dialog.destroy()
+                else:
+                    raise Exception('Unknown dialog response: %s' % response)
 
         return proceed
 
+    def on_about(self, event=None):
+        AboutDialog()
+
     def scaling_factor_changed(self, factor):
         try:
-            factor = float(factor)
-            self.scene.scale_model(factor)
+            self.scene.scale_model(float(factor))
             self.scene.invalidate()
             # tell all the widgets that care about model size that it has changed
             self.panel.model_size_changed()
@@ -322,17 +355,15 @@ class App(object):
 
     def dimension_changed(self, dimension, value):
         try:
-            value = float(value)
-            self.scene.change_model_dimension(dimension, value)
+            self.scene.change_model_dimension(dimension, float(value))
             self.scene.invalidate()
             self.panel.model_size_changed()
             self.window.file_modified = self.scene.model_modified
         except ValueError:
             pass # ignore invalid values
 
-    def on_scale_value_changed(self, widget):
-        value = int(widget.get_value())
-        self.scene.change_num_layers(value)
+    def on_layers_changed(self, layers):
+        self.scene.change_num_layers(layers)
         self.scene.invalidate()
 
     def rotation_changed(self, axis, angle):
@@ -343,7 +374,7 @@ class App(object):
         except ValueError:
             pass # ignore invalid values
 
-    def on_button_center_clicked(self, widget):
+    def on_center_model(self):
         """
         Center model on platform.
         """
@@ -351,117 +382,152 @@ class App(object):
         self.scene.invalidate()
         self.window.file_modified = self.scene.model_modified
 
-    def on_arrows_toggled(self, widget):
+    def on_arrows_toggled(self, value):
         """
         Show/hide arrows on the Gcode model.
         """
-        self.scene.show_arrows(widget.get_active())
+        self.scene.show_arrows(value)
         self.scene.invalidate()
 
-    def on_reset_view(self, widget):
+    def on_reset_view(self):
         """
         Restore the view of the model shown on startup.
         """
         self.scene.reset_view()
         self.scene.invalidate()
 
-    def on_set_mode(self, widget):
-        self.scene.mode_2d = not widget.get_active()
-        if self.scene.is_initialized():
+    def on_set_mode(self, value):
+        self.scene.mode_2d = not value
+        if self.scene.initialized:
             self.scene.invalidate()
 
-    def on_set_ortho(self, widget):
-        self.scene.mode_ortho = widget.get_active()
+    def on_set_ortho(self, value):
+        self.scene.mode_ortho = value
         self.scene.invalidate()
 
-    def on_view_front(self, widget):
+    def on_view_front(self):
         self.scene.rotate_view(0, 0)
 
-    def on_view_back(self, widget):
+    def on_view_back(self):
         self.scene.rotate_view(180, 0)
 
-    def on_view_left(self, widget):
+    def on_view_left(self):
         self.scene.rotate_view(90, 0)
 
-    def on_view_right(self, widget):
+    def on_view_right(self):
         self.scene.rotate_view(-90, 0)
 
-    def on_view_top(self, widget):
+    def on_view_top(self):
         self.scene.rotate_view(0, -90)
 
-    def on_view_bottom(self, widget):
+    def on_view_bottom(self):
         self.scene.rotate_view(0, 90)
 
     # -------------------------------------------------------------------------
     # FILE OPERATIONS
     # -------------------------------------------------------------------------
 
+    def update_recent_files(self, fpath):
+        self.recent_files = [f for f in self.recent_files if f[1] != fpath]
+        self.recent_files.insert(0, (os.path.basename(fpath), fpath))
+        self.recent_files = self.recent_files[:self.RECENT_FILE_LIMIT]
+        self.window.update_recent_files_menu(self.recent_files)
+
     def open_and_display_file(self, fpath):
-        progress_dialog = ProgressDialog('Loading', self.window)
-        self.window.set_cursor(gtk.gdk.WATCH)
+        self.set_wait_cursor()
+        progress_dialog_read = None
+        progress_dialog_load = None
         success = True
 
         try:
+            self.update_recent_files(fpath)
             self.model_file = ModelFile(fpath)
 
-            if self.scene is None:
-                self.scene = Scene()
-                self.glarea = SceneArea(self.scene)
+            self.scene = Scene(self.window)
 
-            progress_dialog.set_text('Reading file...')
-            progress_dialog.show()
-            model, model_data = self.model_file.read(progress_dialog.step)
+            progress_dialog_read = ProgressDialog('Reading file...')
+            model, model_data = self.model_file.read(progress_dialog_read.step)
 
-            progress_dialog.set_text('Loading model...')
-            model.load_data(model_data, progress_dialog.step)
+            progress_dialog_load = ProgressDialog('Loading model...')
+            model.load_data(model_data, progress_dialog_load.step)
 
             self.scene.clear()
-            model.offset_x = self.config.read('machine.platform_offset_x', int)
-            model.offset_y = self.config.read('machine.platform_offset_y', int)
             self.scene.add_model(model)
 
+            if self.model_file.filetype == 'gcode':
+                offset_x = self.config.read('machine.platform_offset_x', float)
+                offset_y = self.config.read('machine.platform_offset_y', float)
+                offset_z = self.config.read('machine.platform_offset_z', float)
+
+                if offset_x is None and offset_y is None and offset_z is None:
+                    self.scene.view_model_center()
+                    logging.info('Platform offsets not set, showing model in the center')
+                else:
+                    model.offset_x = offset_x if offset_x is not None else 0
+                    model.offset_y = offset_y if offset_y is not None else 0
+                    model.offset_z = offset_z if offset_z is not None else 0
+                    logging.info('Using platform offsets: (%s, %s, %s)' % (
+                        model.offset_x, model.offset_y, model.offset_z))
+
             # platform needs to be added last to be translucent
-            platform_w = self.config.read('machine.platform_w', int)
-            platform_d = self.config.read('machine.platform_d', int)
+            platform_w = self.config.read('machine.platform_w', float)
+            platform_d = self.config.read('machine.platform_d', float)
             platform = Platform(platform_w, platform_d)
             self.scene.add_supporting_actor(platform)
 
-            if self.panel is None or not self.panel_matches_file():
-                self.panel = self.create_panel()
-
+            self.panel = self.create_panel()
             # update panel to reflect new model properties
             self.panel.set_initial_values()
             self.panel.connect_handlers()
+
             # always start with the same view on the scene
             self.scene.reset_view(True)
             if self.model_file.filetype == 'gcode':
-                self.scene.mode_2d = self.config.read('ui.gcode_2d', bool)
+                self.scene.mode_2d = bool(self.config.read('ui.gcode_2d', int))
             else:
                 self.scene.mode_2d = False
 
             if hasattr(self.panel, 'set_3d_view'):
                 self.panel.set_3d_view(not self.scene.mode_2d)
 
-            self.window.set_file_widgets(self.glarea, self.panel)
+            self.window.set_file_widgets(self.scene, self.panel)
             self.window.filename = self.model_file.basename
-            self.menu_enable_file_items(self.model_file.filetype != 'gcode')
+            self.window.file_modified = False
+            self.window.menu_enable_file_items(self.model_file.filetype != 'gcode')
+
+
+            if self.model_file.size > 2**30:
+                size = self.model_file.size / 2**30
+                units = 'GB'
+            elif self.model_file.size > 2**20:
+                size = self.model_file.size / 2**20
+                units = 'MB'
+            elif self.model_file.size > 2**10:
+                size = self.model_file.size / 2**10
+                units = 'KB'
+            else:
+                size = self.model_file.size
+                units = 'B'
+
+            vertex_plural = 'vertex' if int(str(model.vertex_count)[-1]) == 1 else 'vertices'
+            self.window.update_status(' %s (%.1f%s, %d %s)' % (
+                self.model_file.basename, size, units, model.vertex_count, vertex_plural))
         except IOError, e:
-            self.window.window.set_cursor(None)
-            progress_dialog.hide()
-            error_dialog = OpenErrorAlert(self.window, fpath, e.strerror)
-            error_dialog.run()
-            error_dialog.destroy()
+            self.set_normal_cursor()
+            error_dialog = OpenErrorAlert(fpath, e.strerror)
+            error_dialog.show()
             success = False
         except ModelFileError, e:
-            self.window.window.set_cursor(None)
-            progress_dialog.hide()
-            error_dialog = OpenErrorAlert(self.window, fpath, e.message)
-            error_dialog.run()
-            error_dialog.destroy()
+            self.set_normal_cursor()
+            error_dialog = OpenErrorAlert(fpath, e.message)
+            error_dialog.show()
             success = False
         finally:
-            progress_dialog.destroy()
-            self.window.window.set_cursor(None)
+            if progress_dialog_read:
+                progress_dialog_read.destroy()
+            if progress_dialog_load:
+                progress_dialog_load.destroy()
+            self.set_normal_cursor()
 
         return success
 
@@ -470,7 +536,7 @@ class App(object):
             Panel = GcodePanel
         elif self.model_file.filetype == 'stl':
             Panel = StlPanel
-        return Panel(self)
+        return Panel(self.window)
 
     def panel_matches_file(self):
         matches = (self.model_file.filetype in self.panel.supported_types)
@@ -484,5 +550,5 @@ if __name__ == '__main__':
     app = App()
     app.show_window()
     app.command_line()
-    gtk.main()
+    app.run()
 

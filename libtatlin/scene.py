@@ -22,11 +22,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-from gtk.gtkgl.apputils import GLArea, GLScene, GLSceneButton, GLSceneButtonMotion
+import math
 
+from .ui import BaseScene
 from .actors import Model
 from .views import View2D, View3D
 
@@ -45,18 +43,7 @@ def html_color(color):
     return parsed
 
 
-class SceneArea(GLArea):
-    """
-    Extend GLScene to provide mouse wheel support.
-    """
-    def __init__(self, *args, **kwargs):
-        super(SceneArea, self).__init__(*args, **kwargs)
-
-        self.connect('scroll-event', self.glscene.wheel_scroll)
-        self.add_events(gtk.gdk.SCROLL_MASK)
-
-
-class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
+class Scene(BaseScene):
     """
     A scene is responsible for displaying a model and accompanying objects (actors).
 
@@ -67,10 +54,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     PAN_SPEED    = 25
     ROTATE_SPEED = 25
 
-    def __init__(self):
-        super(Scene, self).__init__(gtk.gdkgl.MODE_RGB |
-                                    gtk.gdkgl.MODE_DEPTH |
-                                    gtk.gdkgl.MODE_DOUBLE)
+    def __init__(self, parent):
+        super(Scene, self).__init__(parent)
+
         self.model    = None
         self.actors   = []
         self.cursor_x = 0
@@ -79,8 +65,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.view_ortho = View2D()
         self.view_perspective = View3D()
         self.current_view = self.view_perspective
-
-        self.initialized = False
 
         # dict of scene properties
         self._scene_properties = {
@@ -111,9 +95,6 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     def clear(self):
         self.actors = []
 
-    def is_initialized(self):
-        return self.glarea.window is not None
-
     # ------------------------------------------------------------------------
     # DRAWING
     # ------------------------------------------------------------------------
@@ -131,6 +112,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         self.init_actors()
+
         self.initialized = True
 
     def init_actors(self):
@@ -155,8 +137,44 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
         self.current_view.begin(w, h)
         self.current_view.display_transform()
-        for actor in self.actors:
-            actor.display(self.mode_2d)
+
+        if self.mode_ortho:
+            for actor in self.actors:
+                actor.display(elevation=-self.current_view.elevation,
+                              mode_ortho=self.mode_ortho,
+                              mode_2d=self.mode_2d)
+        else:
+            # actors may use eye height to perform rendering optimizations; in
+            # the simplest terms, in the most convenient definitions, eye
+            # height in the perspective projection divides the screen into two
+            # horizontal halves - one seen from above, the other from below
+            y = self.current_view.y / self.current_view.zoom_factor
+            z = self.current_view.z
+            angle = -math.degrees(math.atan2(z, y)) - self.current_view.elevation
+            eye_height = math.sqrt(y**2 + z**2) * math.sin(math.radians(angle))
+
+            # draw line of sight plane
+            #plane_size = 200
+            #glBegin(GL_LINES)
+            #glColor(1.0, 0.0, 0.0)
+            #glVertex(-plane_size/2, plane_size/2, eye_height)
+            #glVertex(plane_size/2, plane_size/2, eye_height)
+
+            #glVertex(plane_size/2, plane_size/2, eye_height)
+            #glVertex(plane_size/2, -plane_size/2, eye_height)
+
+            #glVertex(plane_size/2, -plane_size/2, eye_height)
+            #glVertex(-plane_size/2, -plane_size/2, eye_height)
+
+            #glVertex(-plane_size/2, -plane_size/2, eye_height)
+            #glVertex(-plane_size/2, plane_size/2, eye_height)
+            #glEnd()
+
+            for actor in self.actors:
+                actor.display(eye_height=eye_height,
+                              mode_ortho=self.mode_ortho,
+                              mode_2d=self.mode_2d)
+
         self.current_view.end()
 
     def reshape(self, w, h):
@@ -202,37 +220,37 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
     # VIEWING MANIPULATIONS
     # ------------------------------------------------------------------------
 
-    def button_press(self, width, height, event):
-        self.cursor_x = event.x
-        self.cursor_y = event.y
+    def button_press(self, x, y):
+        self.cursor_x = x
+        self.cursor_y = y
 
-    def button_release(self, width, height, event):
-        pass
+    def button_motion(self, x, y, left, middle, right):
+        delta_x = x - self.cursor_x
+        delta_y = y - self.cursor_y
 
-    def button_motion(self, width, height, event):
-        delta_x = event.x - self.cursor_x
-        delta_y = event.y - self.cursor_y
-
-        if event.state & gtk.gdk.BUTTON1_MASK: # left mouse button
+        if left:
             self.current_view.rotate(delta_x * self.ROTATE_SPEED / 100,
                                      delta_y * self.ROTATE_SPEED / 100)
-        elif event.state & gtk.gdk.BUTTON2_MASK: # middle mouse button
+        elif middle:
             if hasattr(self.current_view, 'offset'):
                 self.current_view.offset(delta_x * self.PAN_SPEED / 100,
                                          delta_y * self.PAN_SPEED / 100)
-        elif event.state & gtk.gdk.BUTTON3_MASK: # right mouse button
+        elif right:
             self.current_view.pan(delta_x * self.PAN_SPEED / 100,
                                   delta_y * self.PAN_SPEED / 100)
 
-        self.cursor_x = event.x
-        self.cursor_y = event.y
+        self.cursor_x = x
+        self.cursor_y = y
 
         self.invalidate()
 
-    def wheel_scroll(self, widget, event):
+    def wheel_scroll(self, direction):
         delta_y = 30.0
-        if event.direction == gtk.gdk.SCROLL_DOWN:
-            delta_y = -delta_y
+        if direction < 0:
+            direction = -1
+        else:
+            direction = 1
+        delta_y = direction * delta_y
 
         self.current_view.zoom(0, delta_y)
         self.invalidate()
@@ -266,6 +284,17 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
             self.current_view.azimuth = azimuth
             self.current_view.elevation = elevation
             self.invalidate()
+
+    def view_model_center(self):
+        """
+        Display the model in the center of the scene without modifying the vertices.
+        """
+        bounding_box = self.model.bounding_box
+        lower_corner = bounding_box.lower_corner
+        upper_corner = bounding_box.upper_corner
+        self.model.offset_x = -(upper_corner[0] + lower_corner[0]) / 2
+        self.model.offset_y = -(upper_corner[1] + lower_corner[1]) / 2
+        self.model.offset_z = -lower_corner[2]
 
     # ------------------------------------------------------------------------
     # MODEL MANIPULATION

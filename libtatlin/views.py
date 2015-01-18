@@ -89,6 +89,7 @@ class View2D(ViewMode):
 
         self.x, self.y, self.z = 0.0, 0.0, 0.0
         self.zoom_factor       = 5.0
+        self.elevation         = -90.0 # for compatibility with 3d view
         self.azimuth           = 0.0
 
         self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth'])

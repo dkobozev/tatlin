@@ -22,6 +22,7 @@ Parser for STL (stereolithography) files.
 import struct
 import time
 import logging
+import math
 from cStringIO import StringIO
 
 
@@ -211,7 +212,7 @@ class StlBinaryParser(object):
 
         self._skip_header(self.stl)
         fcount = self._facet_count(self.stl)
-        callback_every = fcount // 50
+        callback_every = max(1, int(math.floor(fcount / 100)))
         for facet_idx in xrange(fcount):
             vertices, normal = self._parse_facet(self.stl)
             facet_list.extend(vertices)
