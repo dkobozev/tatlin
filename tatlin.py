@@ -265,7 +265,9 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
                 elif response == QuitDialog.RESPONSE_DISCARD:
                     ask_again = False
                 else:
-                    raise Exception('Unknown dialog response: %s' % response)
+                    logging.warning('Unknown dialog response: %s' % response)
+                    ask_again = False
+                    proceed = False
 
         return proceed
 

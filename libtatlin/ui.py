@@ -28,7 +28,7 @@ app = None
 
 
 def load_icon(fpath):
-    return wx.Icon(fpath)
+    return wx.Icon(fpath, wx.BITMAP_TYPE_PNG)
 
 
 class ViewButtons(wx.FlexGridSizer):
@@ -684,17 +684,17 @@ class QuitDialog(wx.Dialog):
         self.btn_save    = wx.Button(self, wx.ID_SAVE)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(self.btn_discard, 0)
-        hbox.Add(self.btn_cancel,  0, wx.LEFT, border=5)
-        hbox.Add(self.btn_save_as, 0, wx.LEFT, border=5)
-        hbox.Add(self.btn_save,    0, wx.LEFT, border=5)
+        hbox.Add(self.btn_discard, 1)
+        hbox.Add(self.btn_cancel,  1, wx.LEFT, border=5)
+        hbox.Add(self.btn_save_as, 1, wx.LEFT, border=5)
+        hbox.Add(self.btn_save,    1, wx.LEFT, border=5)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(label, 0, wx.ALL, border=5)
-        vbox.Add(hbox,  0, wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
+        vbox.Add(label, 1, wx.EXPAND | wx.ALL, border=5)
+        vbox.Add(hbox,  0, wx.EXPAND | wx.ALIGN_BOTTOM | wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
 
         self.SetSizer(vbox)
-        self.DoLayoutAdaptation()
+        self.SetSize((400, 90))
 
         self.btn_discard.Bind(wx.EVT_BUTTON, self.on_discard)
         self.btn_cancel.Bind( wx.EVT_BUTTON, self.on_cancel)

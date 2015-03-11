@@ -12,7 +12,7 @@ Dependencies
 Tatlin requires the following packages:
 
 - Python 2.6+
-- wxPython 2.9+
+- wxPython 2.8+
 - PyOpenGL
 - NumPy
 
