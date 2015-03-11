@@ -34,8 +34,9 @@ class ModelFileError(Exception):
 
 
 class ModelFile(object):
-    def __init__(self, path):
+    def __init__(self, path, ftype=None):
         self._path = path
+        self._ftype = ftype
         self._reset_file_attributes()
 
         self._loaders = {
@@ -81,10 +82,13 @@ class ModelFile(object):
         """
         Determine filetype based on extension.
         """
-        if self.extension not in ['.gcode', '.stl']:
-            raise ModelFileError('Unsupported file extension: %s' % self.extension)
+        if self._ftype is not None:
+            return self._ftype
+        else:
+            if self.extension not in ['.gcode', '.nc', '.stl']:
+                raise ModelFileError('Unsupported file extension: %s' % self.extension)
 
-        return self.extension[1:]
+            return 'gcode' if self.extension in ('.gcode', '.nc') else 'stl'
 
     @property
     def size(self):

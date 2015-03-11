@@ -85,8 +85,16 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
         recent_files = self.config.read('ui.recent_files')
         if recent_files:
-            self.recent_files = [(os.path.basename(f), f) for f in recent_files.split(os.path.pathsep)
-                                 if os.path.exists(f)][:self.RECENT_FILE_LIMIT]
+            self.recent_files = []
+            for f in recent_files.split(os.path.pathsep):
+                if f[-1] in ['0', '1', '2']:
+                    fpath, ftype = f[:-1], OpenDialog.ftypes[int(f[-1])]
+                else:
+                    fpath, ftype = f, None
+
+                self.recent_files.append((os.path.basename(fpath), fpath, ftype))
+            self.recent_files = self.recent_files[:self.RECENT_FILE_LIMIT]
+
         else:
             self.recent_files = []
         self.window.update_recent_files_menu(self.recent_files)
@@ -190,7 +198,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
                 dialog = OpenDialog(self.window, self.current_dir)
                 fpath = dialog.get_path()
                 if fpath:
-                    show_again = not self.open_and_display_file(fpath)
+                    show_again = not self.open_and_display_file(fpath, dialog.get_type())
                 else:
                     show_again = False
 
@@ -220,7 +228,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         changes if the scene has been modified.
         """
         try:
-            self.config.write('ui.recent_files', os.path.pathsep.join([f[1] for f in self.recent_files]))
+            self.config.write('ui.recent_files', os.path.pathsep.join([f[1] + str(OpenDialog.ftypes.index(f[2]))
+                for f in self.recent_files]))
 
             w, h = self.window.get_size()
             self.config.write('ui.window_w', w)
@@ -347,21 +356,21 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     # FILE OPERATIONS
     # -------------------------------------------------------------------------
 
-    def update_recent_files(self, fpath):
+    def update_recent_files(self, fpath, ftype=None):
         self.recent_files = [f for f in self.recent_files if f[1] != fpath]
-        self.recent_files.insert(0, (os.path.basename(fpath), fpath))
+        self.recent_files.insert(0, (os.path.basename(fpath), fpath, ftype))
         self.recent_files = self.recent_files[:self.RECENT_FILE_LIMIT]
         self.window.update_recent_files_menu(self.recent_files)
 
-    def open_and_display_file(self, fpath):
+    def open_and_display_file(self, fpath, ftype=None):
         self.set_wait_cursor()
         progress_dialog_read = None
         progress_dialog_load = None
         success = True
 
         try:
-            self.update_recent_files(fpath)
-            self.model_file = ModelFile(fpath)
+            self.update_recent_files(fpath, ftype)
+            self.model_file = ModelFile(fpath, ftype)
 
             self.scene = Scene(self.window)
 

@@ -574,10 +574,10 @@ class MainWindow(wx.Frame):
         for recent_file in recent_files:
             item = self.recent_files_menu.Append(wx.ID_ANY, recent_file[0])
 
-            def callback(f):
-                return lambda x: app.open_and_display_file(f)
+            def callback(f, t):
+                return lambda x: app.open_and_display_file(f, t)
 
-            self.Bind(wx.EVT_MENU, callback(recent_file[1]), item)
+            self.Bind(wx.EVT_MENU, callback(recent_file[1], recent_file[2]), item)
 
         self.recent_files_item.Enable(len(recent_files) > 0)
 
@@ -623,9 +623,11 @@ class MainWindow(wx.Frame):
 
 class OpenDialog(wx.FileDialog):
 
+    ftypes = (None, 'gcode', 'stl')
+
     def __init__(self, parent, directory=None):
         super(OpenDialog, self).__init__(parent, 'Open',
-                wildcard='Gcode and STL files (*.gcode;*.stl)|*.gcode;*.stl',
+                wildcard='Gcode and STL files (*.gcode;*.nc;*.stl)|*.gcode;*.nc;*.stl|Gcode files (*.*)|*.*|STL files (*.*)|*.*',
                 style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
 
         if directory is not None:
@@ -635,6 +637,9 @@ class OpenDialog(wx.FileDialog):
         if self.ShowModal() == wx.ID_CANCEL:
             return None
         return self.GetPath()
+
+    def get_type(self):
+        return self.ftypes[self.GetFilterIndex()]
 
 
 class OpenErrorAlert(wx.MessageDialog):
