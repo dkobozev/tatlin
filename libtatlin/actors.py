@@ -98,12 +98,12 @@ class Platform(object):
 
         # draw the grid
         glBegin(GL_LINES)
-        for i in range(0, self.width + 1):
+        for i in range(0, int(self.width) + 1):
             color(i)
             glVertex3f(float(i), 0.0,        0.0)
             glVertex3f(float(i), self.depth, 0.0)
 
-        for i in range(0, self.depth + 1):
+        for i in range(0, int(self.depth) + 1):
             color(i)
             glVertex3f(0,          float(i), 0.0)
             glVertex3f(self.width, float(i), 0.0)
@@ -111,7 +111,7 @@ class Platform(object):
 
         # draw fill
         glColor(*self.color_fill)
-        glRectf(0.0, 0.0, float(self.width), float(self.depth))
+        glRectf(0.0, 0.0, self.width, self.depth)
 
         glPopMatrix()
 
