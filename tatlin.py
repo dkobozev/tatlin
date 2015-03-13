@@ -92,7 +92,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
                 else:
                     fpath, ftype = f, None
 
-                self.recent_files.append((os.path.basename(fpath), fpath, ftype))
+                if os.path.exists(fpath):
+                    self.recent_files.append((os.path.basename(fpath), fpath, ftype))
             self.recent_files = self.recent_files[:self.RECENT_FILE_LIMIT]
 
         else:
