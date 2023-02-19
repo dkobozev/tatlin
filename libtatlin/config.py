@@ -1,4 +1,3 @@
-import os.path
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
 

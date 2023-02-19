@@ -29,10 +29,12 @@ from io import StringIO
 class StlParseError(Exception):
     pass
 
+
 class InvalidTokenError(StlParseError):
     def __init__(self, line_no, msg):
         full_msg = 'parse error on line %d: %s' % (line_no, msg)
         StlParseError.__init__(self, full_msg)
+
 
 class ParseEOF(StlParseError):
     pass
@@ -74,7 +76,7 @@ class StlAsciiParser(object):
     def next_line(self):
         next_line = self.peek_line()
 
-        self.tokenized_peek_line = None # force peak line read on next call
+        self.tokenized_peek_line = None  # force peak line read on next call
         self.line_no += 1
 
         return next_line
@@ -100,7 +102,7 @@ class StlAsciiParser(object):
         t_start = time.time()
 
         self.callback = callback
-        self.callback_every = self.line_count // 50 # every 2 percent
+        self.callback_every = self.line_count // 50  # every 2 percent
         self.callback_next = self.callback_every
 
         self._solid()
@@ -191,14 +193,13 @@ class StlBinaryParser(object):
     """
     Read data from a binary STL file.
     """
-    HEADER_LEN      = 80
+    HEADER_LEN = 80
     FACET_COUNT_LEN = 4  # one 32-bit unsigned int
-    FACET_LEN       = 50 # twelve 32-bit floats + one 16-bit short unsigned int
+    FACET_LEN = 50  # twelve 32-bit floats + one 16-bit short unsigned int
 
     def load(self, stl):
         if not hasattr(stl, 'read'):
             stl = StringIO(stl)
-
         self.stl = stl
 
     def parse(self, callback=None):
@@ -208,7 +209,7 @@ class StlBinaryParser(object):
         t_start = time.time()
 
         normal_list = []
-        facet_list  = []
+        facet_list = []
 
         self._skip_header(self.stl)
         fcount = self._facet_count(self.stl)
@@ -216,7 +217,7 @@ class StlBinaryParser(object):
         for facet_idx in range(fcount):
             vertices, normal = self._parse_facet(self.stl)
             facet_list.extend(vertices)
-            normal_list.extend([normal] * len(vertices)) # one normal per vertex
+            normal_list.extend([normal] * len(vertices))  # one normal per vertex
 
             if callback and (facet_idx + 1) % callback_every == 0:
                 callback(facet_idx + 1, fcount)
@@ -244,13 +245,11 @@ class StlBinaryParser(object):
         raw = fp.read(self.FACET_LEN)
         try:
             vertex_data = struct.unpack('<ffffffffffffH', raw)
-
-            normal = [ vertex_data[0], vertex_data[1], vertex_data[2] ]
+            normal = [vertex_data[0], vertex_data[1], vertex_data[2]]
             vertices = []
             for i in range(3, 12, 3):
-                vertices.append([ vertex_data[i], vertex_data[i + 1], vertex_data[i + 2] ])
+                vertices.append([vertex_data[i], vertex_data[i + 1], vertex_data[i + 2]])
             # ignore the attribute byte count...
-
             return vertices, normal
         except struct.error:
             raise StlParseError("Error unpacking binary STL data")
@@ -296,4 +295,3 @@ if __name__ == '__main__':
         print('[ INFO ] Last normals:')
         for normal in normals[-3:]:
             print(normal)
-

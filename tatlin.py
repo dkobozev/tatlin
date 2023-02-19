@@ -16,10 +16,9 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-
-
 import sys
-import os, os.path
+import os
+import os.path
 import logging
 
 from libtatlin.actors import Platform
@@ -33,17 +32,16 @@ from libtatlin.config import Config
 def format_float(f):
     return "%.2f" % f
 
+
 def resolve_path(fpath):
     if os.path.isabs(fpath):
         return fpath
-
     if getattr(sys, 'frozen', False):
         # we are running in a PyInstaller bundle
         basedir = sys._MEIPASS
     else:
         # we are running in a normal Python environment
         basedir = os.path.dirname(__file__)
-
     return os.path.join(basedir, fpath)
 
 
@@ -72,8 +70,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         # ---------------------------------------------------------------------
         # WINDOW SETUP
         # ---------------------------------------------------------------------
-        self.window = MainWindow()
 
+        self.window = MainWindow()
         self.icon = load_icon(resolve_path('tatlin-logo.png'))
         self.window.set_icon(self.icon)
 
@@ -82,7 +80,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         # ---------------------------------------------------------------------
 
         self.init_config()
-
         recent_files = self.config.read('ui.recent_files')
         if recent_files:
             self.recent_files = []
@@ -95,7 +92,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
                 if os.path.exists(fpath):
                     self.recent_files.append((os.path.basename(fpath), fpath, ftype))
             self.recent_files = self.recent_files[:self.RECENT_FILE_LIMIT]
-
         else:
             self.recent_files = []
         self.window.update_recent_files_menu(self.recent_files)
@@ -103,7 +99,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         window_w = self.config.read('ui.window_w', int)
         window_h = self.config.read('ui.window_h', int)
         self.window.set_size((window_w, window_h))
-
         self.init_scene()
 
     def init_config(self):
@@ -114,18 +109,17 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         self.panel = None
         self.scene = None
         self.model_file = None
-
         # dict of properties that other components can read from the app
         self._app_properties = {
             'layers_range_max': lambda: self.scene.get_property('max_layers'),
-            'layers_value':     lambda: self.scene.get_property('max_layers'),
-            'scaling-factor':   self.model_scaling_factor,
-            'width':            self.model_width,
-            'depth':            self.model_depth,
-            'height':           self.model_height,
-            'rotation-x':       self.model_rotation_x,
-            'rotation-y':       self.model_rotation_y,
-            'rotation-z':       self.model_rotation_z,
+            'layers_value': lambda: self.scene.get_property('max_layers'),
+            'scaling-factor': self.model_scaling_factor,
+            'width': self.model_width,
+            'depth': self.model_depth,
+            'height': self.model_height,
+            'rotation-x': self.model_rotation_x,
+            'rotation-y': self.model_rotation_y,
+            'rotation-z': self.model_rotation_z,
         }
 
     def show_window(self):
@@ -180,7 +174,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             dur = os.path.dirname(self.recent_files[0][1])
         else:
             dur = os.getcwd()
-
         return dur
 
     def command_line(self):
@@ -194,7 +187,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     def on_file_open(self, event=None):
         if self.save_changes_dialog():
             show_again = True
-
             while show_again:
                 dialog = OpenDialog(self.window, self.current_dir)
                 fpath = dialog.get_path()
@@ -229,16 +221,14 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         changes if the scene has been modified.
         """
         try:
-            self.config.write('ui.recent_files', os.path.pathsep.join([f[1] + str(OpenDialog.ftypes.index(f[2]))
-                for f in self.recent_files]))
-
+            self.config.write('ui.recent_files', os.path.pathsep.join([f[1] +
+                              str(OpenDialog.ftypes.index(f[2]))
+                              for f in self.recent_files]))
             w, h = self.window.get_size()
             self.config.write('ui.window_w', w)
             self.config.write('ui.window_h', h)
-
             if self.scene:
                 self.config.write('ui.gcode_2d', int(self.scene.mode_2d))
-
             self.config.commit()
         except IOError:
             logging.warning('Could not write settings to config file %s' % self.config.fname)
@@ -250,7 +240,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         proceed = True
         if self.scene and self.scene.model_modified:
             ask_again = True
-
             while ask_again:
                 dialog = QuitDialog(self.window)
                 response = dialog.show()
@@ -269,7 +258,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
                     logging.warning('Unknown dialog response: %s' % response)
                     ask_again = False
                     proceed = False
-
         return proceed
 
     def on_about(self, event=None):
@@ -283,7 +271,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.panel.model_size_changed()
             self.window.file_modified = self.scene.model_modified
         except ValueError:
-            pass # ignore invalid values
+            pass  # ignore invalid values
 
     def dimension_changed(self, dimension, value):
         try:
@@ -292,7 +280,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.panel.model_size_changed()
             self.window.file_modified = self.scene.model_modified
         except ValueError:
-            pass # ignore invalid values
+            pass  # ignore invalid values
 
     def on_layers_changed(self, layers):
         self.scene.change_num_layers(layers)
@@ -304,7 +292,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.scene.invalidate()
             self.window.file_modified = self.scene.model_modified
         except ValueError:
-            pass # ignore invalid values
+            pass  # ignore invalid values
 
     def on_center_model(self):
         """
@@ -370,7 +358,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         progress_dialog_read = None
         progress_dialog_load = None
         success = True
-
         try:
             self.update_recent_files(fpath, ftype)
             self.model_file = ModelFile(fpath, ftype)
@@ -427,7 +414,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.window.file_modified = False
             self.window.menu_enable_file_items(self.model_file.filetype != 'gcode')
 
-
             if self.model_file.size > 2**30:
                 size = self.model_file.size / 2**30
                 units = 'GB'
@@ -440,7 +426,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             else:
                 size = self.model_file.size
                 units = 'B'
-
             vertex_plural = 'vertex' if int(str(model.vertex_count)[-1]) == 1 else 'vertices'
             self.window.update_status(' %s (%.1f%s, %d %s)' % (
                 self.model_file.basename, size, units, model.vertex_count, vertex_plural))
@@ -460,7 +445,6 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             if progress_dialog_load:
                 progress_dialog_load.destroy()
             self.set_normal_cursor()
-
         return success
 
     def create_panel(self):
@@ -483,4 +467,3 @@ if __name__ == '__main__':
     app.show_window()
     app.command_line()
     app.run()
-

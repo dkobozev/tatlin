@@ -21,7 +21,8 @@ Module for loading from and writing to files.
 """
 
 
-import os, os.path
+import os
+import os.path
 
 from .gcodeparser import GcodeParser, GcodeParserError
 from .stlparser import StlParser, StlParseError
@@ -41,14 +42,14 @@ class ModelFile(object):
 
         self._loaders = {
             'gcode': self._load_gcode_model,
-            'stl':   self._load_stl_model,
+            'stl': self._load_stl_model,
         }
 
     def _reset_file_attributes(self):
-        self._dirname   = None
-        self._basename  = None
+        self._dirname = None
+        self._basename = None
         self._extension = None
-        self._size      = None
+        self._size = None
 
     @property
     def path(self):
@@ -131,21 +132,21 @@ class ModelFile(object):
 
         f = open(self.path, 'w')
         print('solid', file=f)
-        print(''.join([self._format_facet(vertices[i:i+3], normals[i])
-            for i in range(0, len(vertices), 3)]), file=f)
+        print(''.join([self._format_facet(vertices[i:i + 3], normals[i])
+              for i in range(0, len(vertices), 3)]), file=f)
         print('endsolid', file=f)
         f.close()
 
     def _format_facet(self, vertices, normal):
-        template = """facet normal %.6f %.6f %.6f
+        template = \
+"""facet normal %.6f %.6f %.6f
   outer loop
     %s
   endloop
 endfacet
 """
         stl_facet = template % (normal[0], normal[1], normal[2],
-            '\n'.join(['vertex %.6f %.6f %.6f' % (v[0], v[1], v[2])
-                for v in vertices])
-        )
+                                '\n'.join(['vertex %.6f %.6f %.6f' % (v[0], v[1], v[2])
+                                          for v in vertices])
+                                )
         return stl_facet
-

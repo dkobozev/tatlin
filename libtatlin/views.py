@@ -16,8 +16,6 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-
-
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -80,17 +78,17 @@ class View2D(ViewMode):
     """
     Orthographic projection transformations (2D mode).
     """
-    NEAR       = -100.0
-    FAR        =  100.0
-    PAN_FACTOR =  4
+    NEAR = -100.0
+    FAR = 100.0
+    PAN_FACTOR = 4
 
     def __init__(self):
         super(View2D, self).__init__()
 
         self.x, self.y, self.z = 0.0, 0.0, 0.0
-        self.zoom_factor       = 5.0
-        self.elevation         = -90.0 # for compatibility with 3d view
-        self.azimuth           = 0.0
+        self.zoom_factor = 5.0
+        self.elevation = -90.0  # for compatibility with 3d view
+        self.azimuth = 0.0
 
         self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth'])
         self.push_state()
@@ -99,13 +97,13 @@ class View2D(ViewMode):
 
     def begin(self, w, h):
         self.w, self.h = w, h
-        glMatrixMode(GL_PROJECTION) # select projection matrix
-        glPushMatrix()              # save the current projection matrix
-        glLoadIdentity()            # set up orthographic projection
+        glMatrixMode(GL_PROJECTION)  # select projection matrix
+        glPushMatrix()  # save the current projection matrix
+        glLoadIdentity()  # set up orthographic projection
         glOrtho(0, w, 0, h, self.NEAR, self.FAR)
         glMatrixMode(GL_MODELVIEW)  # select the modelview matrix
-        glPushMatrix()              # save the current modelview matrix
-        glLoadIdentity()            # replace the modelview matrix with identity
+        glPushMatrix()  # save the current modelview matrix
+        glLoadIdentity()  # replace the modelview matrix with identity
 
     def end(self):
         """
@@ -115,9 +113,9 @@ class View2D(ViewMode):
         # projection and modelview matrix stacks are separate, and can be
         # popped in any order
         glMatrixMode(GL_PROJECTION)
-        glPopMatrix() # restore the projection matrix
+        glPopMatrix()  # restore the projection matrix
         glMatrixMode(GL_MODELVIEW)
-        glPopMatrix() # restore the modelview matrix
+        glPopMatrix()  # restore the modelview matrix
 
     def display_transform(self):
         self._center_on_origin()
@@ -162,19 +160,19 @@ class View3D(ViewMode):
     FOVY = 80.0
     ZOOM_ORTHO_ADJ = 4.5
     NEAR = 1
-    FAR  = 100000
+    FAR = 100000
 
     def __init__(self):
         super(View3D, self).__init__()
 
         self.x, self.y, self.z = 0.0, 180.0, -20.0
         self.zoom_factor = 1.0
-        self.azimuth     = 0.0
-        self.elevation   = -20.0
+        self.azimuth = 0.0
+        self.elevation = -20.0
         self.offset_x = self.offset_y = 0.0
 
         self.supports_ortho = True
-        self.ortho          = False
+        self.ortho = False
 
         self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth',
                                 'elevation', 'offset_x', 'offset_y'])
@@ -197,13 +195,13 @@ class View3D(ViewMode):
 
     def end(self):
         glMatrixMode(GL_PROJECTION)
-        glPopMatrix() # restore the projection matrix
+        glPopMatrix()  # restore the projection matrix
         glMatrixMode(GL_MODELVIEW)
-        glPopMatrix() # restore the modelview matrix
+        glPopMatrix()  # restore the modelview matrix
 
     def display_transform(self):
         glRotate(-90, 1.0, 0.0, 0.0)  # make z point up
-        glTranslate(0.0, self.y, 0.0) # move away from the displayed object
+        glTranslate(0.0, self.y, 0.0)  # move away from the displayed object
 
         # zoom
         f = self.zoom_factor
@@ -249,13 +247,13 @@ class View3D(ViewMode):
         glDisable(GL_LIGHTING)
 
     def ui_transform(self, length):
-        glRotate(-90, 1.0, 0.0, 0.0) # make z point up
+        glRotate(-90, 1.0, 0.0, 0.0)  # make z point up
         glTranslate(length + 20.0, 0.0, length + 20.0)
         glRotatef(-self.elevation, 1.0, 0.0, 0.0)
         glRotatef(self.azimuth, 0.0, 0.0, 1.0)
 
     def rotate(self, delta_x, delta_y):
-        self.azimuth   += delta_x
+        self.azimuth += delta_x
         self.elevation -= delta_y
 
     def pan(self, delta_x, delta_y):
