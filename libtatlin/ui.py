@@ -17,6 +17,7 @@
 
 
 import wx
+import wx.adv
 from wx import glcanvas
 
 
@@ -732,7 +733,7 @@ class AboutDialog(object):
     def __init__(self):
         from datetime import datetime
 
-        info = wx.AboutDialogInfo()
+        info = wx.adv.AboutDialogInfo()
 
         info.SetName('Tatlin')
         info.SetVersion('v%s' % app.TATLIN_VERSION)
@@ -743,7 +744,7 @@ class AboutDialog(object):
         info.AddDeveloper('Denis Kobozev <d.v.kobozev@gmail.com>')
         info.SetLicence(app.TATLIN_LICENSE)
 
-        dialog = wx.AboutBox(info)
+        dialog = wx.adv.AboutBox(info)
 
 
 class BaseScene(glcanvas.GLCanvas):
