@@ -1,7 +1,7 @@
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
 
-class Config(object):
+class Config():
     """
     Read and write Tatlin configuration.
     """
@@ -43,14 +43,15 @@ class Config(object):
 
     def write(self, key, val):
         section, option = self._parse_specifier(key)
-
         if not self.config.has_section(section):
             self.config.add_section(section)
-
+        print(f"Section:{section} Value: {val}")
+        if isinstance(val, int):
+            val = str(val)
         self.config.set(section, option, val)
 
     def commit(self):
-        with open(self.fname, 'wb') as conf_file:
+        with open(self.fname, 'w') as conf_file:
             self.config.write(conf_file)
 
     def _parse_specifier(self, spec):
