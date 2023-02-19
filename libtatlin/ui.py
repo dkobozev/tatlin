@@ -32,7 +32,7 @@ def load_icon(fpath):
 class ViewButtons(wx.FlexGridSizer):
 
     def __init__(self, parent):
-        super(ViewButtons, self).__init__(3, 3)
+        super(ViewButtons, self).__init__(rows=3, cols=3, vgap=0, hgap=0)
 
         self.btn_front = wx.Button(parent, label='Front')
         self.btn_back = wx.Button(parent, label='Back')
@@ -548,14 +548,10 @@ class MainWindow(wx.Frame):
     def set_file_widgets(self, scene, panel):
         # remove startup panel if present
         if self._filename is None:
-            self.box_main.Remove(self.panel_startup)
             self.panel_startup.Destroy()
-
             self.box_main.Add(self.box_scene, 1, wx.EXPAND)
-
         # remove previous scene and panel, if any, destroying the widgets
         self.box_scene.Clear(True)
-
         self.box_scene.Add(scene, 1, wx.EXPAND)
         self.box_scene.Add(panel, 0, wx.EXPAND)
         self.box_scene.ShowItems(True)
@@ -567,7 +563,7 @@ class MainWindow(wx.Frame):
 
     def update_recent_files_menu(self, recent_files):
         for menu_item in self.recent_files_menu.GetMenuItems():
-            self.recent_files_menu.DeleteItem(menu_item)
+            self.recent_files_menu.Delete(menu_item)
 
         for recent_file in recent_files:
             item = self.recent_files_menu.Append(wx.ID_ANY, recent_file[0])
@@ -615,7 +611,6 @@ class MainWindow(wx.Frame):
             if self._file_modified:
                 filename = '*' + filename
             title = filename + ' - ' + title
-
         self.SetTitle(title)
 
 
@@ -655,7 +650,6 @@ class SaveDialog(wx.FileDialog):
     def __init__(self, parent, directory=None):
         super(SaveDialog, self).__init__(parent, 'Save As', wildcard='STL files (*.stl)|*.stl',
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
-
         if directory is not None:
             self.SetDirectory(directory)
 
@@ -799,14 +793,11 @@ class BaseScene(glcanvas.GLCanvas):
     def _on_paint(self, event):
         dc = wx.PaintDC(self)
         self.SetCurrent(self.context)
-
         if not self.initialized:
             self.init()
             self.initialized = True
-
         size = self.GetClientSize()
         self.display(size.width, size.height)
-
         self.SwapBuffers()
 
     def _on_mouse_down(self, event):
@@ -816,11 +807,9 @@ class BaseScene(glcanvas.GLCanvas):
 
     def _on_mouse_motion(self, event):
         x, y = event.GetPosition()
-
         left = event.LeftIsDown()
         middle = event.MiddleIsDown()
         right = event.RightIsDown()
-
         self.button_motion(x, y, left, middle, right)
 
     def _on_mouse_wheel(self, event):
