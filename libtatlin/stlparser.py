@@ -259,7 +259,7 @@ def is_stl_ascii(fp):
     """
     Guess whether file with the given name is plain ASCII STL file.
     """
-    is_ascii = fp.readline().strip().startswith('solid')
+    is_ascii = str(fp.readline().strip()).startswith('solid')
     fp.seek(0)
     return is_ascii
 
