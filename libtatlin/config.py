@@ -1,5 +1,5 @@
 import os.path
-from ConfigParser import ConfigParser, NoSectionError, NoOptionError
+from configparser import ConfigParser, NoSectionError, NoOptionError
 
 
 class Config(object):
@@ -67,6 +67,6 @@ if __name__ == '__main__':
     c = Config('.tatlin')
     c.write('foo', 'bar')
     c.write('machine.toolhead', 0)
-    print c.read('foo')
-    print c.read('general.foo')
-    print c.read('machine.platform_w')
+    print(c.read('foo'))
+    print(c.read('general.foo'))
+    print(c.read('machine.platform_w'))

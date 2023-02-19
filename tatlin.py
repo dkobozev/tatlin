@@ -16,7 +16,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from __future__ import division
+
 
 import sys
 import os, os.path
@@ -444,12 +444,12 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             vertex_plural = 'vertex' if int(str(model.vertex_count)[-1]) == 1 else 'vertices'
             self.window.update_status(' %s (%.1f%s, %d %s)' % (
                 self.model_file.basename, size, units, model.vertex_count, vertex_plural))
-        except IOError, e:
+        except IOError as e:
             self.set_normal_cursor()
             error_dialog = OpenErrorAlert(fpath, e.strerror)
             error_dialog.show()
             success = False
-        except ModelFileError, e:
+        except ModelFileError as e:
             self.set_normal_cursor()
             error_dialog = OpenErrorAlert(fpath, e.message)
             error_dialog.show()

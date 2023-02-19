@@ -16,7 +16,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from __future__ import division
+
 
 import wx
 from wx import glcanvas
@@ -876,20 +876,20 @@ class TestApp(BaseApp):
     def on_file_open(self, event):
         dialog = OpenDialog(self.window)
         path = dialog.get_path()
-        print path
+        print(path)
 
         if path:
             progress_dialog = ProgressDialog('Reading file...')
             import time
             for i in range(10):
-                print i
+                print(i)
                 progress_dialog.step(i, 9)
                 time.sleep(0.1)
             progress_dialog.destroy()
 
             progress_dialog = ProgressDialog('Loading model...')
             for i in range(10):
-                print i
+                print(i)
                 progress_dialog.step(i, 9)
                 time.sleep(0.1)
             progress_dialog.destroy()
@@ -900,16 +900,16 @@ class TestApp(BaseApp):
                 self.show_gcode_mode()
 
     def on_file_save(self, event):
-        print 'save'
+        print('save')
 
     def on_file_save_as(self, event):
-        print 'save as'
+        print('save as')
 
     def on_quit(self, event):
         self.window.Close()
 
     def on_about(self, event):
-        print 'about'
+        print('about')
 
 
 if __name__ == '__main__':

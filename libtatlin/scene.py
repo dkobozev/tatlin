@@ -16,7 +16,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from __future__ import division
+
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -307,7 +307,7 @@ class Scene(BaseScene):
         self.model.num_layers_to_draw = number
 
     def scale_model(self, factor):
-        print '--- scaling model by factor of:', factor
+        print('--- scaling model by factor of:', factor)
         self.model.scale(factor)
         self.model.init()
 

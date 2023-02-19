@@ -18,7 +18,7 @@
 Gcode parser.
 """
 
-from __future__ import division
+
 
 import time
 import logging
@@ -273,8 +273,8 @@ class GcodeParser(object):
     def update_args(self, oldargs, newargs):
         args = oldargs.copy()
 
-        for axis in newargs.keys():
-            if args.has_key(axis) and newargs[axis] is not None:
+        for axis in list(newargs.keys()):
+            if axis in args and newargs[axis] is not None:
                 if self.relative:
                     args[axis] += newargs[axis]
                 else:
@@ -308,8 +308,8 @@ class GcodeParser(object):
             if len(newargs) < 1:
                 newargs = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'E': 0})
 
-            for axis in newargs.keys():
-                if self.offset.has_key(axis):
+            for axis in list(newargs.keys()):
+                if axis in self.offset:
                     self.offset[axis] += self.args[axis] - newargs[axis]
                     self.args[axis] = newargs[axis]
 

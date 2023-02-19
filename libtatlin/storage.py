@@ -19,7 +19,7 @@
 """
 Module for loading from and writing to files.
 """
-from __future__ import division
+
 
 import os, os.path
 
@@ -109,7 +109,7 @@ class ModelFile(object):
             try:
                 data = parser.parse(callback)
                 return GcodeModel(), data
-            except GcodeParserError, e:
+            except GcodeParserError as e:
                 # rethrow as generic file error
                 raise ModelFileError("Parsing error: %s" % e.message)
 
@@ -120,7 +120,7 @@ class ModelFile(object):
             try:
                 data = parser.parse(callback)
                 return StlModel(), data
-            except StlParseError, e:
+            except StlParseError as e:
                 # rethrow as generic file error
                 raise ModelFileError("Parsing error: %s" % e.message)
 
@@ -130,10 +130,10 @@ class ModelFile(object):
         vertices, normals = stl_model.vertices, stl_model.normals
 
         f = open(self.path, 'w')
-        print >>f, 'solid'
-        print >>f, ''.join([self._format_facet(vertices[i:i+3], normals[i])
-            for i in xrange(0, len(vertices), 3)])
-        print >>f, 'endsolid'
+        print('solid', file=f)
+        print(''.join([self._format_facet(vertices[i:i+3], normals[i])
+            for i in range(0, len(vertices), 3)]), file=f)
+        print('endsolid', file=f)
         f.close()
 
     def _format_facet(self, vertices, normal):

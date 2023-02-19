@@ -23,7 +23,7 @@ import struct
 import time
 import logging
 import math
-from cStringIO import StringIO
+from io import StringIO
 
 
 class StlParseError(Exception):
@@ -66,7 +66,7 @@ class StlAsciiParser(object):
         self.stl = iter(stl)
 
     def readline(self):
-        line = self.stl.next()
+        line = next(self.stl)
         if line == '':
             raise ParseEOF
         return line
@@ -213,7 +213,7 @@ class StlBinaryParser(object):
         self._skip_header(self.stl)
         fcount = self._facet_count(self.stl)
         callback_every = max(1, int(math.floor(fcount / 100)))
-        for facet_idx in xrange(fcount):
+        for facet_idx in range(fcount):
             vertices, normal = self._parse_facet(self.stl)
             facet_list.extend(vertices)
             normal_list.extend([normal] * len(vertices)) # one normal per vertex
@@ -281,19 +281,19 @@ if __name__ == '__main__':
         parser.load(stl)
         vertices, normals = parser.parse()
 
-        print '[ OK   ] Parsed %d vertices' % len(vertices)
+        print('[ OK   ] Parsed %d vertices' % len(vertices))
 
-        print '[ INFO ] First vertices:'
+        print('[ INFO ] First vertices:')
         for vertex in vertices[:3]:
-            print vertex
-        print '[ INFO ] First normals:'
+            print(vertex)
+        print('[ INFO ] First normals:')
         for normal in normals[:3]:
-            print normal
+            print(normal)
 
-        print '[ INFO ] Last vertices:'
+        print('[ INFO ] Last vertices:')
         for vertex in vertices[-3:]:
-            print vertex
-        print '[ INFO ] Last normals:'
+            print(vertex)
+        print('[ INFO ] Last normals:')
         for normal in normals[-3:]:
-            print normal
+            print(normal)
 

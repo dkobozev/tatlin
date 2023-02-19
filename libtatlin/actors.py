@@ -16,7 +16,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from __future__ import division
+
 
 import math
 import numpy
@@ -27,8 +27,8 @@ from OpenGL.GL import *
 from OpenGL.GLE import *
 from OpenGL.arrays.vbo import VBO
 
-import vector
-from gcodeparser import Movement
+from . import vector
+from .gcodeparser import Movement
 
 
 def compile_display_list(func, *options):
@@ -133,7 +133,7 @@ class Model(object):
         'z': AXIS_Z,
     }
 
-    axis_letter_map = dict([(v, k) for k, v in letter_axis_map.items()])
+    axis_letter_map = dict([(v, k) for k, v in list(letter_axis_map.items())])
 
     def __init__(self, offset_x=0, offset_y=0, offset_z=0):
         self.offset_x = offset_x
