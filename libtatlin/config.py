@@ -1,7 +1,7 @@
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
 
-class Config():
+class Config(object):
     """
     Read and write Tatlin configuration.
     """
