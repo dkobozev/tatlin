@@ -684,7 +684,7 @@ class QuitDialog(wx.Dialog):
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(label, 1, wx.EXPAND | wx.ALL, border=5)
-        vbox.Add(hbox, 0, wx.EXPAND | wx.ALIGN_BOTTOM | wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
+        vbox.Add(hbox, 0, wx.EXPAND | wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
 
         self.SetSizer(vbox)
         self.SetSize((400, 90))
