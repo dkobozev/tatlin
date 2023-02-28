@@ -26,6 +26,9 @@ import math
 from io import StringIO
 
 
+ENCODING = 'utf-8'
+
+
 class StlParseError(Exception):
     pass
 
@@ -71,7 +74,7 @@ class StlAsciiParser(object):
         line = next(self.stl)
         if line == '':
             raise ParseEOF
-        return line
+        return line.decode(ENCODING)
 
     def next_line(self):
         next_line = self.peek_line()
@@ -259,7 +262,8 @@ def is_stl_ascii(fp):
     """
     Guess whether file with the given name is plain ASCII STL file.
     """
-    is_ascii = str(fp.readline().strip()).startswith('solid')
+    first_line = fp.readline().strip()
+    is_ascii = first_line.startswith(b'solid')
     fp.seek(0)
     return is_ascii
 
