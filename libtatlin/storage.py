@@ -30,8 +30,7 @@ from .actors import StlModel, GcodeModel
 
 
 class ModelFileError(Exception):
-    def __init__(self, message):
-        Exception.__init__(self, message)
+    pass
 
 
 class ModelFile(object):
@@ -87,7 +86,7 @@ class ModelFile(object):
             return self._ftype
         else:
             if self.extension not in ['.gcode', '.nc', '.stl']:
-                raise ModelFileError('Unsupported file extension: %s' % self.extension)
+                raise ModelFileError(f"Unsupported file extension: {self.extension}")
 
             return 'gcode' if self.extension in ('.gcode', '.nc') else 'stl'
 
@@ -112,7 +111,7 @@ class ModelFile(object):
                 return GcodeModel(), data
             except GcodeParserError as e:
                 # rethrow as generic file error
-                raise ModelFileError("Parsing error: %s" % e.message)
+                raise ModelFileError(f"Parsing error: {e}")
 
     def _load_stl_model(self, callback=None):
         with open(self.path, 'rb') as stlfile:
@@ -123,7 +122,7 @@ class ModelFile(object):
                 return StlModel(), data
             except StlParseError as e:
                 # rethrow as generic file error
-                raise ModelFileError("Parsing error: %s" % e.message)
+                raise ModelFileError(f"Parsing error: {e}")
 
     def write_stl(self, stl_model):
         assert self.filetype == 'stl'

@@ -431,12 +431,12 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
                 self.model_file.basename, size, units, model.vertex_count, vertex_plural))
         except IOError as e:
             self.set_normal_cursor()
-            error_dialog = OpenErrorAlert(fpath, e.strerror)
+            error_dialog = OpenErrorAlert(fpath, e)
             error_dialog.show()
             success = False
         except ModelFileError as e:
             self.set_normal_cursor()
-            error_dialog = OpenErrorAlert(fpath, e.message)
+            error_dialog = OpenErrorAlert(fpath, e)
             error_dialog.show()
             success = False
         finally:
