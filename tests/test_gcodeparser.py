@@ -45,9 +45,9 @@ class GcodeParserTest(unittest.TestCase):
 
     def test_set_flags(self):
         commands = (
-            ('',     ArgsDict(), '(<perimeter> outer )'),
-            ('',     ArgsDict(), '(<loop> outer )'),
-            ('',     ArgsDict(), '(</loop>)'),
+            ('', ArgsDict(), '(<perimeter> outer )'),
+            ('', ArgsDict(), '(<loop> outer )'),
+            ('', ArgsDict(), '(</loop>)'),
             ('M101', ArgsDict(), ''),
             ('M103', ArgsDict(), ''),
             ('M101', ArgsDict(), ''),
@@ -104,6 +104,7 @@ class GcodeParserTest(unittest.TestCase):
             self.assertEqual(command, 'M117')
             self.assertEqual(len(args), 0)
             self.assertEqual(comment.strip(), 'Printing stuff now...')
+
 
 if __name__ == '__main__':
     unittest.main()
