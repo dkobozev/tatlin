@@ -832,7 +832,7 @@ class BaseApp(wx.App):
         self.Yield()
 
     def set_wait_cursor(self):
-        wx.SetCursor(wx.StockCursor(wx.CURSOR_WAIT))
+        wx.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
 
     def set_normal_cursor(self):
         wx.SetCursor(wx.NullCursor)
