@@ -126,6 +126,73 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         self.window.show_all()
 
     # -------------------------------------------------------------------------
+    # ACTIONS
+    # -------------------------------------------------------------------------
+
+    def set_up_actions(self):
+        actiongroup = ActionGroup('main')
+        actiongroup.add_action(gtk.Action('file', '_File', 'File', None))
+
+        action_open = gtk.Action('open', 'Open', 'Open', gtk.STOCK_OPEN)
+        action_open.connect('activate', self.open_file_dialog)
+        actiongroup.add_action_with_accel(action_open, '<Control>o')
+
+        action_save = gtk.Action('save', 'Save', 'Save file', gtk.STOCK_SAVE)
+        action_save.connect('activate', self.save_file)
+        actiongroup.add_action_with_accel(action_save, '<Control>s')
+
+        save_as = gtk.Action('save-as', 'Save As...', 'Save As...', gtk.STOCK_SAVE_AS)
+        save_as.connect('activate', self.save_file_as)
+        actiongroup.add_action_with_accel(save_as, '<Control><Shift>s')
+
+        action_quit = gtk.Action('quit', 'Quit', 'Quit', gtk.STOCK_QUIT)
+        action_quit.connect('activate', self.quit)
+        actiongroup.add_action_with_accel(action_quit, '<Control>q')
+
+        actiongroup.add_action(gtk.Action('view', '_View', 'View', None))
+
+        action_toggle_panel = gtk.ToggleAction('toggle_panel', '_Side Panel', 'Side Panel', None)
+        action_toggle_panel.set_active(True)
+        action_toggle_panel.connect('toggled', self.toggle_panel)
+        actiongroup.add_action_with_accel(action_toggle_panel, 'F9')
+
+        accelgroup = gtk.AccelGroup()
+        for action in actiongroup.list_actions():
+            action.set_accel_group(accelgroup)
+
+        self.window.add_accel_group(accelgroup)
+
+        return actiongroup
+
+    def create_menu_items(self, actiongroup):
+        file_menu = gtk.Menu()
+        file_menu.append(actiongroup.menu_item('open'))
+
+        save_item = actiongroup.menu_item('save')
+        file_menu.append(save_item)
+
+        save_as_item = actiongroup.menu_item('save-as')
+        file_menu.append(save_as_item)
+
+        file_menu.append(actiongroup.menu_item('quit'))
+
+        item_file = actiongroup.menu_item('file')
+        item_file.set_submenu(file_menu)
+
+        view_menu = gtk.Menu()
+        view_menu.append(actiongroup.menu_item('toggle_panel'))
+
+        item_view = actiongroup.menu_item('view')
+        item_view.set_submenu(view_menu)
+
+        self.menu_items_file = [save_item, save_as_item]
+        self.menu_items = [item_file, item_view]
+
+    def menu_enable_file_items(self, enable=True):
+        for menu_item in self.menu_items_file:
+            menu_item.set_sensitive(enable)
+
+    # -------------------------------------------------------------------------
     # PROPERTIES
     # -------------------------------------------------------------------------
 
@@ -178,7 +245,14 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
     def command_line(self):
         if len(sys.argv) > 1:
-            self.open_and_display_file(os.path.abspath(sys.argv[1]))
+            if sys.argv[1] == '--hide-panel':
+                if len(sys.argv) > 2:
+                    self.open_and_display_file(sys.argv[2])
+                    action = self.actiongroup.get_action('toggle_panel')
+                    action.set_active(False)
+                    action.emit('toggled')
+            else:
+                self.open_and_display_file(sys.argv[1])
 
     # -------------------------------------------------------------------------
     # EVENT HANDLERS
@@ -235,6 +309,12 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
         if self.save_changes_dialog():
             self.window.quit()
+
+    def toggle_panel(self, action=None):
+        if action.get_active():
+            self.panel.show()
+        else:
+            self.panel.hide()
 
     def save_changes_dialog(self):
         proceed = True
