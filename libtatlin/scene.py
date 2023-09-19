@@ -16,8 +16,6 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from __future__ import division
-
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -34,7 +32,8 @@ def paginate(sequence, n):
     Yield n-sized pieces of sequence.
     """
     for i in range(0, len(sequence), n):
-        yield sequence[i:i+n]
+        yield sequence[i:i + n]
+
 
 def html_color(color):
     if color.startswith('#'):
@@ -51,14 +50,14 @@ class Scene(BaseScene):
     responsible for viewing transformations such as zooming, panning and
     rotation, as well as being the interface for the actors.
     """
-    PAN_SPEED    = 25
+    PAN_SPEED = 25
     ROTATE_SPEED = 25
 
     def __init__(self, parent):
         super(Scene, self).__init__(parent)
 
-        self.model    = None
-        self.actors   = []
+        self.model = None
+        self.actors = []
         self.cursor_x = 0
         self.cursor_y = 0
 
@@ -68,14 +67,14 @@ class Scene(BaseScene):
 
         # dict of scene properties
         self._scene_properties = {
-            'max_layers':     lambda: self.model.max_layers,
+            'max_layers': lambda: self.model.max_layers,
             'scaling-factor': lambda: round(self.model.scaling_factor, 2),
-            'width':          lambda: self.model.width,
-            'depth':          lambda: self.model.depth,
-            'height':         lambda: self.model.height,
-            'rotation-x':     lambda: self.model.rotation_angle[self.model.AXIS_X],
-            'rotation-y':     lambda: self.model.rotation_angle[self.model.AXIS_Y],
-            'rotation-z':     lambda: self.model.rotation_angle[self.model.AXIS_Z],
+            'width': lambda: self.model.width,
+            'depth': lambda: self.model.depth,
+            'height': lambda: self.model.height,
+            'rotation-x': lambda: self.model.rotation_angle[self.model.AXIS_X],
+            'rotation-y': lambda: self.model.rotation_angle[self.model.AXIS_Y],
+            'rotation-z': lambda: self.model.rotation_angle[self.model.AXIS_Z],
         }
 
     def add_model(self, model):
@@ -100,8 +99,8 @@ class Scene(BaseScene):
     # ------------------------------------------------------------------------
 
     def init(self):
-        glClearColor(0.0, 0.0, 0.0, 0.0) # set clear color to black
-        glClearDepth(1.0)                # set depth value to 1
+        glClearColor(0.0, 0.0, 0.0, 0.0)  # set clear color to black
+        glClearDepth(1.0)  # set depth value to 1
         glDepthFunc(GL_LEQUAL)
 
         glEnable(GL_COLOR_MATERIAL)
@@ -154,6 +153,7 @@ class Scene(BaseScene):
             eye_height = math.sqrt(y**2 + z**2) * math.sin(math.radians(angle))
 
             # draw line of sight plane
+            '''
             #plane_size = 200
             #glBegin(GL_LINES)
             #glColor(1.0, 0.0, 0.0)
@@ -169,6 +169,7 @@ class Scene(BaseScene):
             #glVertex(-plane_size/2, -plane_size/2, eye_height)
             #glVertex(-plane_size/2, plane_size/2, eye_height)
             #glEnd()
+            '''
 
             for actor in self.actors:
                 actor.display(eye_height=eye_height,
@@ -212,7 +213,7 @@ class Scene(BaseScene):
             glColor(*color)
             # add padding to labels
             glRasterPos(axis[0] + 2, axis[1] + 2, axis[2] + 2)
-            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(label));
+            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(label))
 
         glPopMatrix()
 
@@ -307,7 +308,7 @@ class Scene(BaseScene):
         self.model.num_layers_to_draw = number
 
     def scale_model(self, factor):
-        print '--- scaling model by factor of:', factor
+        print('--- scaling model by factor of:', factor)
         self.model.scale(factor)
         self.model.init()
 
@@ -355,4 +356,3 @@ class Scene(BaseScene):
         something like size, shape or color.
         """
         return self.model and self.model.modified
-

@@ -1,5 +1,9 @@
+# MacOS
+.DS_Store
+
+# Python
 *.pyc
 *.prof
-.idea
-tests/data/gcode/*
-tests/data/stl/*
+
+# 2to3
+*.py.bak

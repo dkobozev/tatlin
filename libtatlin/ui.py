@@ -16,9 +16,8 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from __future__ import division
-
 import wx
+import wx.adv
 from wx import glcanvas
 
 
@@ -34,36 +33,36 @@ def load_icon(fpath):
 class ViewButtons(wx.FlexGridSizer):
 
     def __init__(self, parent):
-        super(ViewButtons, self).__init__(3, 3)
+        super(ViewButtons, self).__init__(rows=3, cols=3, vgap=0, hgap=0)
 
         self.btn_front = wx.Button(parent, label='Front')
-        self.btn_back  = wx.Button(parent, label='Back')
-        self.btn_left  = wx.Button(parent, label='Left')
+        self.btn_back = wx.Button(parent, label='Back')
+        self.btn_left = wx.Button(parent, label='Left')
         self.btn_right = wx.Button(parent, label='Right')
 
-        self.btn_top    = wx.Button(parent, label='Top')
+        self.btn_top = wx.Button(parent, label='Top')
         self.btn_bottom = wx.Button(parent, label='Bottom')
 
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(self.btn_top,    0, wx.EXPAND)
+        vbox.Add(self.btn_top, 0, wx.EXPAND)
         vbox.Add(self.btn_bottom, 0, wx.EXPAND)
 
-        self.Add((0, 0),         0, wx.EXPAND)
-        self.Add(self.btn_back,  0, wx.EXPAND)
-        self.Add((0, 0),         0, wx.EXPAND)
-        self.Add(self.btn_left,  0, wx.EXPAND)
-        self.Add(vbox,           0, wx.EXPAND)
+        self.Add((0, 0), 0, wx.EXPAND)
+        self.Add(self.btn_back, 0, wx.EXPAND)
+        self.Add((0, 0), 0, wx.EXPAND)
+        self.Add(self.btn_left, 0, wx.EXPAND)
+        self.Add(vbox, 0, wx.EXPAND)
         self.Add(self.btn_right, 0, wx.EXPAND)
-        self.Add((0, 0),         0, wx.EXPAND)
+        self.Add((0, 0), 0, wx.EXPAND)
         self.Add(self.btn_front, 0, wx.EXPAND)
-        self.Add((0, 0),         0, wx.EXPAND)
+        self.Add((0, 0), 0, wx.EXPAND)
 
         # connect handlers
-        self.btn_front.Bind( wx.EVT_BUTTON, self.on_view_front)
-        self.btn_back.Bind(  wx.EVT_BUTTON, self.on_view_back)
-        self.btn_left.Bind(  wx.EVT_BUTTON, self.on_view_left)
-        self.btn_right.Bind( wx.EVT_BUTTON, self.on_view_right)
-        self.btn_top.Bind(   wx.EVT_BUTTON, self.on_view_top)
+        self.btn_front.Bind(wx.EVT_BUTTON, self.on_view_front)
+        self.btn_back.Bind(wx.EVT_BUTTON, self.on_view_back)
+        self.btn_left.Bind(wx.EVT_BUTTON, self.on_view_left)
+        self.btn_right.Bind(wx.EVT_BUTTON, self.on_view_right)
+        self.btn_top.Bind(wx.EVT_BUTTON, self.on_view_top)
         self.btn_bottom.Bind(wx.EVT_BUTTON, self.on_view_bottom)
 
     def on_view_front(self, event):
@@ -94,9 +93,9 @@ class StlPanel(wx.Panel):
 
         self._handlers_connected = False
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # DIMENSIONS
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         static_box_dimensions = wx.StaticBox(self, label='Dimensions')
         sizer_dimensions = wx.StaticBoxSizer(static_box_dimensions, wx.VERTICAL)
@@ -117,24 +116,24 @@ class StlPanel(wx.Panel):
         self.entry_factor = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
 
         grid_dimensions = wx.FlexGridSizer(4, 3, 5, 5)
-        grid_dimensions.Add(label_x,           0, wx.ALIGN_CENTER)
-        grid_dimensions.Add(self.entry_x,      0, wx.EXPAND)
-        grid_dimensions.Add(label_x_units,     0, wx.ALIGN_CENTER_VERTICAL)
-        grid_dimensions.Add(label_y,           0, wx.ALIGN_CENTER)
-        grid_dimensions.Add(self.entry_y,      0, wx.EXPAND)
-        grid_dimensions.Add(label_y_units,     0, wx.ALIGN_CENTER_VERTICAL)
-        grid_dimensions.Add(label_z,           0, wx.ALIGN_CENTER)
-        grid_dimensions.Add(self.entry_z,      0, wx.EXPAND)
-        grid_dimensions.Add(label_z_units,     0, wx.ALIGN_CENTER_VERTICAL)
-        grid_dimensions.Add(label_factor,      0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(label_x, 0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(self.entry_x, 0, wx.EXPAND)
+        grid_dimensions.Add(label_x_units, 0, wx.ALIGN_CENTER_VERTICAL)
+        grid_dimensions.Add(label_y, 0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(self.entry_y, 0, wx.EXPAND)
+        grid_dimensions.Add(label_y_units, 0, wx.ALIGN_CENTER_VERTICAL)
+        grid_dimensions.Add(label_z, 0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(self.entry_z, 0, wx.EXPAND)
+        grid_dimensions.Add(label_z_units, 0, wx.ALIGN_CENTER_VERTICAL)
+        grid_dimensions.Add(label_factor, 0, wx.ALIGN_CENTER)
         grid_dimensions.Add(self.entry_factor, 0, wx.EXPAND)
         grid_dimensions.AddGrowableCol(1)
 
         sizer_dimensions.Add(grid_dimensions, 0, wx.EXPAND | wx.ALL, border=5)
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # MOVE
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         static_box_move = wx.StaticBox(self, label='Move')
         sizer_move = wx.StaticBoxSizer(static_box_move, wx.VERTICAL)
@@ -143,9 +142,9 @@ class StlPanel(wx.Panel):
 
         sizer_move.Add(self.btn_center, 0, wx.EXPAND | wx.ALL, border=5)
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # ROTATE
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         static_box_rotate = wx.StaticBox(self, label='Rotate')
         sizer_rotate = wx.StaticBoxSizer(static_box_rotate, wx.VERTICAL)
@@ -169,22 +168,22 @@ class StlPanel(wx.Panel):
         sizer_entry_z.Add(self.entry_rotate_z, 1, wx.ALIGN_CENTER_VERTICAL)
 
         grid_rotate = wx.FlexGridSizer(3, 3, 5, 5)
-        grid_rotate.Add(self.btn_x_90,       0)
-        grid_rotate.Add(label_rotate_x,      0, wx.ALIGN_CENTER_VERTICAL)
-        grid_rotate.Add(sizer_entry_x,       0, wx.EXPAND)
-        grid_rotate.Add(self.btn_y_90,       0)
-        grid_rotate.Add(label_rotate_y,      0, wx.ALIGN_CENTER_VERTICAL)
-        grid_rotate.Add(sizer_entry_y,       0, wx.EXPAND)
-        grid_rotate.Add(self.btn_z_90,       0)
-        grid_rotate.Add(label_rotate_z,      0, wx.ALIGN_CENTER_VERTICAL)
-        grid_rotate.Add(sizer_entry_z,       0, wx.EXPAND)
+        grid_rotate.Add(self.btn_x_90, 0)
+        grid_rotate.Add(label_rotate_x, 0, wx.ALIGN_CENTER_VERTICAL)
+        grid_rotate.Add(sizer_entry_x, 0, wx.EXPAND)
+        grid_rotate.Add(self.btn_y_90, 0)
+        grid_rotate.Add(label_rotate_y, 0, wx.ALIGN_CENTER_VERTICAL)
+        grid_rotate.Add(sizer_entry_y, 0, wx.EXPAND)
+        grid_rotate.Add(self.btn_z_90, 0)
+        grid_rotate.Add(label_rotate_z, 0, wx.ALIGN_CENTER_VERTICAL)
+        grid_rotate.Add(sizer_entry_z, 0, wx.EXPAND)
         grid_rotate.AddGrowableCol(2)
 
         sizer_rotate.Add(grid_rotate, 0, wx.EXPAND | wx.ALL, border=5)
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # DISPLAY
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         static_box_display = wx.StaticBox(self, label='Display')
         sizer_display = wx.StaticBoxSizer(static_box_display, wx.VERTICAL)
@@ -194,18 +193,18 @@ class StlPanel(wx.Panel):
         self.btn_reset_view = wx.Button(self, label='Reset view')
 
         box_display = wx.BoxSizer(wx.VERTICAL)
-        box_display.Add(view_buttons,        0, wx.ALIGN_CENTER | wx.TOP, border=5)
-        box_display.Add(self.check_ortho,    0, wx.EXPAND | wx.TOP,       border=5)
-        box_display.Add(self.btn_reset_view, 0, wx.EXPAND | wx.TOP,       border=5)
+        box_display.Add(view_buttons, 0, wx.ALIGN_CENTER | wx.TOP, border=5)
+        box_display.Add(self.check_ortho, 0, wx.EXPAND | wx.TOP, border=5)
+        box_display.Add(self.btn_reset_view, 0, wx.EXPAND | wx.TOP, border=5)
 
         sizer_display.Add(box_display, 0, wx.EXPAND | wx.ALL, border=5)
 
         box = wx.BoxSizer(wx.VERTICAL)
 
         box.Add(sizer_dimensions, 0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
-        box.Add(sizer_move,       0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
-        box.Add(sizer_rotate,     0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
-        box.Add(sizer_display,    0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
+        box.Add(sizer_move, 0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
+        box.Add(sizer_rotate, 0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
+        box.Add(sizer_display, 0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
 
         self.SetSizer(box)
 
@@ -213,9 +212,9 @@ class StlPanel(wx.Panel):
         if self._handlers_connected:
             return
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # DIMENSIONS
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         self.entry_x.Bind(wx.EVT_KILL_FOCUS, self.on_entry_x_focus_out)
         self.entry_x.Bind(wx.EVT_TEXT_ENTER, self.on_entry_x_focus_out)
@@ -229,9 +228,9 @@ class StlPanel(wx.Panel):
         self.entry_factor.Bind(wx.EVT_KILL_FOCUS, self.on_entry_factor_focus_out)
         self.entry_factor.Bind(wx.EVT_TEXT_ENTER, self.on_entry_factor_focus_out)
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # ROTATE
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         self.entry_rotate_x.Bind(wx.EVT_KILL_FOCUS, self.on_entry_rotate_x_focus_out)
         self.entry_rotate_x.Bind(wx.EVT_TEXT_ENTER, self.on_entry_rotate_x_focus_out)
@@ -246,18 +245,18 @@ class StlPanel(wx.Panel):
         self.btn_y_90.Bind(wx.EVT_BUTTON, self.on_y_90_clicked)
         self.btn_z_90.Bind(wx.EVT_BUTTON, self.on_z_90_clicked)
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # MOVE
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         self.btn_center.Bind(wx.EVT_BUTTON, self.on_center_clicked)
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # DISPLAY
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-        self.check_ortho.Bind(   wx.EVT_CHECKBOX, self.on_set_ortho)
-        self.btn_reset_view.Bind(wx.EVT_BUTTON,   self.on_reset_clicked)
+        self.check_ortho.Bind(wx.EVT_CHECKBOX, self.on_set_ortho)
+        self.btn_reset_view.Bind(wx.EVT_BUTTON, self.on_reset_clicked)
 
         self._handlers_connected = True
 
@@ -347,9 +346,9 @@ class GcodePanel(wx.Panel):
 
         self._handlers_connected = False
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # DIMENSIONS
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         static_box_dimensions = wx.StaticBox(self, label='Dimensions')
         sizer_dimensions = wx.StaticBoxSizer(static_box_dimensions, wx.VERTICAL)
@@ -364,18 +363,18 @@ class GcodePanel(wx.Panel):
         self.label_height_value = wx.StaticText(self)
 
         grid_dimensions = wx.GridSizer(3, 2, 5, 5)
-        grid_dimensions.Add(label_width,             0, wx.ALIGN_CENTER)
-        grid_dimensions.Add(self.label_width_value,  0, wx.ALIGN_CENTER)
-        grid_dimensions.Add(label_depth,             0, wx.ALIGN_CENTER)
-        grid_dimensions.Add(self.label_depth_value,  0, wx.ALIGN_CENTER)
-        grid_dimensions.Add(label_height,            0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(label_width, 0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(self.label_width_value, 0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(label_depth, 0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(self.label_depth_value, 0, wx.ALIGN_CENTER)
+        grid_dimensions.Add(label_height, 0, wx.ALIGN_CENTER)
         grid_dimensions.Add(self.label_height_value, 0, wx.ALIGN_CENTER)
 
         sizer_dimensions.Add(grid_dimensions, 0, wx.EXPAND | wx.ALL, border=5)
 
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         # DISPLAY
-        #----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         static_box_display = wx.StaticBox(self, label='Display')
         sizer_display = wx.StaticBoxSizer(static_box_display, wx.VERTICAL)
@@ -389,19 +388,19 @@ class GcodePanel(wx.Panel):
         self.btn_reset_view = wx.Button(self, label='Reset view')
 
         box_display = wx.BoxSizer(wx.VERTICAL)
-        box_display.Add(label_layers,        0, wx.ALIGN_LEFT)
-        box_display.Add(self.slider_layers,  0, wx.EXPAND | wx.TOP, border=5)
-        box_display.Add(self.check_arrows,   0, wx.EXPAND | wx.TOP, border=5)
-        box_display.Add(self.check_3d,       0, wx.EXPAND | wx.TOP, border=5)
-        box_display.Add(view_buttons,        0, wx.ALIGN_CENTER | wx.TOP, border=5)
-        box_display.Add(self.check_ortho,    0, wx.EXPAND | wx.TOP, border=5)
+        box_display.Add(label_layers, 0, wx.ALIGN_LEFT)
+        box_display.Add(self.slider_layers, 0, wx.EXPAND | wx.TOP, border=5)
+        box_display.Add(self.check_arrows, 0, wx.EXPAND | wx.TOP, border=5)
+        box_display.Add(self.check_3d, 0, wx.EXPAND | wx.TOP, border=5)
+        box_display.Add(view_buttons, 0, wx.ALIGN_CENTER | wx.TOP, border=5)
+        box_display.Add(self.check_ortho, 0, wx.EXPAND | wx.TOP, border=5)
         box_display.Add(self.btn_reset_view, 0, wx.EXPAND | wx.TOP, border=5)
 
         sizer_display.Add(box_display, 0, wx.EXPAND | wx.ALL, border=5)
 
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(sizer_dimensions, 0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
-        box.Add(sizer_display,    0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
+        box.Add(sizer_display, 0, wx.EXPAND | wx.TOP | wx.RIGHT | wx.LEFT, border=5)
 
         self.SetSizer(box)
 
@@ -409,11 +408,11 @@ class GcodePanel(wx.Panel):
         if self._handlers_connected:
             return
 
-        self.slider_layers.Bind( wx.EVT_SCROLL,   self.on_slider_moved)
-        self.check_arrows.Bind(  wx.EVT_CHECKBOX, self.on_arrows_toggled)
-        self.btn_reset_view.Bind(wx.EVT_BUTTON,   self.on_reset_clicked)
-        self.check_3d.Bind(      wx.EVT_CHECKBOX, self.on_set_mode)
-        self.check_ortho.Bind(   wx.EVT_CHECKBOX, self.on_set_ortho)
+        self.slider_layers.Bind(wx.EVT_SCROLL, self.on_slider_moved)
+        self.check_arrows.Bind(wx.EVT_CHECKBOX, self.on_arrows_toggled)
+        self.btn_reset_view.Bind(wx.EVT_BUTTON, self.on_reset_clicked)
+        self.check_3d.Bind(wx.EVT_CHECKBOX, self.on_set_mode)
+        self.check_ortho.Bind(wx.EVT_CHECKBOX, self.on_set_ortho)
 
         self._handlers_connected = True
 
@@ -443,7 +442,7 @@ class GcodePanel(wx.Panel):
         else:
             self.slider_layers.Hide()
 
-        self.check_arrows.SetValue(True) # check the box
+        self.check_arrows.SetValue(True)  # check the box
         self.check_3d.SetValue(True)
 
         self.label_width_value.SetLabel(app.get_property('width'))
@@ -463,10 +462,10 @@ class StartupPanel(wx.Panel):
         self.btn_open = wx.Button(self, wx.ID_OPEN)
 
         box = wx.BoxSizer(wx.VERTICAL)
-        box.Add((0, 0),        1, wx.EXPAND)
-        box.Add(text,          0, wx.ALIGN_CENTER | wx.ALL,                         border=5)
+        box.Add((0, 0), 1, wx.EXPAND)
+        box.Add(text, 0, wx.ALIGN_CENTER | wx.ALL, border=5)
         box.Add(self.btn_open, 0, wx.ALIGN_CENTER | wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
-        box.Add((0, 0),        1, wx.EXPAND)
+        box.Add((0, 0), 1, wx.EXPAND)
 
         self.SetSizer(box)
 
@@ -485,11 +484,11 @@ class MainWindow(wx.Frame):
         item_open = file_menu.Append(wx.ID_OPEN, '&Open', 'Open file')
         self.recent_files_menu = wx.Menu()
         self.recent_files_item = file_menu.AppendMenu(wx.ID_ANY, '&Recent files',
-                self.recent_files_menu)
+                                                      self.recent_files_menu)
         item_save = file_menu.Append(wx.ID_SAVE, '&Save', 'Save changes')
         item_save.Enable(False)
         item_save_as = file_menu.Append(wx.ID_SAVEAS, 'Save As...\tShift+Ctrl+S',
-                'Save under a different filename')
+                                        'Save under a different filename')
         item_save_as.Enable(False)
         item_quit = file_menu.Append(wx.ID_EXIT, '&Quit', 'Quit %s' % self._app_name)
 
@@ -550,18 +549,14 @@ class MainWindow(wx.Frame):
     def set_file_widgets(self, scene, panel):
         # remove startup panel if present
         if self._filename is None:
-            self.box_main.Remove(self.panel_startup)
             self.panel_startup.Destroy()
-
             self.box_main.Add(self.box_scene, 1, wx.EXPAND)
-
         # remove previous scene and panel, if any, destroying the widgets
         self.box_scene.Clear(True)
-
         self.box_scene.Add(scene, 1, wx.EXPAND)
         self.box_scene.Add(panel, 0, wx.EXPAND)
         self.box_scene.ShowItems(True)
-        self.Layout() # without this call, wxPython does not draw the new widgets until window resize
+        self.Layout()  # without this call, wxPython does not draw the new widgets until window resize
 
     def menu_enable_file_items(self, enable=True):
         for item in self.menu_items_file:
@@ -569,7 +564,7 @@ class MainWindow(wx.Frame):
 
     def update_recent_files_menu(self, recent_files):
         for menu_item in self.recent_files_menu.GetMenuItems():
-            self.recent_files_menu.DeleteItem(menu_item)
+            self.recent_files_menu.Delete(menu_item)
 
         for recent_file in recent_files:
             item = self.recent_files_menu.Append(wx.ID_ANY, recent_file[0])
@@ -617,7 +612,6 @@ class MainWindow(wx.Frame):
             if self._file_modified:
                 filename = '*' + filename
             title = filename + ' - ' + title
-
         self.SetTitle(title)
 
 
@@ -657,7 +651,6 @@ class SaveDialog(wx.FileDialog):
     def __init__(self, parent, directory=None):
         super(SaveDialog, self).__init__(parent, 'Save As', wildcard='STL files (*.stl)|*.stl',
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
-
         if directory is not None:
             self.SetDirectory(directory)
 
@@ -668,10 +661,10 @@ class SaveDialog(wx.FileDialog):
 
 
 class QuitDialog(wx.Dialog):
-    RESPONSE_CANCEL  = 0
+    RESPONSE_CANCEL = 0
     RESPONSE_DISCARD = 1
     RESPONSE_SAVE_AS = 2
-    RESPONSE_SAVE    = 3
+    RESPONSE_SAVE = 3
 
     def __init__(self, parent):
         super(QuitDialog, self).__init__(parent, title='Save changes?')
@@ -679,27 +672,27 @@ class QuitDialog(wx.Dialog):
         label = wx.StaticText(self, label='Save changes to the file before closing?')
 
         self.btn_discard = wx.Button(self, label='Discard')
-        self.btn_cancel  = wx.Button(self, wx.ID_CANCEL)
+        self.btn_cancel = wx.Button(self, wx.ID_CANCEL)
         self.btn_save_as = wx.Button(self, wx.ID_SAVEAS)
-        self.btn_save    = wx.Button(self, wx.ID_SAVE)
+        self.btn_save = wx.Button(self, wx.ID_SAVE)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(self.btn_discard, 1)
-        hbox.Add(self.btn_cancel,  1, wx.LEFT, border=5)
+        hbox.Add(self.btn_cancel, 1, wx.LEFT, border=5)
         hbox.Add(self.btn_save_as, 1, wx.LEFT, border=5)
-        hbox.Add(self.btn_save,    1, wx.LEFT, border=5)
+        hbox.Add(self.btn_save, 1, wx.LEFT, border=5)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(label, 1, wx.EXPAND | wx.ALL, border=5)
-        vbox.Add(hbox,  0, wx.EXPAND | wx.ALIGN_BOTTOM | wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
+        vbox.Add(hbox, 0, wx.EXPAND | wx.RIGHT | wx.BOTTOM | wx.LEFT, border=5)
 
         self.SetSizer(vbox)
         self.SetSize((400, 90))
 
         self.btn_discard.Bind(wx.EVT_BUTTON, self.on_discard)
-        self.btn_cancel.Bind( wx.EVT_BUTTON, self.on_cancel)
+        self.btn_cancel.Bind(wx.EVT_BUTTON, self.on_cancel)
         self.btn_save_as.Bind(wx.EVT_BUTTON, self.on_save_as)
-        self.btn_save.Bind(   wx.EVT_BUTTON, self.on_save)
+        self.btn_save.Bind(wx.EVT_BUTTON, self.on_save)
 
     def on_discard(self, event):
         self.EndModal(self.RESPONSE_DISCARD)
@@ -740,7 +733,7 @@ class AboutDialog(object):
     def __init__(self):
         from datetime import datetime
 
-        info = wx.AboutDialogInfo()
+        info = wx.adv.AboutDialogInfo()
 
         info.SetName('Tatlin')
         info.SetVersion('v%s' % app.TATLIN_VERSION)
@@ -751,7 +744,7 @@ class AboutDialog(object):
         info.AddDeveloper('Denis Kobozev <d.v.kobozev@gmail.com>')
         info.SetLicence(app.TATLIN_LICENSE)
 
-        dialog = wx.AboutBox(info)
+        dialog = wx.adv.AboutBox(info)
 
 
 class BaseScene(glcanvas.GLCanvas):
@@ -764,10 +757,10 @@ class BaseScene(glcanvas.GLCanvas):
         self.context = glcanvas.GLContext(self)
 
         self.Bind(wx.EVT_ERASE_BACKGROUND, self._on_erase_background)
-        self.Bind(wx.EVT_SIZE,             self._on_size)
-        self.Bind(wx.EVT_PAINT,            self._on_paint)
-        self.Bind(wx.EVT_LEFT_DOWN,        self._on_mouse_down)
-        self.Bind(wx.EVT_MOTION,           self._on_mouse_motion)
+        self.Bind(wx.EVT_SIZE, self._on_size)
+        self.Bind(wx.EVT_PAINT, self._on_paint)
+        self.Bind(wx.EVT_LEFT_DOWN, self._on_mouse_down)
+        self.Bind(wx.EVT_MOTION, self._on_mouse_motion)
 
         # make it unnecessary for the scene to be in focus to respond to the
         # mouse wheel by binding the mouse wheel event to the parent; if we
@@ -787,7 +780,7 @@ class BaseScene(glcanvas.GLCanvas):
         self.Refresh(False)
 
     def _on_erase_background(self, event):
-        pass # Do nothing, to avoid flashing on MSW. Doesn't seem to be working, though :(
+        pass  # Do nothing, to avoid flashing on MSW. Doesn't seem to be working, though :(
 
     def _on_size(self, event):
         wx.CallAfter(self._set_viewport)
@@ -801,14 +794,11 @@ class BaseScene(glcanvas.GLCanvas):
     def _on_paint(self, event):
         dc = wx.PaintDC(self)
         self.SetCurrent(self.context)
-
         if not self.initialized:
             self.init()
             self.initialized = True
-
         size = self.GetClientSize()
         self.display(size.width, size.height)
-
         self.SwapBuffers()
 
     def _on_mouse_down(self, event):
@@ -818,11 +808,9 @@ class BaseScene(glcanvas.GLCanvas):
 
     def _on_mouse_motion(self, event):
         x, y = event.GetPosition()
-
-        left   = event.LeftIsDown()
+        left = event.LeftIsDown()
         middle = event.MiddleIsDown()
-        right  = event.RightIsDown()
-
+        right = event.RightIsDown()
         self.button_motion(x, y, left, middle, right)
 
     def _on_mouse_wheel(self, event):
@@ -844,7 +832,7 @@ class BaseApp(wx.App):
         self.Yield()
 
     def set_wait_cursor(self):
-        wx.SetCursor(wx.StockCursor(wx.CURSOR_WAIT))
+        wx.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
 
     def set_normal_cursor(self):
         wx.SetCursor(wx.NullCursor)
@@ -876,20 +864,20 @@ class TestApp(BaseApp):
     def on_file_open(self, event):
         dialog = OpenDialog(self.window)
         path = dialog.get_path()
-        print path
+        print(path)
 
         if path:
             progress_dialog = ProgressDialog('Reading file...')
             import time
             for i in range(10):
-                print i
+                print(i)
                 progress_dialog.step(i, 9)
                 time.sleep(0.1)
             progress_dialog.destroy()
 
             progress_dialog = ProgressDialog('Loading model...')
             for i in range(10):
-                print i
+                print(i)
                 progress_dialog.step(i, 9)
                 time.sleep(0.1)
             progress_dialog.destroy()
@@ -900,20 +888,19 @@ class TestApp(BaseApp):
                 self.show_gcode_mode()
 
     def on_file_save(self, event):
-        print 'save'
+        print('save')
 
     def on_file_save_as(self, event):
-        print 'save as'
+        print('save as')
 
     def on_quit(self, event):
         self.window.Close()
 
     def on_about(self, event):
-        print 'about'
+        print('about')
 
 
 if __name__ == '__main__':
     app = TestApp()
     app.show_stl_mode()
     app.run()
-

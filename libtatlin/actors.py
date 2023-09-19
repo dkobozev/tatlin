@@ -16,8 +16,6 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from __future__ import division
-
 import math
 import numpy
 import logging
@@ -27,8 +25,8 @@ from OpenGL.GL import *
 from OpenGL.GLE import *
 from OpenGL.arrays.vbo import VBO
 
-import vector
-from gcodeparser import Movement
+from . import vector
+from .gcodeparser import Movement
 
 
 def compile_display_list(func, *options):
@@ -37,6 +35,7 @@ def compile_display_list(func, *options):
     func(*options)
     glEndList()
     return display_list
+
 
 class BoundingBox(object):
     """
@@ -72,10 +71,10 @@ class Platform(object):
         self.width = width
         self.depth = depth
 
-        self.color_grads_minor  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
+        self.color_grads_minor = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.1)
         self.color_grads_interm = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.2)
-        self.color_grads_major  = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
-        self.color_fill         = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
+        self.color_grads_major = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.33)
+        self.color_fill = (0xaf / 255, 0xdf / 255, 0x5f / 255, 0.05)
 
         self.initialized = False
 
@@ -100,12 +99,12 @@ class Platform(object):
         glBegin(GL_LINES)
         for i in range(0, int(self.width) + 1):
             color(i)
-            glVertex3f(float(i), 0.0,        0.0)
+            glVertex3f(float(i), 0.0, 0.0)
             glVertex3f(float(i), self.depth, 0.0)
 
         for i in range(0, int(self.depth) + 1):
             color(i)
-            glVertex3f(0,          float(i), 0.0)
+            glVertex3f(0, float(i), 0.0)
             glVertex3f(self.width, float(i), 0.0)
         glEnd()
 
@@ -133,7 +132,7 @@ class Model(object):
         'z': AXIS_Z,
     }
 
-    axis_letter_map = dict([(v, k) for k, v in letter_axis_map.items()])
+    axis_letter_map = dict([(v, k) for k, v in list(letter_axis_map.items())])
 
     def __init__(self, offset_x=0, offset_y=0, offset_z=0):
         self.offset_x = offset_x
@@ -192,9 +191,9 @@ class GcodeModel(Model):
     """
     # vertices for arrow to display the direction of movement
     arrow = numpy.require([
-        [0.0, 0.0, 0.0],
+        [0.0,  0.0, 0.0],
         [0.4, -0.1, 0.0],
-        [0.4, 0.1, 0.0],
+        [0.4,  0.1, 0.0],
     ], 'f')
     layer_entry_marker = numpy.require([
         [ 0.23, -0.14, 0.0],
@@ -213,35 +212,31 @@ class GcodeModel(Model):
     def load_data(self, model_data, callback=None):
         t_start = time.time()
 
-        vertex_list             = []
-        color_list              = []
-        self.layer_stops        = [0]
-        self.layer_heights      = []
-        arrow_list              = []
-        layer_markers_list      = []
+        vertex_list = []
+        color_list = []
+        self.layer_stops = [0]
+        self.layer_heights = []
+        arrow_list = []
+        layer_markers_list = []
         self.layer_marker_stops = [0]
 
-        num_layers     = len(model_data)
+        num_layers = len(model_data)
         callback_every = max(1, int(math.floor(num_layers / 100)))
 
         # the first movement designates the starting point
         start = prev = model_data[0][0]
         del model_data[0][0]
-
         for layer_idx, layer in enumerate(model_data):
             first = layer[0]
             for movement in layer:
                 vertex_list.append(prev.v)
                 vertex_list.append(movement.v)
-
                 arrow = self.arrow
                 # position the arrow with respect to movement
                 arrow = vector.rotate(arrow, movement.angle(prev.v), 0.0, 0.0, 1.0)
                 arrow_list.extend(arrow)
-
                 vertex_color = self.movement_color(movement)
                 color_list.append(vertex_color)
-
                 prev = movement
 
             self.layer_stops.append(len(vertex_list))
@@ -249,7 +244,7 @@ class GcodeModel(Model):
 
             # add the layer entry marker
             if layer_idx > 0 and len(model_data[layer_idx - 1]) > 0:
-                layer_markers_list.extend(self.layer_entry_marker + model_data[layer_idx-1][-1].v)
+                layer_markers_list.extend(self.layer_entry_marker + model_data[layer_idx - 1][-1].v)
             elif layer_idx == 0 and len(layer) > 0:
                 layer_markers_list.extend(self.layer_entry_marker + layer[0].v)
 
@@ -262,9 +257,9 @@ class GcodeModel(Model):
             if callback and layer_idx % callback_every == 0:
                 callback(layer_idx + 1, num_layers)
 
-        self.vertices      = numpy.array(vertex_list,        'f')
-        self.colors        = numpy.array(color_list,         'f')
-        self.arrows        = numpy.array(arrow_list,         'f')
+        self.vertices = numpy.array(vertex_list, 'f')
+        self.colors = numpy.array(color_list, 'f')
+        self.arrows = numpy.array(arrow_list, 'f')
         self.layer_markers = numpy.array(layer_markers_list, 'f')
 
         # by translating the arrow vertices outside of the loop, we achieve a
@@ -276,11 +271,11 @@ class GcodeModel(Model):
         assert len(self.arrows) == ((len(self.vertices) // 2) * 3), \
             'The 2:3 ratio of model vertices to arrow vertices does not hold.'
 
-        self.max_layers         = len(self.layer_stops) - 1
+        self.max_layers = len(self.layer_stops) - 1
         self.num_layers_to_draw = self.max_layers
-        self.arrows_enabled     = True
-        self.initialized        = False
-        self.vertex_count       = len(self.vertices)
+        self.arrows_enabled = True
+        self.initialized = False
+        self.vertex_count = len(self.vertices)
 
         t_end = time.time()
 
@@ -300,13 +295,13 @@ class GcodeModel(Model):
                            move.flags & Movement.FLAG_PERIMETER_OUTER)
 
         if extruder_on and outer_perimeter:
-            color = (0.0, 0.875, 0.875, 0.6) # cyan
+            color = (0.0, 0.875, 0.875, 0.6)  # cyan
         elif extruder_on and move.flags & Movement.FLAG_PERIMETER:
-            color = (0.0, 1.0, 0.0, 0.6) # green
+            color = (0.0, 1.0, 0.0, 0.6)  # green
         elif extruder_on and move.flags & Movement.FLAG_LOOP:
-            color = (1.0, 0.875, 0.0, 0.6) # yellow
+            color = (1.0, 0.875, 0.0, 0.6)  # yellow
         elif extruder_on:
-            color = (1.0, 0.0, 0.0, 0.6) # red
+            color = (1.0, 0.0, 0.0, 0.6)  # red
 
         return color
 
@@ -315,12 +310,12 @@ class GcodeModel(Model):
     # ------------------------------------------------------------------------
 
     def init(self):
-        self.vertex_buffer       = VBO(self.vertices, 'GL_STATIC_DRAW')
-        self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW') # each pair of vertices shares the color
+        self.vertex_buffer = VBO(self.vertices, 'GL_STATIC_DRAW')
+        self.vertex_color_buffer = VBO(self.colors.repeat(2, 0), 'GL_STATIC_DRAW')  # each pair of vertices shares the color
 
         if self.arrows_enabled:
-            self.arrow_buffer       = VBO(self.arrows, 'GL_STATIC_DRAW')
-            self.arrow_color_buffer = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW') # each triplet of vertices shares the color
+            self.arrow_buffer = VBO(self.arrows, 'GL_STATIC_DRAW')
+            self.arrow_color_buffer = VBO(self.colors.repeat(3, 0), 'GL_STATIC_DRAW')  # each triplet of vertices shares the color
 
         self.layer_marker_buffer = VBO(self.layer_markers, 'GL_STATIC_DRAW')
 
@@ -356,18 +351,16 @@ class GcodeModel(Model):
         glColorPointer(4, GL_FLOAT, 0, None)
 
         if mode_2d:
-            glScale(1.0, 1.0, 0.0) # discard z coordinates
+            glScale(1.0, 1.0, 0.0)  # discard z coordinates
             start = self.layer_stops[self.num_layers_to_draw - 1]
-            end   = self.layer_stops[self.num_layers_to_draw]
-
+            end = self.layer_stops[self.num_layers_to_draw]
             glDrawArrays(GL_LINES, start, end - start)
 
         elif mode_ortho:
             if elevation >= 0:
                 # draw layers in normal order, bottom to top
                 start = 0
-                end   = self.layer_stops[self.num_layers_to_draw]
-
+                end = self.layer_stops[self.num_layers_to_draw]
                 glDrawArrays(GL_LINES, start, end - start)
 
             else:
@@ -375,21 +368,18 @@ class GcodeModel(Model):
                 stop_idx = self.num_layers_to_draw - 1
                 while stop_idx >= 0:
                     start = self.layer_stops[stop_idx]
-                    end   = self.layer_stops[stop_idx + 1]
-
+                    end = self.layer_stops[stop_idx + 1]
                     glDrawArrays(GL_LINES, start, end - start)
-
                     stop_idx -= 1
 
-        else: # 3d projection mode
+        else:  # 3d projection mode
             reverse_threshold_layer = self._layer_up_to_height(eye_height - self.offset_z)
 
             if reverse_threshold_layer >= 0:
                 # draw layers up to (and including) the threshold in normal order, bottom to top
                 normal_layers_to_draw = min(self.num_layers_to_draw, reverse_threshold_layer + 1)
                 start = 0
-                end   = self.layer_stops[normal_layers_to_draw]
-
+                end = self.layer_stops[normal_layers_to_draw]
                 glDrawArrays(GL_LINES, start, end - start)
 
             if reverse_threshold_layer + 1 < self.num_layers_to_draw:
@@ -397,10 +387,8 @@ class GcodeModel(Model):
                 stop_idx = self.num_layers_to_draw - 1
                 while stop_idx > reverse_threshold_layer:
                     start = self.layer_stops[stop_idx]
-                    end   = self.layer_stops[stop_idx + 1]
-
+                    end = self.layer_stops[stop_idx + 1]
                     glDrawArrays(GL_LINES, start, end - start)
-
                     stop_idx -= 1
 
         self.vertex_buffer.unbind()
@@ -422,7 +410,7 @@ class GcodeModel(Model):
         glColorPointer(4, GL_FLOAT, 0, None)
 
         start = (self.layer_stops[self.num_layers_to_draw - 1] // 2) * 3
-        end   = (self.layer_stops[self.num_layers_to_draw] // 2) * 3
+        end = (self.layer_stops[self.num_layers_to_draw] // 2) * 3
 
         glDrawArrays(GL_TRIANGLES, start, end - start)
 
@@ -434,7 +422,7 @@ class GcodeModel(Model):
         glVertexPointer(3, GL_FLOAT, 0, None)
 
         start = self.layer_marker_stops[self.num_layers_to_draw - 1]
-        end   = self.layer_marker_stops[self.num_layers_to_draw]
+        end = self.layer_marker_stops[self.num_layers_to_draw]
 
         glColor4f(0.6, 0.6, 0.6, 0.6)
         glDrawArrays(GL_TRIANGLES, start, end - start)
@@ -452,7 +440,7 @@ class StlModel(Model):
         vertices, normals = model_data
         # convert python lists to numpy arrays for constructing vbos
         self.vertices = numpy.require(vertices, 'f')
-        self.normals  = numpy.require(normals, 'f')
+        self.normals = numpy.require(normals, 'f')
 
         self.scaling_factor = 1.0
         self.rotation_angle = {
@@ -461,8 +449,8 @@ class StlModel(Model):
             self.AXIS_Z: 0.0,
         }
 
-        self.mat_specular   = (1.0, 1.0, 1.0, 1.0)
-        self.mat_shininess  = 50.0
+        self.mat_specular = (1.0, 1.0, 1.0, 1.0)
+        self.mat_shininess = 50.0
         self.light_position = (20.0, 20.0, 20.0)
 
         self.vertex_count = len(self.vertices)
@@ -537,7 +525,7 @@ class StlModel(Model):
 
         glColor(1.0, 1.0, 1.0)
 
-        ### VBO stuff
+        # Begin VBO stuff
 
         self.vertex_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, None)
@@ -554,7 +542,7 @@ class StlModel(Model):
         self.normal_buffer.unbind()
         self.vertex_buffer.unbind()
 
-        ### end VBO stuff
+        # End VBO stuff
 
         glDisable(GL_LIGHT1)
         glDisable(GL_LIGHT0)
@@ -620,4 +608,3 @@ class StlModel(Model):
         self.vertices = self.vertices.dot(final_matrix)
         self.invalidate_bounding_box()
         self.modified = True
-

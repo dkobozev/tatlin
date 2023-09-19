@@ -74,5 +74,6 @@ class GcodeLexerTest(unittest.TestCase):
         result = list(self.lexer.scan())
         self.assertEqual(len(result), 3)
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -18,7 +18,6 @@
 Gcode parser.
 """
 
-from __future__ import division
 
 import time
 import logging
@@ -28,6 +27,7 @@ import array
 
 class GcodeParserError(Exception):
     pass
+
 
 class GcodeArgumentError(GcodeParserError):
     pass
@@ -146,12 +146,12 @@ class Movement(object):
     Movement represents travel between two points and machine state during
     travel.
     """
-    FLAG_PERIMETER       = 1
+    FLAG_PERIMETER = 1
     FLAG_PERIMETER_OUTER = 2
-    FLAG_LOOP            = 4
-    FLAG_SURROUND_LOOP   = 8
-    FLAG_EXTRUDER_ON     = 16
-    FLAG_INCHES          = 32
+    FLAG_LOOP = 4
+    FLAG_SURROUND_LOOP = 8
+    FLAG_EXTRUDER_ON = 16
+    FLAG_INCHES = 32
 
     # tell the python interpreter to only allocate memory for the following attributes
     __slots__ = ['v', 'delta_e', 'feedrate', 'flags']
@@ -159,14 +159,14 @@ class Movement(object):
     def __init__(self, v, delta_e, feedrate, flags=0):
         self.v = v
 
-        self.delta_e  = delta_e
+        self.delta_e = delta_e
         self.feedrate = feedrate
-        self.flags    = flags
+        self.flags = flags
 
     def angle(self, start, precision=0):
         x = self.v[0] - start[0]
         y = self.v[1] - start[1]
-        angle = math.degrees(math.atan2(y, -x)) # negate x for clockwise rotation angle
+        angle = math.degrees(math.atan2(y, -x))  # negate x for clockwise rotation angle
         return round(angle, precision)
 
     def __str__(self):
@@ -180,23 +180,23 @@ class Movement(object):
 
 class GcodeParser(object):
 
-    marker_layer                  = '</layer>'
-    marker_perimeter_start        = '<perimeter>'
-    marker_perimeter_end          = '</perimeter>)'
-    marker_loop_start             = '<loop>'
-    marker_loop_end               = '</loop>'
+    marker_layer = '</layer>'
+    marker_perimeter_start = '<perimeter>'
+    marker_perimeter_end = '</perimeter>)'
+    marker_loop_start = '<loop>'
+    marker_loop_end = '</loop>'
     marker_surrounding_loop_start = '<surroundingLoop>'
-    marker_surrounding_loop_end   = '</surroundingLoop>'
+    marker_surrounding_loop_end = '</surroundingLoop>'
 
     def __init__(self):
         self.lexer = GcodeLexer()
 
-        self.args      = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'F': 0, 'E': 0})
-        self.offset    = {'X': 0, 'Y': 0, 'Z': 0, 'E': 0}
-        self.src       = None
-        self.flags     = 0
+        self.args = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'F': 0, 'E': 0})
+        self.offset = {'X': 0, 'Y': 0, 'Z': 0, 'E': 0}
+        self.src = None
+        self.flags = 0
         self.set_flags = self.set_flags_skeinforge
-        self.relative  = False
+        self.relative = False
 
     def load(self, src):
         self.lexer.load(src)
@@ -221,7 +221,7 @@ class GcodeParser(object):
                 self.set_flags = self.set_flags_slic3r
 
             args = self.update_args(self.args, newargs)
-            dst  = self.command_coords(gcode, args, newargs)
+            dst = self.command_coords(gcode, args, newargs)
             delta_e = args['E'] - self.args['E']
             self.set_flags(command)
 
@@ -273,8 +273,8 @@ class GcodeParser(object):
     def update_args(self, oldargs, newargs):
         args = oldargs.copy()
 
-        for axis in newargs.keys():
-            if args.has_key(axis) and newargs[axis] is not None:
+        for axis in list(newargs.keys()):
+            if axis in args and newargs[axis] is not None:
                 if self.relative:
                     args[axis] += newargs[axis]
                 else:
@@ -283,12 +283,12 @@ class GcodeParser(object):
         return args
 
     def command_coords(self, gcode, args, newargs):
-        if gcode in ('G0', 'G00', 'G1', 'G01'): # move
+        if gcode in ('G0', 'G00', 'G1', 'G01'):  # move
             coords = (self.offset['X'] + args['X'],
                       self.offset['Y'] + args['Y'],
                       self.offset['Z'] + args['Z'])
             return coords
-        elif gcode == 'G28': # move to origin
+        elif gcode == 'G28':  # move to origin
             if newargs['X'] is None and newargs['Y'] is None and newargs['Z'] is None:
                 # if no coordinates specified, move all axes to origin
                 return (self.offset['X'], self.offset['Y'], self.offset['Z'])
@@ -299,17 +299,17 @@ class GcodeParser(object):
                 y = self.offset['Y'] if newargs['Y'] is not None else args['Y']
                 z = self.offset['Z'] if newargs['Z'] is not None else args['Z']
                 return (x, y, z)
-        elif gcode == 'G90': # set to absolute positioning
+        elif gcode == 'G90':  # set to absolute positioning
             self.relative = False
-        elif gcode == 'G91': # set to relative positioning
+        elif gcode == 'G91':  # set to relative positioning
             self.relative = True
-        elif gcode == 'G92': # set position
+        elif gcode == 'G92':  # set position
             # G92 without coordinates resets all axes to zero
             if len(newargs) < 1:
                 newargs = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'E': 0})
 
-            for axis in newargs.keys():
-                if self.offset.has_key(axis):
+            for axis in list(newargs.keys()):
+                if axis in self.offset:
                     self.offset[axis] += self.args[axis] - newargs[axis]
                     self.args[axis] = newargs[axis]
 
@@ -343,10 +343,10 @@ class GcodeParser(object):
         elif self.marker_surrounding_loop_end in comment:
             self.flags &= ~Movement.FLAG_SURROUND_LOOP
 
-        elif gcode in ('M101', 'M3', 'M03', 'M4', 'M04'): # turn on extruder/spindle
+        elif gcode in ('M101', 'M3', 'M03', 'M4', 'M04'):  # turn on extruder/spindle
             self.flags |= Movement.FLAG_EXTRUDER_ON
 
-        elif gcode in ('M103', 'M5', 'M05'): # turn off extruder/spindle
+        elif gcode in ('M103', 'M5', 'M05'):  # turn off extruder/spindle
             self.flags &= ~Movement.FLAG_EXTRUDER_ON
 
         elif gcode == 'G20':
