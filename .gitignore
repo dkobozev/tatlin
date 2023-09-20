@@ -1,9 +1,35 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# virtual environments
+venv/
+*.venv
+env/
+ENV/
+
+# environment variables
+.env
+
 # MacOS
 .DS_Store
 
-# Python
-*.pyc
-*.prof
+# Windows
+.Thumbs.db
+Desktop.ini
 
-# 2to3
-*.py.bak
+# Linux
+*.swp
+*.swo
+
+# Editors and IDEs
+.idea/
+.vscode/
+
+# misc
+*.bak
+*.log
+*.tmp
+*.prof
