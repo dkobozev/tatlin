@@ -3,6 +3,8 @@
 *.pyo
 *.pyd
 __pycache__/
+*.egg-info/
+*.egg
 
 # virtual environments
 venv/
@@ -33,3 +35,5 @@ Desktop.ini
 *.log
 *.tmp
 *.prof
+
+/dist/

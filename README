@@ -1,13 +1,11 @@
-Tatlin
-======
+# Tatlin
 
 Tatlin is a Gcode and STL viewer heavily inspired by Mac-only software
 Pleasant3D. Besides viewing, it also supports rotating and scaling of STL
 files. It is currently in early stages of development, but should already
 be quite usable.
 
-Dependencies
-------------
+## Dependencies
 
 Tatlin requires the following packages:
 
@@ -16,8 +14,7 @@ Tatlin requires the following packages:
 - PyOpenGL
 - NumPy
 
-Usage
------
+## Usage
 
 To launch Tatlin from the command line:
 
@@ -29,10 +26,10 @@ You can also provide a filename to load:
 
 Mouse navigation
 
-* Left mouse button to rotate
-* Mouse wheel to zoom
-* Middle mouse button to offset the platform
-* Right mouse button to pan
+- Left mouse button to rotate
+- Mouse wheel to zoom
+- Middle mouse button to offset the platform
+- Right mouse button to pan
 
 Build platform size can be customized by creating a file called `.tatlin` in
 your home directory with the following contents:
@@ -41,8 +38,7 @@ your home directory with the following contents:
     platform_w = 300
     platform_d = 300
 
-Thanks
--------
+## Thanks
 
-* Lenbok for config file options
-* Bartosz Zaborowski for the two digit Gcode patch
+- Lenbok for config file options
+- Bartosz Zaborowski for the two digit Gcode patch
