@@ -2,10 +2,22 @@ Source: tatlin
 Section: utils
 Priority: optional
 Maintainer: Denis Kobozev <d.v.kobozev@gmail.com>
-Build-Depends: debhelper (>= 9)
-Standards-Version: 3.9.6
+Build-Depends-Indep:
+ dh-python,
+ python3-all,
+ python3-setuptools
+Build-Depends:
+ debhelper (>= 11)
+Standards-Version: 4.4.0
 
 Package: tatlin
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python3-numpy, python3-pil, python3-opengl, python3-six, python3-wxgtk4.0
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python3-numpy,
+ python3-pil,
+ python3-opengl,
+ python3-six,
+ python3-wxgtk4.0
 Description: Lightweight Gcode and STL viewer for 3D printing
