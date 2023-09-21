@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
 
     - name: Setup Python
       uses: actions/setup-python@v2
@@ -33,7 +33,6 @@ jobs:
     - name: Build DEB package
       run: |
         dpkg-buildpackage -b -rfakeroot -us -uc
-        pwd
 
     - name: Upload DEB package as artifact
       uses: actions/upload-artifact@v2
@@ -41,10 +40,11 @@ jobs:
         name: debian-package
         path: /home/runner/work/tatlin/*_all.deb
 
-    - name: Setup GitHub CLI
-      run: gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
-
+    # The GitHub CLI is pre-installed on GitHub-hosted runners.
+    # https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
     - name: Create GitHub Release and Upload DEB package
       run: |
         gh release create ${{ github.ref }} /home/runner/work/tatlin/*_all.deb --title "Release ${{ github.ref }}" --notes "Release of ${{ github.ref }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
