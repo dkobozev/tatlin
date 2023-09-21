@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - '*'
-    branches:
-      - deb
 
 jobs:
   build:
