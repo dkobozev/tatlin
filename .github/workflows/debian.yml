@@ -40,13 +40,21 @@ jobs:
         name: debian-package
         path: /home/runner/work/tatlin/*_all.deb
 
+    - name: Get commit messages
+      continue-on-error: true  # Continue even if there is no previous tag
+      run: |
+        git fetch --tags
+        PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
+        COMMIT_MESSAGES=$(git log --pretty=format:"- %s" ${PREVIOUS_TAG}..HEAD)
+        echo "{COMMIT_MESSAGES}=${COMMIT_MESSAGES}" >> "$GITHUB_ENV"
+
     # The GitHub CLI is pre-installed on GitHub-hosted runners.
     # https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
     - name: Create GitHub Release and Upload DEB package
       run: |
         TAG_NAME=${{ github.ref }}
         TAG_NAME=${TAG_NAME##refs/tags/}
-        gh release create $TAG_NAME /home/runner/work/tatlin/*_all.deb --title "$TAG_NAME" --notes "Release of $TAG_NAME"
+        gh release create $TAG_NAME /home/runner/work/tatlin/*_all.deb --title "$TAG_NAME" --notes "Changes:\n${COMMIT_MESSAGES}}"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
