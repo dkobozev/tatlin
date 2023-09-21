@@ -20,6 +20,9 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
+        sudo apt-get install debhelper
+        sudo apt-get install dh-python
+        sudo apt-get install python3-all
         sudo apt-get install python3-dev
         sudo apt-get install python3-setuptools
         sudo apt-get install python3-numpy
