@@ -621,7 +621,7 @@ class OpenDialog(wx.FileDialog):
 
     def __init__(self, parent, directory=None):
         super(OpenDialog, self).__init__(parent, 'Open',
-                wildcard='Gcode and STL files (*.gcode;*.nc;*.stl)|*.gcode;*.nc;*.stl|Gcode files (*.*)|*.*|STL files (*.*)|*.*',
+                wildcard='G-code and STL files (*.gcode;*.nc;*.stl)|*.gcode;*.nc;*.stl|G-code files (*.*)|*.*|STL files (*.*)|*.*',
                 style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
 
         if directory is not None:

@@ -8,7 +8,7 @@ setup(
     version="0.2.5",
     author="Denis Kobozev",
     author_email="d.v.kobozev@gmail.com",
-    description="Lightweight Gcode and STL viewer for 3D printing",
+    description="Lightweight G-code and STL viewer for 3D printing",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dkobozev/tatlin",

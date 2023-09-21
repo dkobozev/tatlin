@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Tatlin
+GenericName=G-code Viewer
+Comment=Lightweight G-code and STL viewer
+Exec=tatlin
+MimeType=text/plain;text/x-gcode;application/x-gcode;model/stl;model/x.stl-ascii;model/x.stl-binary
+Terminal=false
+Type=Application
+Icon=/usr/lib/python3/dist-packages/tatlin/tatlin-logo.png
+Categories=Utility

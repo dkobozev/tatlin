@@ -1,0 +1,44 @@
+name: Build Debian package
+
+on:
+  push:
+    branches:
+      - deb
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install python3-dev
+        sudo apt-get install python3-setuptools
+        sudo apt-get install python3-numpy
+        sudo apt-get install python3-opengl
+        sudo apt-get install python3-pil
+        sudo apt-get install python3-six
+
+    - name: Build DEB package
+      run: dpkg-buildpackage -b -rfakeroot -us -uc
+
+    - name: Upload DEB package as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: debian-package
+        path: ../*_all.deb
+
+    - name: Setup GitHub CLI
+      run: gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create GitHub Release and Upload DEB package
+      run: |
+        gh release create ${{ github.ref }} ../*_all.deb --title "Release ${{ github.ref }}" --notes "Release of ${{ github.ref }}"

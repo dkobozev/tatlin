@@ -1,6 +1,6 @@
 # Tatlin
 
-Tatlin is a Gcode and STL viewer heavily inspired by Mac-only software
+Tatlin is a G-code and STL viewer heavily inspired by Mac-only software
 Pleasant3D. Besides viewing, it also supports rotating and scaling of STL
 files. It is currently in early stages of development, but should already
 be quite usable.
@@ -41,4 +41,4 @@ your home directory with the following contents:
 ## Thanks
 
 - Lenbok for config file options
-- Bartosz Zaborowski for the two digit Gcode patch
+- Bartosz Zaborowski for the two digit G-code patch

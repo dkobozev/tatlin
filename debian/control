@@ -20,4 +20,5 @@ Depends:
  python3-opengl,
  python3-six,
  python3-wxgtk4.0
-Description: Lightweight Gcode and STL viewer for 3D printing
+Description: Lightweight G-code and STL viewer for 3D printing.
+ Supports rotating and scaling of STL files.
