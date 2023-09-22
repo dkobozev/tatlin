@@ -11,6 +11,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+      with:
+        fetch-depth: 0 # fetch all history so that we can get the commit messages
 
     - name: Setup Python
       uses: actions/setup-python@v2
@@ -45,11 +47,11 @@ jobs:
       run: |
         git fetch --tags
         PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
-        {
-          echo 'COMMIT_MESSAGES<<EOF'
-          git log --pretty=format:"- %s" ${PREVIOUS_TAG}..HEAD
-          echo EOF
-        } >> "$GITHUB_ENV"
+        COMMIT_MESSAGES=$(git log --pretty=format:"- %s" ${PREVIOUS_TAG}..HEAD)
+        echo "COMMIT_MESSAGES=${COMMIT_MESSAGES}"
+        echo "COMMIT_MESSAGES<<EOF" >> $GITHUB_ENV
+        echo "${COMMIT_MESSAGES}" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
     # The GitHub CLI is pre-installed on GitHub-hosted runners.
     # https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
