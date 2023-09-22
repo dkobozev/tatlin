@@ -49,7 +49,7 @@ jobs:
           echo 'COMMIT_MESSAGES<<EOF'
           git log --pretty=format:"- %s" ${PREVIOUS_TAG}..HEAD
           echo EOF
-        } >> $GITHUB_ENV
+        } >> "$GITHUB_ENV"
 
     # The GitHub CLI is pre-installed on GitHub-hosted runners.
     # https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
