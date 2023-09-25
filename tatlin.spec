@@ -13,7 +13,7 @@ BuildArch:      noarch
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 
-Requires:       python3-wxpython4 python3-numpy python3-pyopengl python3-pillow python3-six
+Requires:       python3-wxpython4 python3-numpy python3-pyopengl python3-pillow python3-six mesa-libOSMesa
 
 %description
 Lightweight G-code and STL viewer for 3D printing.
