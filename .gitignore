@@ -1,8 +1,8 @@
 # Python
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 __pycache__/
+*.egg-info/
+*.egg
 
 # virtual environments
 venv/
@@ -17,7 +17,7 @@ ENV/
 .DS_Store
 
 # Windows
-.Thumbs.db
+Thumbs.db
 Desktop.ini
 
 # Linux
@@ -33,3 +33,9 @@ Desktop.ini
 *.log
 *.tmp
 *.prof
+
+# distutils
+MANIFEST
+/build/
+/dist/
+.pybuild/
