@@ -5,3 +5,4 @@ export PYBUILD_NAME=tatlin
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
+	dh_install tatlin/tatlin-logo.png usr/share/icons/hicolor/scalable/apps/tatlin.png

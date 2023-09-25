@@ -1,0 +1,79 @@
+name: Build Packages and Create Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install debhelper
+          sudo apt-get install dh-python
+          sudo apt-get install python3-all
+          sudo apt-get install python3-dev
+          sudo apt-get install python3-setuptools
+          sudo apt-get install python3-numpy
+          sudo apt-get install python3-opengl
+          sudo apt-get install python3-pil
+          sudo apt-get install python3-six
+
+      - name: Build DEB package
+        run: |
+          dpkg-buildpackage -b -rfakeroot -us -uc
+
+      - name: Upload DEB package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: deb-package
+          path: /home/runner/work/tatlin/*_all.deb
+
+  create-release:
+    needs: [build-deb]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+        with:
+          fetch-depth: 0 # fetch all history so that we can get the commit messages
+
+      - name: Get commit messages
+        continue-on-error: true  # Continue even if there is no previous tag
+        run: |
+          git fetch --tags
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" ${PREVIOUS_TAG}..HEAD)
+          echo "COMMIT_MESSAGES=${COMMIT_MESSAGES}"
+          echo "COMMIT_MESSAGES<<EOF" >> $GITHUB_ENV
+          echo "${COMMIT_MESSAGES}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Download DEB package
+        uses: actions/download-artifact@v3
+        with:
+          name: deb-package
+          path: ./packages/
+
+      # The GitHub CLI is pre-installed on GitHub-hosted runners.
+      # https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
+      - name: Create GitHub Release and Upload DEB package
+        run: |
+          TAG_NAME=${{ github.ref }}
+          TAG_NAME=${TAG_NAME##refs/tags/}
+          gh release create $TAG_NAME /home/runner/work/tatlin/packages/* --title "$TAG_NAME" --notes "Changes:"$'\n'"$COMMIT_MESSAGES" --draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
