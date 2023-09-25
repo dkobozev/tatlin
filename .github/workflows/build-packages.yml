@@ -51,13 +51,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-
       - name: Install dependencies
         run: |
+          sudo dnf install -y python3
           sudo dnf install -y rpm-build
           sudo dnf install -y python3-devel
           sudo dnf install -y python3-wxpython4
@@ -68,19 +64,20 @@ jobs:
 
       - name: Build RPM package
         run: |
+          cd $GITHUB_WORKSPACE
           VERSION=$(rpm -q --specfile tatlin.spec --qf %{VERSION})
-          cd /__w/tatlin
           mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
           cp tatlin/tatlin.spec rpmbuild/SPECS/
           mv tatlin tatlin-$VERSION
           tar -czvf rpmbuild/SOURCES/tatlin-$VERSION.tar.gz tatlin-$VERSION
           rpmbuild -ba rpmbuild/SPECS/tatlin.spec
+        shell: bash
 
       - name: Upload RPM package as artifact
         uses: actions/upload-artifact@v2
         with:
           name: rpm-package
-          path: /__w/tatlin/rpmbuild/RPMS/noarch/*.rpm
+          path: ${{ github.workspace }}/rpmbuild/RPMS/noarch/*.rpm
 
   create-release:
     needs: [ build-deb, build-rpm ]
