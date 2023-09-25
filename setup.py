@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-with open("README", "r", encoding="utf-8") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
@@ -15,7 +15,7 @@ setup(
     packages=find_packages(),
     package_data={
         "tatlin": [
-            "tatlin-logo.png",
+            "tatlin.png",
         ]
     },
     classifiers=[
@@ -24,12 +24,12 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",
-    install_requiees=[
+    install_requires=[
         "wxPython==4.2.1",
         "numpy==1.25.2",
         "Pillow==10.0.1",
         "PyOpenGL==3.1.7",
-        "six==1.16.0",
+        "six>=1.16.0",
     ],
     entry_points={
         "console_scripts": [

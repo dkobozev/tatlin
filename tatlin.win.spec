@@ -17,7 +17,7 @@ exe = EXE(pyz,
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
-               a.datas + [ ('tatlin-logo.png',          'tatlin-logo.png',  'DATA')
+               a.datas + [ ('tatlin/tatlin.png',          'tatlin/tatlin.png',  'DATA')
 
                          , ('tests/data/gcode/slic3r.gcode',        'tests/data/gcode/slic3r.gcode',        'DATA')
                          , ('tests/data/gcode/top.gcode',           'tests/data/gcode/top.gcode',           'DATA')

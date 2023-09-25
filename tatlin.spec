@@ -27,7 +27,7 @@ python3 setup.py build
 %install
 python3 setup.py install --skip-build --root $RPM_BUILD_ROOT
 install -Dm644 tatlin.desktop %{buildroot}/usr/share/applications/tatlin.desktop
-install -Dm644 tatlin/tatlin-logo.png %{buildroot}/usr/share/icons/hicolor/scalable/apps/tatlin.png
+install -Dm644 tatlin/tatlin.png %{buildroot}/usr/share/icons/hicolor/scalable/apps/tatlin.png
 
 %files
 %{python3_sitelib}/tatlin/

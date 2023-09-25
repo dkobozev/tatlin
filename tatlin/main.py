@@ -72,7 +72,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         # ---------------------------------------------------------------------
 
         self.window = MainWindow()
-        self.icon = load_icon(resolve_path('tatlin-logo.png'))
+        self.icon = load_icon(resolve_path('tatlin.png'))
         self.window.set_icon(self.icon)
 
         # ---------------------------------------------------------------------
