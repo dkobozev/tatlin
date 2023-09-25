@@ -70,7 +70,8 @@ jobs:
           mkdir /github/home/tatlin-$VERSION
           cp -r * /github/home/tatlin-$VERSION
           tar -czvf /github/home/rpmbuild/SOURCES/tatlin-$VERSION.tar.gz /github/home/tatlin-$VERSION
-          rpmbuild -ba /github/home/rpmbuild/SPECS/tatlin.spec
+          cd /github/home
+          rpmbuild -ba rpmbuild/SPECS/tatlin.spec
         shell: bash
 
       - name: Upload RPM package as artifact
