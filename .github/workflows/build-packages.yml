@@ -65,13 +65,12 @@ jobs:
       - name: Build RPM package
         run: |
           VERSION=$(rpm -q --specfile tatlin.spec --qf %{VERSION})
-          cd /__w/tatlin
-          mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-          cp tatlin/tatlin.spec rpmbuild/SPECS/
-          mv tatlin tatlin-$VERSION
-          tar -czvf rpmbuild/SOURCES/tatlin-$VERSION.tar.gz tatlin-$VERSION
-          echo test
-          rpmbuild -ba rpmbuild/SPECS/tatlin.spec
+          mkdir -p /github/home/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          cp tatlin.spec /github/home/rpmbuild/SPECS/
+          mkdir /github/home/tatlin-$VERSION
+          cp -r * /github/home/tatlin-$VERSION
+          tar -czvf /github/home/rpmbuild/SOURCES/tatlin-$VERSION.tar.gz /github/home/tatlin-$VERSION
+          rpmbuild -ba /github/home/rpmbuild/SPECS/tatlin.spec
         shell: bash
 
       - name: Upload RPM package as artifact
