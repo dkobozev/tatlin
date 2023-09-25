@@ -67,7 +67,7 @@ jobs:
 
       - name: Build RPM package
         run: |
-          ls -la
+          pwd
 
   create-release:
     needs: [ build-deb, build-rpm ]
