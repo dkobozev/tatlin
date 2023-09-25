@@ -58,6 +58,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo dnf install -y rpm-build
           sudo dnf install -y python3-devel
           sudo dnf install -y python3-wxpython4
           sudo dnf install -y python3-numpy
