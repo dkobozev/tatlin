@@ -64,12 +64,13 @@ jobs:
 
       - name: Build RPM package
         run: |
-          cd $GITHUB_WORKSPACE
           VERSION=$(rpm -q --specfile tatlin.spec --qf %{VERSION})
+          cd /__w/tatlin
           mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
           cp tatlin/tatlin.spec rpmbuild/SPECS/
           mv tatlin tatlin-$VERSION
           tar -czvf rpmbuild/SOURCES/tatlin-$VERSION.tar.gz tatlin-$VERSION
+          echo test
           rpmbuild -ba rpmbuild/SPECS/tatlin.spec
         shell: bash
 
