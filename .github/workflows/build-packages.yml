@@ -74,6 +74,7 @@ jobs:
         run: |
           TAG_NAME=${{ github.ref }}
           TAG_NAME=${TAG_NAME##refs/tags/}
-          gh release create $TAG_NAME /home/runner/work/tatlin/packages/* --title "$TAG_NAME" --notes "Changes:"$'\n'"$COMMIT_MESSAGES" --draft
+          pwd
+          gh release create $TAG_NAME /home/runner/work/tatlin/tatlin/packages/* --title "$TAG_NAME" --notes "Changes:"$'\n'"$COMMIT_MESSAGES" --draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
