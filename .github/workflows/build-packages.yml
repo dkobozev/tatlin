@@ -58,12 +58,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo dnf install python3-devel
-          sudo dnf install python3-wxpython4
-          sudo dnf install python3-numpy
-          sudo dnf install python3-pyopengl
-          sudo dnf install python3-pillow
-          sudo dnf install python3-six
+          sudo dnf install -y python3-devel
+          sudo dnf install -y python3-wxpython4
+          sudo dnf install -y python3-numpy
+          sudo dnf install -y python3-pyopengl
+          sudo dnf install -y python3-pillow
+          sudo dnf install -y python3-six
 
       - name: Build RPM package
         run: |
