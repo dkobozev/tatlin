@@ -69,8 +69,8 @@ jobs:
           cp tatlin.spec /github/home/rpmbuild/SPECS/
           mkdir /github/home/tatlin-$VERSION
           cp -r * /github/home/tatlin-$VERSION
-          tar -czvf /github/home/rpmbuild/SOURCES/tatlin-$VERSION.tar.gz /github/home/tatlin-$VERSION
           cd /github/home
+          tar -czvf rpmbuild/SOURCES/tatlin-$VERSION.tar.gz tatlin-$VERSION
           rpmbuild -ba rpmbuild/SPECS/tatlin.spec
         shell: bash
 
@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rpm-package
-          path: ${{ github.workspace }}/rpmbuild/RPMS/noarch/*.rpm
+          path: /github/home/rpmbuild/RPMS/noarch/*.rpm
 
   create-release:
     needs: [ build-deb, build-rpm ]
