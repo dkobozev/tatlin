@@ -25,10 +25,10 @@ setup(
     ],
     python_requires=">=3.6",
     install_requires=[
-        "wxPython==4.2.1",
-        "numpy==1.25.2",
-        "Pillow==10.0.1",
-        "PyOpenGL==3.1.7",
+        "wxPython>=4.2.0",
+        "numpy>=1.24.4",
+        "Pillow>=9.4.0",
+        "PyOpenGL>=3.1.6",
         "six>=1.16.0",
     ],
     entry_points={

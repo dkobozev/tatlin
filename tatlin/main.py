@@ -21,6 +21,10 @@ import os
 import os.path
 import logging
 
+from .config.rendering import configure_backend
+
+configure_backend()
+
 from .libtatlin.actors import Platform
 from .libtatlin.scene import Scene
 from .libtatlin.ui import load_icon, BaseApp, MainWindow, StlPanel, GcodePanel, \

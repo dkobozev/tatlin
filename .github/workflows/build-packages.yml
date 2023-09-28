@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
@@ -41,8 +41,47 @@ jobs:
           name: deb-package
           path: /home/runner/work/tatlin/*_all.deb
 
+  build-rpm:
+    runs-on: ubuntu-latest
+
+    container:
+      image: fedora:38
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo dnf install -y python3
+          sudo dnf install -y rpm-build
+          sudo dnf install -y python3-devel
+          sudo dnf install -y python3-wxpython4
+          sudo dnf install -y python3-numpy
+          sudo dnf install -y python3-pyopengl
+          sudo dnf install -y python3-pillow
+          sudo dnf install -y python3-six
+
+      - name: Build RPM package
+        run: |
+          VERSION=$(rpm -q --specfile tatlin.spec --qf %{VERSION})
+          mkdir -p /github/home/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          cp tatlin.spec /github/home/rpmbuild/SPECS/
+          mkdir /github/home/tatlin-$VERSION
+          cp -r * /github/home/tatlin-$VERSION
+          cd /github/home
+          tar -czvf rpmbuild/SOURCES/tatlin-$VERSION.tar.gz tatlin-$VERSION
+          rpmbuild -ba rpmbuild/SPECS/tatlin.spec
+        shell: bash
+
+      - name: Upload RPM package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: rpm-package
+          path: /github/home/rpmbuild/RPMS/noarch/*.rpm
+
   create-release:
-    needs: [build-deb]
+    needs: [ build-deb, build-rpm ]
     runs-on: ubuntu-latest
 
     steps:
@@ -66,6 +105,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: deb-package
+          path: ./packages/
+
+      - name: Download RPM package
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm-package
           path: ./packages/
 
       # The GitHub CLI is pre-installed on GitHub-hosted runners.
