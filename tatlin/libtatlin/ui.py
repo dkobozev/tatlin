@@ -750,7 +750,10 @@ class AboutDialog(object):
 class BaseScene(glcanvas.GLCanvas):
 
     def __init__(self, parent):
-        super(BaseScene, self).__init__(parent, self._get_display_attributes())
+        try: # the new way
+            super(BaseScene, self).__init__(parent, self._get_display_attributes())
+        except AttributeError: # the old way
+            super(BaseScene, self).__init__(parent, attribList=self._get_attrib_list())
 
         self.Hide()
 
@@ -779,12 +782,24 @@ class BaseScene(glcanvas.GLCanvas):
 
     @staticmethod
     def _get_display_attributes():
+        """Get the display attributes when using wxPython 4.1 or later."""
         for depth in [32, 24, 16, 8]:
             dispAttrs = glcanvas.GLAttributes()
             dispAttrs.PlatformDefaults().DoubleBuffer().Depth(depth).EndList()
 
             if glcanvas.GLCanvas.IsDisplaySupported(dispAttrs):
                 return dispAttrs
+        else:
+            raise Exception('No suitable depth buffer value found')
+
+    @staticmethod
+    def _get_attrib_list():
+        """Get the display attributes when using wxPython 4.0 or earlier."""
+        for depth in [32, 24, 16, 8]:
+            attrib_list = [glcanvas.WX_GL_RGBA, glcanvas.WX_GL_DOUBLEBUFFER, glcanvas.WX_GL_DEPTH_SIZE, depth, 0]
+
+            if glcanvas.GLCanvas.IsDisplaySupported(attrib_list):
+                return attrib_list
         else:
             raise Exception('No suitable depth buffer value found')
 
