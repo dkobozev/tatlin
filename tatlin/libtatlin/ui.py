@@ -19,7 +19,7 @@
 import wx
 import wx.adv
 from wx import glcanvas
-
+from wx.glcanvas import WX_GL_DEPTH_SIZE
 
 # this variable is set when the app is instantiated so that all the ui elements
 # in this module can easily reference the app
@@ -750,7 +750,8 @@ class AboutDialog(object):
 class BaseScene(glcanvas.GLCanvas):
 
     def __init__(self, parent):
-        super(BaseScene, self).__init__(parent, -1, size=(128, 128))
+        super(BaseScene, self).__init__(parent, self._get_display_attributes())
+
         self.Hide()
 
         self.initialized = False
@@ -775,6 +776,17 @@ class BaseScene(glcanvas.GLCanvas):
         for method in methods:
             if not hasattr(self, method):
                 raise Exception('Method %s() is not implemented' % method)
+
+    @staticmethod
+    def _get_display_attributes():
+        for depth in [32, 24, 16, 8]:
+            dispAttrs = glcanvas.GLAttributes()
+            dispAttrs.PlatformDefaults().DoubleBuffer().Depth(depth).EndList()
+
+            if glcanvas.GLCanvas.IsDisplaySupported(dispAttrs):
+                return dispAttrs
+        else:
+            raise Exception('No suitable depth buffer value found')
 
     def invalidate(self):
         self.Refresh(False)
