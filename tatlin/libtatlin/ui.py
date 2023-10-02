@@ -483,8 +483,8 @@ class MainWindow(wx.Frame):
         file_menu = wx.Menu()
         item_open = file_menu.Append(wx.ID_OPEN, '&Open', 'Open file')
         self.recent_files_menu = wx.Menu()
-        self.recent_files_item = file_menu.AppendMenu(wx.ID_ANY, '&Recent files',
-                                                      self.recent_files_menu)
+        self.recent_files_item = file_menu.Append(wx.ID_ANY, '&Recent files',
+                                                  self.recent_files_menu)
         item_save = file_menu.Append(wx.ID_SAVE, '&Save', 'Save changes')
         item_save.Enable(False)
         item_save_as = file_menu.Append(wx.ID_SAVEAS, 'Save As...\tShift+Ctrl+S',

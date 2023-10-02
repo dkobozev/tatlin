@@ -45,7 +45,6 @@ class Config(object):
         section, option = self._parse_specifier(key)
         if not self.config.has_section(section):
             self.config.add_section(section)
-        print(f"Section:{section} Value: {val}")
         if isinstance(val, int):
             val = str(val)
         self.config.set(section, option, val)
