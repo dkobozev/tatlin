@@ -1,5 +1,5 @@
 Name:           tatlin
-Version:        0.2.5
+Version:        0.3.0
 Release:        1%{?dist}
 Summary:        Lightweight G-code and STL viewer for 3D printing.
 
@@ -37,5 +37,5 @@ install -Dm644 tatlin/tatlin.png %{buildroot}/usr/share/icons/hicolor/scalable/a
 /usr/share/icons/hicolor/scalable/apps/tatlin.png
 
 %changelog
-* Fri Sep 22 2023 Denis Kobozev <d.v.kobozev@gmail.com> - 0.2.5
-- Initial package for Fedora 38
+* Tue Oct 3 2023 Denis Kobozev <d.v.kobozev@gmail.com> - 0.3.0
+- First RPM package build
