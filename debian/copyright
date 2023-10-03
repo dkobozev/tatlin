@@ -1,0 +1,7 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Tatlin
+Source: https://dkobozev.github.io/tatlin/
+
+Files: *
+Copyright: Copyright 2011 Denis Kobozev <d.v.kobozev@gmail.com>
+License: GPL-2

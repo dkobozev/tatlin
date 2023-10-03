@@ -27,14 +27,14 @@ python3 setup.py build
 %install
 python3 setup.py install --skip-build --root $RPM_BUILD_ROOT
 install -Dm644 tatlin.desktop %{buildroot}/usr/share/applications/tatlin.desktop
-install -Dm644 tatlin/tatlin.png %{buildroot}/usr/share/icons/hicolor/scalable/apps/tatlin.png
+install -Dm644 tatlin/tatlin.png %{buildroot}/usr/share/icons/hicolor/64x64/apps/tatlin.png
 
 %files
 %{python3_sitelib}/tatlin/
 %{python3_sitelib}/tatlin-*.egg-info/
 /usr/bin/tatlin
 /usr/share/applications/tatlin.desktop
-/usr/share/icons/hicolor/scalable/apps/tatlin.png
+/usr/share/icons/hicolor/64x64/apps/tatlin.png
 
 %changelog
 * Tue Oct 3 2023 Denis Kobozev <d.v.kobozev@gmail.com> - 0.3.0
