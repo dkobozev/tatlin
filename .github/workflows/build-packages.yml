@@ -80,6 +80,40 @@ jobs:
           name: rpm-package
           path: /github/home/rpmbuild/RPMS/noarch/*.rpm
 
+  build-win:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          .\venv\Scripts\activate.bat
+          pip install -r requirements-win.txt
+          pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL-3.1.6-cp311-cp311-win_amd64.whl
+          pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL_accelerate-3.1.6-cp311-cp311-win_amd64.whl
+          pip install cx_Freeze
+        shell: cmd
+
+      - name: Build Windows package
+        run: |
+          .\venv\Scripts\activate.bat
+          cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate
+          zip -r tatlin-win.zip dist
+
+      - name: Upload Windows package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: win-package
+          path: tatlin-win.zip
+
   create-release:
     needs: [ build-deb, build-rpm ]
     runs-on: ubuntu-latest

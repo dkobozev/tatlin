@@ -40,12 +40,8 @@ def format_float(f):
 def resolve_path(fpath):
     if os.path.isabs(fpath):
         return fpath
-    if getattr(sys, 'frozen', False):
-        # we are running in a PyInstaller bundle
-        basedir = sys._MEIPASS
-    else:
-        # we are running in a normal Python environment
-        basedir = os.path.dirname(__file__)
+
+    basedir = os.path.dirname(__file__)
     return os.path.join(basedir, fpath)
 
 

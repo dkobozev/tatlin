@@ -21,10 +21,16 @@ import wx.adv
 from wx import glcanvas
 from wx.glcanvas import WX_GL_DEPTH_SIZE
 
+# prevent blurriness on MSW, see: https://bugs.python.org/msg317775
+import ctypes
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(True)
+except:
+    pass
+
 # this variable is set when the app is instantiated so that all the ui elements
 # in this module can easily reference the app
 app = None
-
 
 def load_icon(fpath):
     return wx.Icon(fpath, wx.BITMAP_TYPE_PNG)
