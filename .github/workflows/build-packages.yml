@@ -107,6 +107,7 @@ jobs:
           .\venv\Scripts\activate.bat
           cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate
           zip -r tatlin-win.zip dist
+          dir
         shell: cmd
 
       - name: Upload Windows package as artifact
