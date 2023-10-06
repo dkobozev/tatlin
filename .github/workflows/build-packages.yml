@@ -103,10 +103,11 @@ jobs:
         shell: cmd
 
       - name: Build Windows package
-        run: |
-          .\venv\Scripts\activate.bat
-          cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate
-          zip -r tatlin-win.zip dist
+        run: cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate
+        shell: cmd
+
+      - name: Zip Windows package
+        run: zip -r tatlin-win.zip dist
         shell: cmd
 
       - name: List directory contents
