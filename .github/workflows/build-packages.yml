@@ -110,7 +110,7 @@ jobs:
         shell: cmd
 
       - name: List directory contents
-        run: dir ./dist /s
+        run: dir
         shell: cmd
 
       - name: Upload Windows package as artifact
