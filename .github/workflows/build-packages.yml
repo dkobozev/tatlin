@@ -92,14 +92,28 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m venv venv
-          .\venv\Scripts\activate.bat
-          pip install -r requirements-win.txt
-          pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL-3.1.6-cp311-cp311-win_amd64.whl
-          pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL_accelerate-3.1.6-cp311-cp311-win_amd64.whl
-          pip install cx_Freeze
+      - name: Create virtual environment
+        run: python -m venv venv
+        shell: cmd
+
+      - name: Activate virtual environment
+        run: .\venv\Scripts\activate.bat
+        shell: cmd
+
+      - name: Install dependencies using pip
+        run: pip install -r requirements-win.txt
+        shell: cmd
+
+      - name: Install PyOpenGL
+        run: pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL-3.1.6-cp311-cp311-win_amd64.whl
+        shell: cmd
+
+      - name: Install PyOpenGL_accelerate
+        run: pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL_accelerate-3.1.6-cp311-cp311-win_amd64.whl
+        shell: cmd
+
+      - name: Install cx_Freeze
+        run: pip install cx_Freeze
         shell: cmd
 
       - name: Build Windows package
