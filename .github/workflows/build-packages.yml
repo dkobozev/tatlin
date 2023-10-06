@@ -107,17 +107,20 @@ jobs:
           .\venv\Scripts\activate.bat
           cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate
           zip -r tatlin-win.zip dist
-          dir
+        shell: cmd
+
+      - name: List directory contents
+        run: dir ./dist /s
         shell: cmd
 
       - name: Upload Windows package as artifact
         uses: actions/upload-artifact@v2
         with:
           name: win-package
-          path: tatlin-win.zip
+          path: ./tatlin-win.zip
 
   create-release:
-    needs: [ build-deb, build-rpm ]
+    needs: [ build-deb, build-rpm, build-win ]
     runs-on: ubuntu-latest
 
     steps:
@@ -149,9 +152,15 @@ jobs:
           name: rpm-package
           path: ./packages/
 
+      - name: Download Windows package
+        uses: actions/download-artifact@v3
+        with:
+          name: win-package
+          path: ./packages/
+
       # The GitHub CLI is pre-installed on GitHub-hosted runners.
       # https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
-      - name: Create GitHub Release and Upload DEB package
+      - name: Create GitHub Release and Upload Packages
         run: |
           TAG_NAME=${{ github.ref }}
           TAG_NAME=${TAG_NAME##refs/tags/}
