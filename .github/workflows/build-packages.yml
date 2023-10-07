@@ -117,7 +117,7 @@ jobs:
         shell: cmd
 
       - name: Build Windows package
-        run: pyinstaller --icon=tatlin.ico tatlin.win.spec
+        run: pyinstaller tatlin.win.spec
         shell: cmd
 
       - name: Zip Windows package
