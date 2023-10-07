@@ -41,7 +41,13 @@ def resolve_path(fpath):
     if os.path.isabs(fpath):
         return fpath
 
-    basedir = os.path.dirname(__file__)
+    if getattr(sys, 'frozen', False):
+        # we are running in a PyInstaller bundle
+        basedir = sys._MEIPASS
+    else:
+        # we are running in a normal Python environment
+        basedir = os.path.dirname(__file__)
+
     return os.path.join(basedir, fpath)
 
 

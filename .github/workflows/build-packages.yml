@@ -112,12 +112,12 @@ jobs:
         run: pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL_accelerate-3.1.6-cp311-cp311-win_amd64.whl
         shell: cmd
 
-      - name: Install cx_Freeze
-        run: pip install cx_Freeze
+      - name: Install pyinstaller
+        run: pip install pyinstaller
         shell: cmd
 
       - name: Build Windows package
-        run: cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate,wx._core
+        run: pyinstaller --icon=tatlin.ico tatlin.win.spec
         shell: cmd
 
       - name: Zip Windows package
