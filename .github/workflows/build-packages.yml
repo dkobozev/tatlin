@@ -128,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: win-package
-          path: ./tatlin-win.zip
+          path: ./dist/tatlin-win.zip
 
   create-release:
     needs: [build-deb, build-rpm, build-win]
