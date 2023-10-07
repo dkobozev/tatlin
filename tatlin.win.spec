@@ -20,7 +20,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas
     + [
-        ("tatlin/tatlin.png", "tatlin/tatlin.png", "DATA"),
+        ("tatlin/tatlin.png", "tatlin.png", "DATA"),
         ("tests/data/gcode/slic3r.gcode", "tests/data/gcode/slic3r.gcode", "DATA"),
         ("tests/data/gcode/top.gcode", "tests/data/gcode/top.gcode", "DATA"),
         ("tests/data/stl/top.stl", "tests/data/stl/top.stl", "DATA"),

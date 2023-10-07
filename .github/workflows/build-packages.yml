@@ -3,7 +3,7 @@ name: Build Packages and Create Release
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 jobs:
   build-deb:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install dependencies
         run: |
@@ -90,7 +90,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Create virtual environment
         run: python -m venv venv
@@ -121,7 +121,7 @@ jobs:
         shell: cmd
 
       - name: Zip Windows package
-        run: 7z a tatlin-win.zip dist
+        run: 7z a tatlin-win.zip dist/tatlin
         shell: cmd
 
       - name: Upload Windows package as artifact
@@ -131,7 +131,7 @@ jobs:
           path: ./tatlin-win.zip
 
   create-release:
-    needs: [ build-deb, build-rpm, build-win ]
+    needs: [build-deb, build-rpm, build-win]
     runs-on: ubuntu-latest
 
     steps:
@@ -141,7 +141,7 @@ jobs:
           fetch-depth: 0 # fetch all history so that we can get the commit messages
 
       - name: Get commit messages
-        continue-on-error: true  # Continue even if there is no previous tag
+        continue-on-error: true # Continue even if there is no previous tag
         run: |
           git fetch --tags
           PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
