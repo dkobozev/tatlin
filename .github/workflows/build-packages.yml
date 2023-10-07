@@ -117,7 +117,7 @@ jobs:
         shell: cmd
 
       - name: Build Windows package
-        run: cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate
+        run: cxfreeze -c tatlin.py --target-dir dist --packages=OpenGL,OpenGL_accelerate,wx,PIL,numpy
         shell: cmd
 
       - name: Zip Windows package
