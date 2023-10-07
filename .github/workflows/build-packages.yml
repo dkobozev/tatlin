@@ -121,7 +121,7 @@ jobs:
         shell: cmd
 
       - name: Zip Windows package
-        run: 7z a tatlin-win.zip dist/tatlin
+        run: cd dist & 7z a tatlin-win.zip tatlin
         shell: cmd
 
       - name: Upload Windows package as artifact

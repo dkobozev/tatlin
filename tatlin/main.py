@@ -43,7 +43,7 @@ def resolve_path(fpath):
 
     if getattr(sys, 'frozen', False):
         # we are running in a PyInstaller bundle
-        basedir = sys._MEIPASS
+        basedir = os.path.join(sys._MEIPASS, 'tatlin')
     else:
         # we are running in a normal Python environment
         basedir = os.path.dirname(__file__)
