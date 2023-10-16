@@ -3,7 +3,7 @@ name: Build Packages and Create Release
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 jobs:
   build-deb:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install dependencies
         run: |
@@ -80,8 +80,58 @@ jobs:
           name: rpm-package
           path: /github/home/rpmbuild/RPMS/noarch/*.rpm
 
+  build-win:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Create virtual environment
+        run: python -m venv venv
+        shell: cmd
+
+      - name: Activate virtual environment
+        run: .\venv\Scripts\activate.bat
+        shell: cmd
+
+      - name: Install dependencies using pip
+        run: pip install -r requirements-win.txt
+        shell: cmd
+
+      - name: Install PyOpenGL
+        run: pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL-3.1.6-cp311-cp311-win_amd64.whl
+        shell: cmd
+
+      - name: Install PyOpenGL_accelerate
+        run: pip install https://download.lfd.uci.edu/pythonlibs/archived/PyOpenGL_accelerate-3.1.6-cp311-cp311-win_amd64.whl
+        shell: cmd
+
+      - name: Install pyinstaller
+        run: pip install pyinstaller
+        shell: cmd
+
+      - name: Build Windows package
+        run: pyinstaller tatlin.win.spec
+        shell: cmd
+
+      - name: Zip Windows package
+        run: cd dist & 7z a tatlin-win.zip tatlin
+        shell: cmd
+
+      - name: Upload Windows package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: win-package
+          path: ./dist/tatlin-win.zip
+
   create-release:
-    needs: [ build-deb, build-rpm ]
+    needs: [build-deb, build-rpm, build-win]
     runs-on: ubuntu-latest
 
     steps:
@@ -91,7 +141,7 @@ jobs:
           fetch-depth: 0 # fetch all history so that we can get the commit messages
 
       - name: Get commit messages
-        continue-on-error: true  # Continue even if there is no previous tag
+        continue-on-error: true # Continue even if there is no previous tag
         run: |
           git fetch --tags
           PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
@@ -113,9 +163,15 @@ jobs:
           name: rpm-package
           path: ./packages/
 
+      - name: Download Windows package
+        uses: actions/download-artifact@v3
+        with:
+          name: win-package
+          path: ./packages/
+
       # The GitHub CLI is pre-installed on GitHub-hosted runners.
       # https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows
-      - name: Create GitHub Release and Upload DEB package
+      - name: Create GitHub Release and Upload Packages
         run: |
           TAG_NAME=${{ github.ref }}
           TAG_NAME=${TAG_NAME##refs/tags/}
