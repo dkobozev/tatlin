@@ -146,7 +146,7 @@ jobs:
         run: python -m venv venv
 
       - name: Activate virtual environment
-        run: ./venv/bin/activate
+        run: source venv/bin/activate
 
       - name: Install dependencies using pip
         run: pip install -r requirements.txt
