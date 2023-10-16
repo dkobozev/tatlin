@@ -130,8 +130,41 @@ jobs:
           name: win-package
           path: ./dist/tatlin-win.zip
 
+  build-mac:
+    runs-on: mac-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Create virtual environment
+        run: python -m venv venv
+
+      - name: Activate virtual environment
+        run: ./venv/bin/activate
+
+      - name: Install dependencies using pip
+        run: pip install -r requirements.txt
+
+      - name: Install pyinstaller
+        run: pip install pyinstaller
+
+      - name: Build Mac package
+        run: pyinstaller tatlin.mac.spec
+
+      - name: Upload Mac package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: mac-package
+          path: ./dist/tatlin.app
+
   create-release:
-    needs: [build-deb, build-rpm, build-win]
+    needs: [build-deb, build-rpm, build-win, build-mac]
     runs-on: ubuntu-latest
 
     steps:
@@ -167,6 +200,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: win-package
+          path: ./packages/
+
+      - name: Download Mac package
+        uses: actions/download-artifact@v3
+        with:
+          name: mac-package
           path: ./packages/
 
       # The GitHub CLI is pre-installed on GitHub-hosted runners.
