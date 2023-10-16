@@ -12,7 +12,6 @@ exe = EXE(
     strip=None,
     upx=True,
     console=False,
-    icon="tatlin.ico",
 )
 coll = COLLECT(
     exe,
@@ -29,4 +28,4 @@ coll = COLLECT(
     upx=True,
     name="tatlin",
 )
-app = BUNDLE(coll, name="tatlin.app", icon=None)
+app = BUNDLE(coll, name="tatlin.app")
