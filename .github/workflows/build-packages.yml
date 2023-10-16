@@ -157,11 +157,14 @@ jobs:
       - name: Build Mac package
         run: pyinstaller tatlin.mac.spec
 
+      - name: Zip Mac package
+        run: cd dist & 7z a tatlin-mac.zip tatlin.app
+
       - name: Upload Mac package as artifact
         uses: actions/upload-artifact@v2
         with:
           name: mac-package
-          path: ./dist/tatlin.app
+          path: ./dist/tatlin-mac.zip
 
   create-release:
     needs: [build-deb, build-rpm, build-win, build-mac]
