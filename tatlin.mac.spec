@@ -24,7 +24,7 @@ coll = COLLECT(
         ("tests/data/gcode/top.gcode", "tests/data/gcode/top.gcode", "DATA"),
         ("tests/data/stl/top.stl", "tests/data/stl/top.stl", "DATA"),
     ],
-    strip=None,
+    strip=False,
     upx=True,
     name="tatlin",
 )
