@@ -9,7 +9,7 @@ exe = EXE(
     exclude_binaries=True,
     name="tatlin",
     debug=False,
-    strip=None,
+    strip=False,
     upx=True,
     console=False,
 )
