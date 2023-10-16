@@ -161,7 +161,7 @@ jobs:
         run: ls -l dist
 
       - name: Zip Mac package
-        run: cd dist & 7z a tatlin-mac.zip tatlin.app
+        run: cd dist && 7z a tatlin-mac.zip tatlin.app
 
       - name: Upload Mac package as artifact
         uses: actions/upload-artifact@v2
