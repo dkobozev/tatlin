@@ -28,4 +28,4 @@ coll = COLLECT(
     upx=True,
     name="tatlin",
 )
-app = BUNDLE(coll, name="tatlin.app")
+app = BUNDLE(coll, name="tatlin.app", icon="tatlin.icns", bundle_identifier="com.tatlin")
