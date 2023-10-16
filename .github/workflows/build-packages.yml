@@ -157,6 +157,9 @@ jobs:
       - name: Build Mac package
         run: pyinstaller tatlin.mac.spec
 
+      - name: List dir
+        run: ls -l dist
+
       - name: Zip Mac package
         run: cd dist & 7z a tatlin-mac.zip tatlin.app
 
