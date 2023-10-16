@@ -131,7 +131,7 @@ jobs:
           path: ./dist/tatlin-win.zip
 
   build-mac:
-    runs-on: mac-latest
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
