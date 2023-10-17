@@ -10,7 +10,7 @@ exe = EXE(
     name="tatlin",
     debug=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=False,
 )
 coll = COLLECT(
@@ -25,7 +25,7 @@ coll = COLLECT(
         ("tests/data/stl/top.stl", "tests/data/stl/top.stl", "DATA"),
     ],
     strip=False,
-    upx=True,
+    upx=False,
     name="tatlin",
 )
 app = BUNDLE(coll, name="tatlin.app", icon="tatlin.icns", bundle_identifier="com.tatlin")
