@@ -183,11 +183,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install python3-wxpython4
-          sudo apt-get install python3-numpy
-          sudo apt-get install python3-opengl
-          sudo apt-get install python3-pil
-          sudo apt-get install python3-six
+          pip install -r requirements.txt
+          pip install pyinstaller
 
       - name: Build AppImage
         run: |
