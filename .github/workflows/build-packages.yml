@@ -169,8 +169,48 @@ jobs:
           name: mac-package
           path: ./dist/tatlin-mac.zip
 
+  build-appimage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install python3-wxpython4
+          sudo apt-get install python3-numpy
+          sudo apt-get install python3-opengl
+          sudo apt-get install python3-pil
+          sudo apt-get install python3-six
+
+      - name: Build AppImage
+        run: |
+          pyinstaller --onefile tatlin.py
+
+          # Download AppImage tools
+          wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -O linuxdeployqt
+          chmod a+x linuxdeployqt
+
+          # Create an AppDir structure
+          mkdir -p AppDir/usr/bin
+          cp dist/tatlin AppDir/usr/bin/
+
+          ./linuxdeployqt AppDir/usr/bin/tatlin -appimage
+
+      - name: Upload AppImage as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: appimage-package
+          path: tatlin-x86_64.AppImage
+
   create-release:
-    needs: [build-deb, build-rpm, build-win, build-mac]
+    needs: [build-deb, build-rpm, build-win, build-mac, build-appimage]
     runs-on: ubuntu-latest
 
     steps:
@@ -212,6 +252,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: mac-package
+          path: ./packages/
+
+      - name: Download AppImage package
+        uses: actions/download-artifact@v3
+        with:
+          name: appimage-package
           path: ./packages/
 
       # The GitHub CLI is pre-installed on GitHub-hosted runners.
