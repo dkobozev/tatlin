@@ -170,7 +170,7 @@ jobs:
           path: ./dist/tatlin-mac.zip
 
   build-appimage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout code
@@ -191,13 +191,13 @@ jobs:
           sudo apt install libfuse2
           pip install pyinstaller
 
-      - name: Build AppImage
-        run: |
-          pyinstaller --onefile tatlin.py
-
           # Download AppImage tools
           wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -O linuxdeployqt
           chmod a+x linuxdeployqt
+
+      - name: Build AppImage
+        run: |
+          pyinstaller --onefile tatlin.py
 
           # Create an AppDir structure
           mkdir -p AppDir/usr/bin
