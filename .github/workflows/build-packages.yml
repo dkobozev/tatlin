@@ -202,6 +202,8 @@ jobs:
           # Create an AppDir structure
           mkdir -p AppDir/usr/bin
           cp dist/tatlin AppDir/usr/bin/
+          cp tatlin.desktop AppDir/usr/share/applications/
+          cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
 
           ./linuxdeployqt AppDir/usr/bin/tatlin -appimage
 
