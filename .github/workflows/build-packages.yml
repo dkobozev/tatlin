@@ -196,8 +196,8 @@ jobs:
           pip install pyinstaller
 
           # Download AppImage tools
-          wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -O linuxdeployqt
-          chmod a+x linuxdeployqt
+          wget --no-verbose "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" -O linuxdeploy
+          chmod +x linuxdeploy
 
       - name: Build AppImage
         run: |
@@ -212,7 +212,7 @@ jobs:
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
 
-          ./linuxdeployqt AppDir/usr/bin/tatlin -appimage
+          ./linuxdeploy --appdir AppDir --output appimage
 
       - name: Upload AppImage as artifact
         uses: actions/upload-artifact@v2
