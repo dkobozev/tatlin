@@ -183,12 +183,16 @@ jobs:
 
       - name: Install Tatlin dependencies
         run: |
-          sudo apt install libgtk-3-dev
-          pip install -r requirements.txt
+          sudo apt-get install libgtk-3-dev
+          sudo apt-get install python3-wxgtk4.0
+          sudo apt-get install python3-numpy
+          sudo apt-get install python3-opengl
+          sudo apt-get install python3-pil
+          sudo apt-get install python3-six
 
       - name: Install build dependencies
         run: |
-          sudo apt install libfuse2
+          sudo apt-get install libfuse2
           pip install pyinstaller
 
           # Download AppImage tools
@@ -201,6 +205,9 @@ jobs:
 
           # Create an AppDir structure
           mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications/
+          mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
+
           cp dist/tatlin AppDir/usr/bin/
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
