@@ -181,10 +181,14 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install dependencies
+      - name: Install Tatlin dependencies
         run: |
           sudo apt install libgtk-3-dev
           pip install -r requirements.txt
+
+      - name: Install build dependencies
+        run: |
+          sudo apt install libfuse2
           pip install pyinstaller
 
       - name: Build AppImage
