@@ -218,7 +218,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: appimage-package
-          path: tatlin-x86_64.AppImage
+          path: Tatlin-x86_64.AppImage
 
   create-release:
     needs: [build-deb, build-rpm, build-win, build-mac, build-appimage]
