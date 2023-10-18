@@ -6,5 +6,5 @@ Exec=tatlin %f
 MimeType=text/plain;text/x-gcode;application/x-gcode;model/stl;model/x.stl-ascii;model/x.stl-binary
 Terminal=false
 Type=Application
-Icon=tatlin.png
+Icon=tatlin
 Categories=Utility
