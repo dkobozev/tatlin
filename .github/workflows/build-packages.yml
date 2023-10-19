@@ -197,7 +197,7 @@ jobs:
 
       - name: Install Tatlin dependencies
         run: |
-          sudo apt-get install python3-wxgtk4.0
+          pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
           pip install -r requirements-appimage.txt
 
       - name: Build AppImage
