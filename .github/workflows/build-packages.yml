@@ -213,10 +213,12 @@ jobs:
         run: |
           # Create an AppDir structure
           mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/opt/tatlin
           mkdir -p AppDir/usr/share/applications/
           mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
 
-          cp dist/tatlin AppDir/usr/bin/
+          mv dist/tatlin/* AppDir/usr/opt/tatlin/
+          ln -s /usr/opt/tatlin/tatlin AppDir/usr/bin/tatlin
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
 
