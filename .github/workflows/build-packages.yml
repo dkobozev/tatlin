@@ -192,7 +192,7 @@ jobs:
           sudo apt-get install \
             libfuse2 \
             libsdl2-2.0-0 \
-            libgdk-pixbuf-2.0-0
+            libgdk-pixbuf-2.0-dev
           pip install pyinstaller
 
           # Download AppImage tools
