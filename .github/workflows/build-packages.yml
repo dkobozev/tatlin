@@ -193,6 +193,9 @@ jobs:
             libfuse2 \
             libsdl2-2.0-0 \
             libgdk-pixbuf2.0-0
+
+          sudo /lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders --update-cache
+
           pip install pyinstaller
 
           # Download AppImage tools
