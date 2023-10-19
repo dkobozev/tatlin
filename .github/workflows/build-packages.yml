@@ -190,7 +190,8 @@ jobs:
         run: |
           sudo apt-get install \
             libfuse2 \
-            libsdl2-2.0-0
+            libsdl2-2.0-0 \
+            libgdk-pixbuf-2.0-0
           pip install pyinstaller
 
           # Download AppImage tools
@@ -202,11 +203,13 @@ jobs:
           pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
           pip install -r requirements-appimage.txt
 
-      - name: Build AppImage
+      - name: Run PyInstaller
         run: |
           # add gdk-pixbuf-2.0 to PATH to avoid errors, see: https://github.com/pyinstaller/pyinstaller/issues/4485
           env PATH="$PATH:/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0" pyinstaller -y tatlin-appimage.spec
 
+      - name: Build AppImage
+        run: |
           # Create an AppDir structure
           mkdir -p AppDir/usr/bin
           mkdir -p AppDir/usr/share/applications/
