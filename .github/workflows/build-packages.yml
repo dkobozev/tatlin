@@ -188,7 +188,9 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          sudo apt-get install libfuse2
+          sudo apt-get install \
+            libfuse2 \
+            libsdl2-2.0-0
           pip install pyinstaller
 
           # Download AppImage tools
