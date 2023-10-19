@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -179,16 +179,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
       - name: Install Tatlin dependencies
         run: |
-          sudo apt-get install libgtk-3-dev
-          sudo apt-get install python3-wxgtk4.0
-          sudo apt-get install python3-numpy
-          sudo apt-get install python3-opengl
-          sudo apt-get install python3-pil
-          sudo apt-get install python3-six
+          sudo apt-get install \
+            libgtk-3-dev \
+            python3-wxgtk4.0 \
+            python3-numpy \
+            python3-opengl \
+            python3-pil \
+            python3-six
 
       - name: Install build dependencies
         run: |
@@ -201,7 +202,7 @@ jobs:
 
       - name: Build AppImage
         run: |
-          pyinstaller --onefile tatlin.py
+          pyinstaller tatlin-appimage.spec
 
           # Create an AppDir structure
           mkdir -p AppDir/usr/bin
