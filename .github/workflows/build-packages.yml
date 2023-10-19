@@ -187,9 +187,6 @@ jobs:
       - name: Activate virtual environment
         run: source venv/bin/activate
 
-      - name: Install dependencies using pip
-        run: pip install -r requirements.txt
-
       - name: Install build dependencies
         run: |
           sudo apt-get install \
@@ -200,6 +197,9 @@ jobs:
           # Download AppImage tools
           wget --no-verbose "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" -O linuxdeploy
           chmod +x linuxdeploy
+
+      - name: Install dependencies using pip
+        run: pip install -r requirements.txt
 
       - name: Build AppImage
         run: |
