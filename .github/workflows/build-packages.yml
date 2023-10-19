@@ -218,7 +218,9 @@ jobs:
           mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
 
           mv dist/tatlin/* AppDir/usr/opt/tatlin/
-          ln -s /usr/opt/tatlin/tatlin AppDir/usr/bin/tatlin
+          cd AppDir/usr/bin
+          ln -s ../opt/tatlin/tatlin tatlin
+          cd ../../..
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
 
