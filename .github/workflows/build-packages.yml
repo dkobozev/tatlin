@@ -204,7 +204,7 @@ jobs:
 
           sudo apt-get install xdg-desktop-portal-gtk
 
-          pip install pyinstaller
+          pip install pyinstaller==6.1.0
 
           # Download AppImage tools
           wget --no-verbose "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" -O linuxdeploy
@@ -217,6 +217,7 @@ jobs:
 
       - name: Run PyInstaller
         run: |
+          export XDG_DATA_DIRS="/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/"
           # add gdk-pixbuf-2.0 to PATH to avoid errors, see: https://github.com/pyinstaller/pyinstaller/issues/4485
           env PATH="$PATH:/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0" pyinstaller -y tatlin-appimage.spec
 
