@@ -16,11 +16,6 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-try:
-    import gi.repostitory.GdkPixbuf
-except ImportError:
-    pass
-
 import sys
 import os
 import os.path
