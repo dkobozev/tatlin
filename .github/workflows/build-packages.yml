@@ -217,7 +217,9 @@ jobs:
 
       - name: Run PyInstaller
         run: |
-          export XDG_DATA_DIRS="/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/"
+          export XDG_DATA_DIRS="/usr/share/ubuntu:/usr/local/share/:/usr/share/:$XDG_DATA_DIRS"
+          export XDG_CONFIG_DIRS="/etc/xdg/xdg-ubuntu:/etc/xdg:$XDG_CONFIG_DIRS"
+
           # add gdk-pixbuf-2.0 to PATH to avoid errors, see: https://github.com/pyinstaller/pyinstaller/issues/4485
           env PATH="$PATH:/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0" pyinstaller -y tatlin-appimage.spec
 
