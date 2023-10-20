@@ -203,8 +203,8 @@ jobs:
 
       - name: Install Tatlin dependencies
         run: |
-          pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
-          pip install -r requirements-appimage.txt
+          # use prebuilt wxPython wheel to make the installation faster
+          pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 -r requirements.txt
 
       - name: Run PyInstaller
         run: |
@@ -218,10 +218,7 @@ jobs:
           mkdir -p AppDir/usr/share/applications/
           mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
 
-          mv dist/tatlin/* AppDir/usr/opt/tatlin/
-          cd AppDir/usr/bin
-          ln -s ../opt/tatlin/tatlin tatlin
-          cd ../../..
+          cp dist/tatlin AppDir/usr/bin/
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
 
