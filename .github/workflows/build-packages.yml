@@ -192,7 +192,11 @@ jobs:
           sudo apt-get install \
             libfuse2 \
             libsdl2-2.0-0 \
-            libgdk-pixbuf2.0-0
+            libgdk-pixbuf2.0-0 \
+            libgdk-pixbuf2.0-common \
+            shared-mime-info \
+            libjpeg8 \
+            libpng16-16
 
           sudo apt-get install shared-mime-info
           sudo update-mime-database /usr/share/mime
