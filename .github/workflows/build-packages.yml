@@ -194,26 +194,9 @@ jobs:
             libsdl2-2.0-0 \
             libclutter-gtk-1.0-0 \
             libcolord-gtk1 \
-            libdbusmenu-gtk3-4 \
-            libgtk-3-0 \
             libgtk-3-bin \
-            libgtk-3-common \
-            libgtk-4-1 \
-            libgtk-4-bin \
-            libgtk-4-common \
-            libgtk2.0-0 \
-            libgtk2.0-bin \
-            libgtk2.0-common \
-            libgtk3-perl \
-            libgtkmm-3.0-1v5 \
-            libjavascriptcoregtk-4.0-18 \
             xdg-desktop-portal-gtk \
-            xdg-user-dirs-gtk \
-            gir1.2-gdkpixbuf-2.0 \
-            gtk2-engines-pixbuf \
-            libgdk-pixbuf-2.0-0 \
-            libgdk-pixbuf2.0-bin \
-            libgdk-pixbuf2.0-common
+            xdg-user-dirs-gtk
 
           sudo apt-get install shared-mime-info
           sudo update-mime-database /usr/share/mime
