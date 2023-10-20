@@ -197,17 +197,9 @@ jobs:
             gir1.2-gtk-4.0 \
             gir1.2-gtksource-4 \
             gir1.2-javascriptcoregtk-4.0 \
-            gstreamer1.0-gtk3 \
             gtk-update-icon-cache \
             gtk2-engines-murrine \
             gtk2-engines-pixbuf \
-            ibus-gtk3 \
-            ibus-gtk4 \
-            ibus-gtk \
-            libavahi-ui-gtk3-0 \
-            libcanberra-gtk3-0 \
-            libcanberra-gtk3-module \
-            libcheese-gtk25 \
             libclutter-gtk-1.0-0 \
             libcolord-gtk1 \
             libdbusmenu-gtk3-4 \
@@ -222,16 +214,9 @@ jobs:
             libgtk2.0-common \
             libgtk3-perl \
             libgtkmm-3.0-1v5 \
-            libgtksourceview-4-0 \
-            libgtksourceview-4-common \
             libjavascriptcoregtk-4.0-18 \
-            libwebkit2gtk-4.0-37 \
-            libwmf-0.2-7-gtk \
-            libwmf0.2-7-gtk \
-            python3-aptdaemon.gtk3widgets \
             xdg-desktop-portal-gtk \
             xdg-user-dirs-gtk \
-            yaru-theme-gtk \
             gir1.2-gdkpixbuf-2.0 \
             gtk2-engines-pixbuf \
             libgdk-pixbuf-2.0-0 \
