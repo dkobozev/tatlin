@@ -192,18 +192,13 @@ jobs:
           sudo apt-get install \
             libfuse2 \
             libsdl2-2.0-0 \
-            libgdk-pixbuf2.0-0 \
-            libgdk-pixbuf2.0-common \
-            shared-mime-info \
-            libjpeg8 \
-            libpng16-16
+            libgdk-pixbuf2.0-dev
 
           sudo apt-get install shared-mime-info
           sudo update-mime-database /usr/share/mime
           sudo /lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders --update-cache
 
           sudo apt-get install xdg-desktop-portal-gtk
-          sudo apt-get install gnome
 
           pip install pyinstaller==6.1.0
 
