@@ -192,9 +192,6 @@ jobs:
           sudo apt-get install \
             libfuse2 \
             libsdl2-2.0-0 \
-            libclutter-gtk-1.0-0 \
-            libcolord-gtk1 \
-            libgtk-3-bin \
             xdg-desktop-portal-gtk \
             xdg-user-dirs-gtk
 
