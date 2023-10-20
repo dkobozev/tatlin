@@ -192,14 +192,6 @@ jobs:
           sudo apt-get install \
             libfuse2 \
             libsdl2-2.0-0 \
-            apport-gtk \
-            gir1.2-gtk-3.0 \
-            gir1.2-gtk-4.0 \
-            gir1.2-gtksource-4 \
-            gir1.2-javascriptcoregtk-4.0 \
-            gtk-update-icon-cache \
-            gtk2-engines-murrine \
-            gtk2-engines-pixbuf \
             libclutter-gtk-1.0-0 \
             libcolord-gtk1 \
             libdbusmenu-gtk3-4 \
