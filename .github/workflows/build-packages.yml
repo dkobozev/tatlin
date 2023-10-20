@@ -203,7 +203,7 @@ jobs:
           sudo /lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders --update-cache
 
           sudo apt-get install xdg-desktop-portal-gtk
-          sudo apt-get install ubuntu-desktop-minimal
+          sudo apt-get install ubuntu-desktop
 
           pip install pyinstaller==6.1.0
 
