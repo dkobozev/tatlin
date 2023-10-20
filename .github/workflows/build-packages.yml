@@ -202,6 +202,8 @@ jobs:
           sudo update-mime-database /usr/share/mime
           sudo /lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders --update-cache
 
+          sudo apt-get install xdg-desktop-portal-gtk
+
           pip install pyinstaller
 
           # Download AppImage tools
