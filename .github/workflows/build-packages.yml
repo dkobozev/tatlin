@@ -195,10 +195,6 @@ jobs:
             xdg-desktop-portal-gtk \
             xdg-user-dirs-gtk
 
-          sudo apt-get install shared-mime-info
-          sudo update-mime-database /usr/share/mime
-          sudo /lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders --update-cache
-
           pip install pyinstaller==6.1.0
 
           # Download AppImage tools
