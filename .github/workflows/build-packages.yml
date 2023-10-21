@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+        uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -36,7 +36,7 @@ jobs:
           dpkg-buildpackage -b -rfakeroot -us -uc
 
       - name: Upload DEB package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: deb-package
           path: /home/runner/work/tatlin/*_all.deb
@@ -49,7 +49,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -75,7 +75,7 @@ jobs:
         shell: bash
 
       - name: Upload RPM package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: rpm-package
           path: /github/home/rpmbuild/RPMS/noarch/*.rpm
@@ -85,10 +85,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -125,7 +125,7 @@ jobs:
         shell: cmd
 
       - name: Upload Windows package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: win-package
           path: ./dist/tatlin-win.zip
@@ -135,10 +135,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -164,7 +164,7 @@ jobs:
         run: cd dist && 7z a tatlin-mac.zip tatlin.app
 
       - name: Upload Mac package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mac-package
           path: ./dist/tatlin-mac.zip
@@ -174,10 +174,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -228,7 +228,7 @@ jobs:
           ./linuxdeploy --appdir AppDir --output appimage
 
       - name: Upload AppImage as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: appimage-package
           path: Tatlin-x86_64.AppImage
@@ -239,7 +239,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+        uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
         with:
           fetch-depth: 0 # fetch all history so that we can get the commit messages
 

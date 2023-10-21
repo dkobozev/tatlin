@@ -31,6 +31,8 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+
+# onedir mode package appears to start faster than onefile mode
 coll = COLLECT(
     exe,
     a.binaries,
