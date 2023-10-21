@@ -11,12 +11,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+        uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -36,7 +36,7 @@ jobs:
           dpkg-buildpackage -b -rfakeroot -us -uc
 
       - name: Upload DEB package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: deb-package
           path: /home/runner/work/tatlin/*_all.deb
@@ -49,7 +49,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -75,7 +75,7 @@ jobs:
         shell: bash
 
       - name: Upload RPM package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: rpm-package
           path: /github/home/rpmbuild/RPMS/noarch/*.rpm
@@ -85,10 +85,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -125,7 +125,7 @@ jobs:
         shell: cmd
 
       - name: Upload Windows package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: win-package
           path: ./dist/tatlin-win.zip
@@ -135,10 +135,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -164,18 +164,82 @@ jobs:
         run: cd dist && 7z a tatlin-mac.zip tatlin.app
 
       - name: Upload Mac package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mac-package
           path: ./dist/tatlin-mac.zip
 
+  build-appimage:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Create virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            libfuse2 \
+            libsdl2-2.0-0 \
+            xdg-desktop-portal-gtk \
+            xdg-user-dirs-gtk
+
+          pip install pyinstaller==6.1.0
+
+          # Download AppImage tools
+          wget --no-verbose "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" -O linuxdeploy
+          chmod +x linuxdeploy
+
+      - name: Install Tatlin dependencies
+        run: |
+          # use prebuilt wxPython wheel to make the installation faster
+          pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 -r requirements.txt
+
+      - name: Run PyInstaller
+        run: |
+          pyinstaller -y tatlin-appimage.spec
+
+      - name: Build AppImage
+        run: |
+          # Create an AppDir structure
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/opt/tatlin
+          mkdir -p AppDir/usr/share/applications/
+          mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
+
+          mv dist/tatlin/* AppDir/usr/opt/tatlin/
+          cd AppDir/usr/bin
+          ln -s ../opt/tatlin/tatlin tatlin
+          cd ../../..
+          cp tatlin.desktop AppDir/usr/share/applications/
+          cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
+
+          ./linuxdeploy --appdir AppDir --output appimage
+
+      - name: Upload AppImage as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: appimage-package
+          path: Tatlin-x86_64.AppImage
+
   create-release:
-    needs: [build-deb, build-rpm, build-win, build-mac]
+    needs: [build-deb, build-rpm, build-win, build-mac, build-appimage]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+        uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
         with:
           fetch-depth: 0 # fetch all history so that we can get the commit messages
 
@@ -212,6 +276,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: mac-package
+          path: ./packages/
+
+      - name: Download AppImage package
+        uses: actions/download-artifact@v3
+        with:
+          name: appimage-package
           path: ./packages/
 
       # The GitHub CLI is pre-installed on GitHub-hosted runners.
