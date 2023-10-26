@@ -1,0 +1,29 @@
+# Maintainer: Denis Kobozev <d.v.kobozev at gmail.com>
+pkgname=tatlin
+pkgver=0.3.1
+pkgrel=1
+pkgdesc="3D STL and G-code viewer"
+arch=("any")
+url="https://github.com/dkobozev/tatlin"
+license=("GPL2")
+depends=("python-wxpython" "python-numpy" "python-pillow" "python-opengl" "python-six")
+makedepends=("python-setuptools")
+source=("$pkgname-$pkgver.tar.gz::https://github.com/dkobozev/tatlin/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=("6031c414ad401db661ace5fda0b2759470140dad18328ec45179dd37f6d5f2ba")
+
+build() {
+    cd "$pkgname-$pkgver"
+    python setup.py build
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+
+    install -d -m755 "${pkgdir}/usr/share/applications"
+    install -d -m755 "${pkgdir}/usr/share/icons/hicolor/64x64/apps/"
+
+    cp tatlin.desktop "${pkgdir}/usr/share/applications/tatlin.desktop"
+    cp ./tatlin/tatlin.png "${pkgdir}/usr/share/icons/hicolor/64x64/apps/"
+
+    python setup.py install --root="$pkgdir" --optimize=1
+}
