@@ -9,7 +9,7 @@ license=("GPL2")
 depends=("python-wxpython" "python-numpy" "python-pillow" "python-opengl" "python-six")
 makedepends=("python-setuptools")
 source=("$pkgname-$pkgver.tar.gz::https://github.com/dkobozev/tatlin/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=("6031c414ad401db661ace5fda0b2759470140dad18328ec45179dd37f6d5f2ba")
+sha256sums=("147771949da81c499a9eb56ebc207042d5a9f607a70db921f2df2c962b8af6f1")
 
 build() {
     cd "$pkgname-$pkgver"
