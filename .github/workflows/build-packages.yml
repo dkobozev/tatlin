@@ -225,6 +225,7 @@ jobs:
           cd ../../..
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
+          cp /usr/lib/x86_64-linux-gnu/libglut.so.* AppDir/usr/lib/x86_64-linux-gnu/
 
           ./linuxdeploy --appdir AppDir --output appimage
 
