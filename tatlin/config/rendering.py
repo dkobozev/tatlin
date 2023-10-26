@@ -29,7 +29,7 @@ def configure_backend():
         # use GLX as the default backend as wxWidgets does not support EGL under
         # X11 on Ubuntu and EGL GLUT support was only added to PyOpenGL in 3.1.7
         # see: https://github.com/mcfletch/pyopengl/commit/2d2457b4d565bce1c58b76b427e1f9027e8b4bcc
-        os.environ['PYOPENGL_PLATFORM'] = 'glx'
+        os.environ['PYOPENGL_PLATFORM'] = 'x11' # GLX
 
     # monkey-patch PyOpenGL's context retrieval - needed as of 3.1.7
     from OpenGL import contextdata
