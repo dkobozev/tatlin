@@ -1,19 +1,6 @@
 import os
 import sys
 
-from OpenGL import platform
-
-def __patched_get_context(context=None):
-    """getContext() replacement for monkey-patching until this is fixed in PyOpenGL."""
-    if context is None:
-        context = platform.GetCurrentContext()
-        if context is None: # fixed: 0 is a valid context-id
-            from OpenGL import error
-            raise error.Error(
-                """Attempt to retrieve context when no valid context"""
-            )
-    return context
-
 def configure_backend():
     if sys.platform != 'linux':
         return
@@ -25,6 +12,7 @@ def configure_backend():
     if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
         os.environ['GDK_BACKEND'] = 'x11'
 
+    # IMPORTANT: PYOPENGL_PLATFORM must be set before importing PyOpenGL
     if 'PYOPENGL_PLATFORM' not in os.environ:
         # use GLX as the default backend as wxWidgets does not support EGL under
         # X11 on Ubuntu and EGL GLUT support was only added to PyOpenGL in 3.1.7
@@ -32,5 +20,17 @@ def configure_backend():
         os.environ['PYOPENGL_PLATFORM'] = 'x11' # GLX
 
     # monkey-patch PyOpenGL's context retrieval - needed as of 3.1.7
-    from OpenGL import contextdata
-    contextdata.getContext = __patched_get_context
+    from OpenGL import platform, contextdata
+
+    def getContext(context=None):
+        """getContext() replacement for monkey-patching until this is fixed in PyOpenGL."""
+        if context is None:
+            context = platform.GetCurrentContext()
+            if context is None: # fixed: 0 is a valid context-id
+                from OpenGL import error
+                raise error.Error(
+                    """Attempt to retrieve context when no valid context"""
+                )
+        return context
+
+    contextdata.getContext = getContext
