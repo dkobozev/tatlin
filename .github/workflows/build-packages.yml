@@ -193,7 +193,8 @@ jobs:
             libfuse2 \
             libsdl2-2.0-0 \
             xdg-desktop-portal-gtk \
-            xdg-user-dirs-gtk
+            xdg-user-dirs-gtk \
+            freeglut3
 
           pip install pyinstaller==6.1.0
 
