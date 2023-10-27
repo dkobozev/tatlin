@@ -229,7 +229,7 @@ jobs:
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
           cp /usr/lib/x86_64-linux-gnu/libglut.so.* AppDir/usr/lib/x86_64-linux-gnu/
 
-          patchelf --set-rpath '$ORIGIN/../lib' AppDir/usr/bin/tatlin
+          patchelf --set-rpath '$ORIGIN/../lib' AppDir/usr/opt/tatlin/tatlin
 
           ./linuxdeploy --appdir AppDir --output appimage
 
