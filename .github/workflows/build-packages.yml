@@ -219,17 +219,14 @@ jobs:
           mkdir -p AppDir/usr/opt/tatlin
           mkdir -p AppDir/usr/share/applications/
           mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
-          mkdir -p AppDir/usr/lib/x86_64-linux-gnu/
 
           mv dist/tatlin/* AppDir/usr/opt/tatlin/
+          cp /usr/lib/x86_64-linux-gnu/libglut.so.* AppDir/usr/opt/tatlin/_internal
           cd AppDir/usr/bin
           ln -s ../opt/tatlin/tatlin tatlin
           cd ../../..
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
-          cp /usr/lib/x86_64-linux-gnu/libglut.so.* AppDir/usr/lib/x86_64-linux-gnu/
-
-          patchelf --set-rpath '$ORIGIN/../lib' AppDir/usr/opt/tatlin/tatlin
 
           ./linuxdeploy --appdir AppDir --output appimage
 
