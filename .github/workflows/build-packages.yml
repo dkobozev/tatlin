@@ -218,6 +218,7 @@ jobs:
           mkdir -p AppDir/usr/opt/tatlin
           mkdir -p AppDir/usr/share/applications/
           mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
+          mkdir -p AppDir/usr/lib/x86_64-linux-gnu/
 
           mv dist/tatlin/* AppDir/usr/opt/tatlin/
           cd AppDir/usr/bin
