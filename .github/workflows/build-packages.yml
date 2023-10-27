@@ -194,7 +194,8 @@ jobs:
             libsdl2-2.0-0 \
             xdg-desktop-portal-gtk \
             xdg-user-dirs-gtk \
-            freeglut3
+            freeglut3 \
+            patchelf
 
           pip install pyinstaller==6.1.0
 
@@ -227,6 +228,8 @@ jobs:
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
           cp /usr/lib/x86_64-linux-gnu/libglut.so.* AppDir/usr/lib/x86_64-linux-gnu/
+
+          patchelf --set-rpath '$ORIGIN/../lib' AppDir/usr/bin/tatlin
 
           ./linuxdeploy --appdir AppDir --output appimage
 
