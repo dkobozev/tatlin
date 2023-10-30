@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 def configure_backend():
     """
