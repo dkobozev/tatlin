@@ -219,6 +219,7 @@ jobs:
           mkdir -p AppDir/usr/opt/tatlin
           mkdir -p AppDir/usr/share/applications/
           mkdir -p AppDir/usr/share/icons/hicolor/64x64/apps/
+          mkdir -p AppDir/etc
 
           mv dist/tatlin/* AppDir/usr/opt/tatlin/
           cp /usr/lib/x86_64-linux-gnu/libglut.so.* AppDir/usr/opt/tatlin/_internal
