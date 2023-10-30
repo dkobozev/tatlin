@@ -14,7 +14,7 @@ def configure_backend():
     # settings for the current environment. The conf resides in /etc/tatlin.conf, but a relative path must be used for this to work in an AppImage.
     base_dir = os.path.dirname(os.readlink('/proc/self/exe'))
     possible_paths = [
-        '../../etc/tatlin.conf'
+        '../../etc/tatlin.conf',
         '../../../etc/tatlin.conf'
     ]
 
