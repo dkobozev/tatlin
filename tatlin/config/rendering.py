@@ -10,19 +10,28 @@ def configure_backend():
 
     conf = {}
 
-    # check for existence of a system-wide config file written by a packaging script to help determine the correct
-    # settings for the current environment
+    # Check for the existence of a system-wide config file written by a packaging script to help determine the correct
+    # settings for the current environment. The conf resides in /etc/tatlin.conf, but a relative path must be used for this to work in an AppImage.
     base_dir = os.path.dirname(os.readlink('/proc/self/exe'))
-    sys_conf_path = os.path.abspath(os.path.join(base_dir, '../../../etc/tatlin.conf'))
-    print(sys_conf_path)
+    possible_paths = [
+        '../../etc/tatlin.conf'
+        '../../../etc/tatlin.conf'
+    ]
 
-    if os.path.exists(sys_conf_path):
-        with open(sys_conf_path) as f:
-            for line in f:
-                if line.startswith('#'):
-                    continue
-                key, value = line.strip().split('=')
-                conf[key] = value
+    for possible_path in possible_paths:
+        sys_conf_path = os.path.abspath(os.path.join(base_dir, possible_path))
+
+        if os.path.exists(sys_conf_path):
+            logging.info("Loading system-wide config from {}".format(sys_conf_path))
+
+            with open(sys_conf_path) as f:
+                for line in f:
+                    if line.startswith('#'):
+                        continue
+                    key, value = line.strip().split('=')
+                    conf[key] = value
+
+            break
 
     # but the environment variables take precedence over the system-wide file
     if os.environ.get('GDK_BACKEND'):
