@@ -12,7 +12,11 @@ def configure_backend():
 
     # check for existence of a system-wide config file written by a packaging script to help determine the correct
     # settings for the current environment
-    print (os.getcwd())
+    base_dir = os.path.dirname(os.readlink('/proc/self/exe'))
+    print(base_dir)
+    sys_conf_path = os.path.join(base_dir, '../../../etc/tatlin.conf')
+    print(sys_conf_path)
+
     if os.path.exists('../../../etc/tatlin.conf'):
         with open('../../../etc/tatlin.conf') as f:
             for line in f:
