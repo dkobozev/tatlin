@@ -229,7 +229,7 @@ jobs:
           cd ../../..
           cp tatlin.desktop AppDir/usr/share/applications/
           cp tatlin/tatlin.png AppDir/usr/share/icons/hicolor/64x64/apps/
-          echo "PYOPENGL_PLATFORM=egl\\\\n" > AppDir/etc/tatlin.conf
+          echo "PYOPENGL_PLATFORM=egl$'\n'" > AppDir/etc/tatlin.conf
 
           ./linuxdeploy --appdir AppDir --output appimage
 
