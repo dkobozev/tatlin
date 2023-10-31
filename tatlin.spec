@@ -1,5 +1,5 @@
 Name:           tatlin
-Version:        0.3.0
+Version:        0.3.1
 Release:        1%{?dist}
 Summary:        Lightweight G-code and STL viewer for 3D printing.
 
@@ -37,5 +37,7 @@ install -Dm644 tatlin/tatlin.png %{buildroot}/usr/share/icons/hicolor/64x64/apps
 /usr/share/icons/hicolor/64x64/apps/tatlin.png
 
 %changelog
+* Tue Oct 31 2023 Denis Kobozev <d.v.kobozev@gmail.com> - 0.3.1
+- Improved platform compatibility
 * Tue Oct 3 2023 Denis Kobozev <d.v.kobozev@gmail.com> - 0.3.0
 - First RPM package build

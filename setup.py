@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="tatlin",
-    version="0.3.0",
+    version="0.3.1",
     author="Denis Kobozev",
     author_email="d.v.kobozev@gmail.com",
     description="Lightweight G-code and STL viewer for 3D printing",
