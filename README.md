@@ -1,28 +1,46 @@
-# Tatlin
+# TATLIN
 
-Tatlin is a G-code and STL viewer heavily inspired by Mac-only software
-Pleasant3D. Besides viewing, it also supports rotating and scaling of STL
-files. It is currently in early stages of development, but should already
-be quite usable.
+Overview
+--------
 
-## Dependencies
+Tatlin is an open-source 3D G-code and STL viewer for 3D printers. In addition
+to viewing, Tatlin also supports rotation and scaling of STL files. The app
+takes advantage of hardware acceleration for efficient rendering even for
+complex models. The aim of the project is to provide a fast, portable and
+intuitive way to view and examine models with a minimal learning curve.
 
-Tatlin requires the following packages:
+Installation
+------------
 
-- Python 3
-- wxPython 4+
-- PyOpenGL
-- NumPy
+Prebuilt packages for Linux, Windows and MacOS are available on the [Releases
+page](https://github.com/dkobozev/tatlin/releases).
 
-## Usage
+### Arch Linux
 
-To launch Tatlin from the command line:
+Tatlin is also available in the [AUR](https://aur.archlinux.org/packages/tatlin/).
+
+Running from Source
+-------------------
+
+For those wishing to forego the prebuilt packages (e.g. for development
+purposes), the preferred way to run the application from source is by using
+[venv](https://docs.python.org/3/library/venv.html),
+[virtualenv](https://virtualenv.pypa.io/en/latest/),
+[pipenv](https://pipenv.readthedocs.io/en/latest/) or similar. Once you have a
+virtual environment set up and activated, install the dependencies:
+
+    $ pip install -r requirements.txt
+
+You can then run Tatlin with:
 
     $ python tatlin.py
 
-You can also provide a filename to load:
+Usage
+-----
 
-    $ python tatlin.py foobar.stl
+You can provide an optional filename to load:
+
+    $ python tatlin.py filename.stl
 
 Mouse navigation
 
@@ -31,14 +49,20 @@ Mouse navigation
 - Middle mouse button to offset the platform
 - Right mouse button to pan
 
-Build platform size can be customized by creating a file called `.tatlin` in
-your home directory with the following contents:
+Build platform size can be customed by creating a configuration file called
+`.tatlin` in your user's home directory and specifying the width and depth of
+the platform in millimeters:
 
     [machine]
     platform_w = 300
     platform_d = 300
 
-## Thanks
+Feedback and Issues
+-------------------
 
-- Lenbok for config file options
-- Bartosz Zaborowski for the two digit G-code patch
+To request features or report bugs, please use the
+[GitHub Issues page](https://github.com/dkobozev/tatlin/issues).
+
+Keep in mind that it can be very challenging to troubleshoot issues without
+being able to reproduce them, so please include the relevant g-code or STL files
+and steps to reproduce the issue in your report.
