@@ -18,7 +18,7 @@
 from OpenGL.GL import *  # type:ignore
 from OpenGL.GLE import *  # type:ignore
 
-from .helpers import compile_display_list
+from .util import compile_display_list
 
 
 class Platform(object):

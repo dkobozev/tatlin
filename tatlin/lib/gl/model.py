@@ -20,7 +20,7 @@ from OpenGL.GL import *  # type:ignore
 from OpenGL.GLE import *  # type:ignore
 import numpy
 
-from .bounding_box import BoundingBox
+from .boundingbox import BoundingBox
 
 
 class Model(object):

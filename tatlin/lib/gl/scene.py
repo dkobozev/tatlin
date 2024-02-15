@@ -24,7 +24,8 @@ from OpenGL.GLU import *  # type:ignore
 from OpenGL.GLUT import *  # type:ignore
 
 from tatlin.lib.ui.basescene import BaseScene
-from tatlin.lib.actors.model import Model
+
+from .model import Model
 from .views import View2D, View3D
 from .util import html_color
 

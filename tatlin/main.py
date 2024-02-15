@@ -36,7 +36,7 @@ try:
 except:
     pass
 
-from tatlin.lib.actors.platform import Platform
+from tatlin.lib.gl.platform import Platform
 from tatlin.lib.gl.scene import Scene
 from tatlin.lib.ui.app import BaseApp
 from tatlin.lib.ui.window import MainWindow

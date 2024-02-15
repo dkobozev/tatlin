@@ -26,8 +26,8 @@ import os.path
 
 from tatlin.lib.parsers.gcode.parser import GcodeParser, GcodeParserError
 from tatlin.lib.parsers.stl.parser import StlParser, StlParseError
-from tatlin.lib.actors.stl import StlModel
-from tatlin.lib.actors.gcode import GcodeModel
+from tatlin.lib.gl.stlmodel import StlModel
+from tatlin.lib.gl.gcodemodel import GcodeModel
 
 
 class ModelFileError(Exception):
