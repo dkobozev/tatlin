@@ -22,7 +22,7 @@ import os.path
 import logging
 from typing import Any
 
-from tatlin.config.rendering import configure_backend
+from tatlin.conf.rendering import configure_backend
 
 configure_backend()
 
@@ -36,11 +36,11 @@ try:
 except:
     pass
 
-from tatlin.libtatlin.actors.platform import Platform
-from tatlin.libtatlin.gl.scene import Scene
-from tatlin.libtatlin.ui.app import BaseApp
-from tatlin.libtatlin.ui.window import MainWindow
-from tatlin.libtatlin.ui.dialogs import (
+from tatlin.lib.actors.platform import Platform
+from tatlin.lib.gl.scene import Scene
+from tatlin.lib.ui.app import BaseApp
+from tatlin.lib.ui.window import MainWindow
+from tatlin.lib.ui.dialogs import (
     OpenDialog,
     SaveDialog,
     QuitDialog,
@@ -48,11 +48,11 @@ from tatlin.libtatlin.ui.dialogs import (
     ProgressDialog,
     OpenErrorAlert,
 )
-from tatlin.libtatlin.ui.gcode import GcodePanel
-from tatlin.libtatlin.ui.stl import StlPanel
+from tatlin.lib.ui.gcode import GcodePanel
+from tatlin.lib.ui.stl import StlPanel
 
-from tatlin.libtatlin.storage import ModelFile, ModelFileError
-from tatlin.libtatlin.config import Config
+from tatlin.lib.storage import ModelFile, ModelFileError
+from tatlin.conf.config import Config
 
 
 def format_float(f):

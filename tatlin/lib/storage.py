@@ -24,10 +24,10 @@ Module for loading from and writing to files.
 import os
 import os.path
 
-from tatlin.libtatlin.parsers.gcode.parser import GcodeParser, GcodeParserError
-from tatlin.libtatlin.parsers.stl.parser import StlParser, StlParseError
-from tatlin.libtatlin.actors.stl import StlModel
-from tatlin.libtatlin.actors.gcode import GcodeModel
+from tatlin.lib.parsers.gcode.parser import GcodeParser, GcodeParserError
+from tatlin.lib.parsers.stl.parser import StlParser, StlParseError
+from tatlin.lib.actors.stl import StlModel
+from tatlin.lib.actors.gcode import GcodeModel
 
 
 class ModelFileError(Exception):

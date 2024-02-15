@@ -26,7 +26,7 @@ from OpenGL.arrays.vbo import VBO
 
 from .model import Model
 
-from tatlin.libtatlin import vector
+from tatlin.lib import vector
 
 
 class StlModel(Model):

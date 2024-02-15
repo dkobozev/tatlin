@@ -27,8 +27,8 @@ from OpenGL.arrays.vbo import VBO
 
 from .model import Model
 
-from tatlin.libtatlin import vector
-from tatlin.libtatlin.parsers.gcode.parser import Movement
+from tatlin.lib import vector
+from tatlin.lib.parsers.gcode.parser import Movement
 
 
 class GcodeModel(Model):
