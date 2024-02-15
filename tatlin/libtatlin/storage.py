@@ -24,9 +24,10 @@ Module for loading from and writing to files.
 import os
 import os.path
 
-from .gcodeparser import GcodeParser, GcodeParserError
-from .stlparser import StlParser, StlParseError
-from .actors import StlModel, GcodeModel
+from tatlin.libtatlin.parsers.gcode.parser import GcodeParser, GcodeParserError
+from tatlin.libtatlin.parsers.stl.parser import StlParser, StlParseError
+from tatlin.libtatlin.actors.stl import StlModel
+from tatlin.libtatlin.actors.gcode import GcodeModel
 
 
 class ModelFileError(Exception):
@@ -40,8 +41,8 @@ class ModelFile(object):
         self._reset_file_attributes()
 
         self._loaders = {
-            'gcode': self._load_gcode_model,
-            'stl': self._load_stl_model,
+            "gcode": self._load_gcode_model,
+            "stl": self._load_stl_model,
         }
 
     def _reset_file_attributes(self):
@@ -85,10 +86,10 @@ class ModelFile(object):
         if self._ftype is not None:
             return self._ftype
         else:
-            if self.extension not in ['.gcode', '.nc', '.stl']:
+            if self.extension not in [".gcode", ".nc", ".stl"]:
                 raise ModelFileError(f"Unsupported file extension: {self.extension}")
 
-            return 'gcode' if self.extension in ('.gcode', '.nc') else 'stl'
+            return "gcode" if self.extension in (".gcode", ".nc") else "stl"
 
     @property
     def size(self):
@@ -104,7 +105,7 @@ class ModelFile(object):
 
     def _load_gcode_model(self, callback=None):
         parser = GcodeParser()
-        with open(self.path, 'r') as gcodefile:
+        with open(self.path, "r") as gcodefile:
             parser.load(gcodefile)
             try:
                 data = parser.parse(callback)
@@ -114,7 +115,7 @@ class ModelFile(object):
                 raise ModelFileError(f"Parsing error: {e}")
 
     def _load_stl_model(self, callback=None):
-        with open(self.path, 'rb') as stlfile:
+        with open(self.path, "rb") as stlfile:
             parser = StlParser(stlfile)
             parser.load(stlfile)
             try:
@@ -125,27 +126,35 @@ class ModelFile(object):
                 raise ModelFileError(f"Parsing error: {e}")
 
     def write_stl(self, stl_model):
-        assert self.filetype == 'stl'
+        assert self.filetype == "stl"
 
         vertices, normals = stl_model.vertices, stl_model.normals
 
-        f = open(self.path, 'w')
-        print('solid', file=f)
-        print(''.join([self._format_facet(vertices[i:i + 3], normals[i])
-              for i in range(0, len(vertices), 3)]), file=f)
-        print('endsolid', file=f)
+        f = open(self.path, "w")
+        print("solid", file=f)
+        print(
+            "".join(
+                [
+                    self._format_facet(vertices[i : i + 3], normals[i])
+                    for i in range(0, len(vertices), 3)
+                ]
+            ),
+            file=f,
+        )
+        print("endsolid", file=f)
         f.close()
 
     def _format_facet(self, vertices, normal):
-        template = \
-"""facet normal %.6f %.6f %.6f
+        template = """facet normal %.6f %.6f %.6f
   outer loop
     %s
   endloop
 endfacet
 """
-        stl_facet = template % (normal[0], normal[1], normal[2],
-                                '\n'.join(['vertex %.6f %.6f %.6f' % (v[0], v[1], v[2])
-                                          for v in vertices])
-                                )
+        stl_facet = template % (
+            normal[0],
+            normal[1],
+            normal[2],
+            "\n".join(["vertex %.6f %.6f %.6f" % (v[0], v[1], v[2]) for v in vertices]),
+        )
         return stl_facet

@@ -38,6 +38,7 @@ class ArgsDict(dict):
     Dictionary that returns None on missing keys instead of throwing a
     KeyError.
     """
+
     def __missing__(self, key):
         return None
 
@@ -46,6 +47,7 @@ class GcodeLexer(object):
     """
     Load gcode and split commands into tokens.
     """
+
     def __init__(self):
         self.line_no = None
         self.current_line = None
@@ -53,10 +55,10 @@ class GcodeLexer(object):
 
     def load(self, gcode):
         if isinstance(gcode, str):
-            lines = gcode.replace('\r', '\n').replace('\n\n', '\n').split('\n')
+            lines = gcode.replace("\r", "\n").replace("\n\n", "\n").split("\n")
             self.line_count = len(lines)
 
-            def _getlines():
+            def _getlines():  # type: ignore
                 for line in lines:
                     yield line
 
@@ -69,7 +71,7 @@ class GcodeLexer(object):
 
             def _getlines():
                 for line in gcode:
-                    yield line.replace('\r', '\n').replace('\n\n', '\n')
+                    yield line.replace("\r", "\n").replace("\n\n", "\n")
 
             self.getlines = _getlines
 
@@ -88,11 +90,12 @@ class GcodeLexer(object):
                     yield tokens
         except GcodeArgumentError as e:
             error_msg = str(e).strip()
-            if error_msg.endswith(':'):
+            if error_msg.endswith(":"):
                 error_msg = error_msg[:-1]
 
-            raise GcodeParserError('Error parsing arguments: %s on line %d\n' % (
-                error_msg, self.line_no))
+            raise GcodeParserError(
+                "Error parsing arguments: %s on line %d\n" % (error_msg, self.line_no)
+            )
 
     def scan_line(self, line):
         """
@@ -107,13 +110,13 @@ class GcodeLexer(object):
                     try:
                         args[part[0]] = float(part[1:])
                     except ValueError as e:
-                        comment = part + ' ' + comment
+                        comment = part + " " + comment
                 else:
                     args[part[0]] = None
 
             return (parts[0], args, comment)
         else:
-            return ('', ArgsDict(), comment)
+            return ("", ArgsDict(), comment)
 
     def split_comment(self, line):
         """
@@ -121,16 +124,15 @@ class GcodeLexer(object):
 
         Comments start with a semicolon ; or a open parentheses (.
         """
-        idx_semi = line.find(';')
+        idx_semi = line.find(";")
         if idx_semi >= 0:
             command, comment = line[:idx_semi], line[idx_semi:]
         else:
-            command, comment = line, ''
+            command, comment = line, ""
 
-        idx_paren = command.find('(')
+        idx_paren = command.find("(")
         if idx_paren >= 0:
-            command, comment = (command[:idx_paren],
-                                command[idx_paren:] + comment)
+            command, comment = (command[:idx_paren], command[idx_paren:] + comment)
 
         return (command, comment)
 
@@ -138,7 +140,7 @@ class GcodeLexer(object):
         """
         Return true if tokens does not contain any information.
         """
-        return tokens == ('', ArgsDict(), '')
+        return tokens == ("", ArgsDict(), "")
 
 
 class Movement(object):
@@ -146,6 +148,7 @@ class Movement(object):
     Movement represents travel between two points and machine state during
     travel.
     """
+
     FLAG_PERIMETER = 1
     FLAG_PERIMETER_OUTER = 2
     FLAG_LOOP = 4
@@ -154,7 +157,7 @@ class Movement(object):
     FLAG_INCHES = 32
 
     # tell the python interpreter to only allocate memory for the following attributes
-    __slots__ = ['v', 'delta_e', 'feedrate', 'flags']
+    __slots__ = ["v", "delta_e", "feedrate", "flags"]
 
     def __init__(self, v, delta_e, feedrate, flags=0):
         self.v = v
@@ -174,25 +177,29 @@ class Movement(object):
         return s
 
     def __repr__(self):
-        s = "Movement(%s, %s, %s, %s)" % (self.v, self.delta_e, self.feedrate, self.flags)
+        s = "Movement(%s, %s, %s, %s)" % (
+            self.v,
+            self.delta_e,
+            self.feedrate,
+            self.flags,
+        )
         return s
 
 
 class GcodeParser(object):
-
-    marker_layer = '</layer>'
-    marker_perimeter_start = '<perimeter>'
-    marker_perimeter_end = '</perimeter>)'
-    marker_loop_start = '<loop>'
-    marker_loop_end = '</loop>'
-    marker_surrounding_loop_start = '<surroundingLoop>'
-    marker_surrounding_loop_end = '</surroundingLoop>'
+    marker_layer = "</layer>"
+    marker_perimeter_start = "<perimeter>"
+    marker_perimeter_end = "</perimeter>)"
+    marker_loop_start = "<loop>"
+    marker_loop_end = "</loop>"
+    marker_surrounding_loop_start = "<surroundingLoop>"
+    marker_surrounding_loop_end = "</surroundingLoop>"
 
     def __init__(self):
         self.lexer = GcodeLexer()
 
-        self.args = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'F': 0, 'E': 0})
-        self.offset = {'X': 0, 'Y': 0, 'Z': 0, 'E': 0}
+        self.args = ArgsDict({"X": 0, "Y": 0, "Z": 0, "F": 0, "E": 0})
+        self.offset = {"X": 0, "Y": 0, "Z": 0, "E": 0}
         self.src = None
         self.flags = 0
         self.set_flags = self.set_flags_skeinforge
@@ -216,19 +223,19 @@ class GcodeParser(object):
         for command_idx, command in enumerate(self.lexer.scan()):
             gcode, newargs, comment = command
 
-            if 'Slic3r' in comment:
+            if "Slic3r" in comment:
                 # switch mode to slic3r
                 self.set_flags = self.set_flags_slic3r
 
             args = self.update_args(self.args, newargs)
             dst = self.command_coords(gcode, args, newargs)
-            delta_e = args['E'] - self.args['E']
+            delta_e = args["E"] - self.args["E"]
             self.set_flags(command)
 
             if self.marker_layer in comment:
                 new_layer = True
-            if delta_e > 0 and args['Z'] != current_layer_z:
-                current_layer_z = args['Z']
+            if delta_e > 0 and args["Z"] != current_layer_z:
+                current_layer_z = args["Z"]
                 new_layer = True
 
             # create a new movement if the gcode contains a valid coordinate
@@ -239,9 +246,13 @@ class GcodeParser(object):
                     new_layer = False
 
                 if self.flags & Movement.FLAG_INCHES:
-                    dst = (dst[0] * mm_in_inch, dst[1] * mm_in_inch, dst[2] * mm_in_inch)
+                    dst = (
+                        dst[0] * mm_in_inch,
+                        dst[1] * mm_in_inch,
+                        dst[2] * mm_in_inch,
+                    )
 
-                move = Movement(array.array('f', dst), delta_e, args['F'], self.flags)
+                move = Movement(array.array("f", dst), delta_e, args["F"], self.flags)
                 movements.append(move)
 
             # if gcode contains a valid coordinate, update the previous point
@@ -261,12 +272,12 @@ class GcodeParser(object):
             callback(command_idx + 1, line_count)
 
         t_end = time.time()
-        logging.info('Parsed Gcode file in %.2f seconds' % (t_end - t_start))
+        logging.info("Parsed Gcode file in %.2f seconds" % (t_end - t_start))
 
         if len(layers) < 1:
             raise GcodeParserError("File does not contain valid Gcode")
 
-        logging.info('Layers: %d' % len(layers))
+        logging.info("Layers: %d" % len(layers))
 
         return layers
 
@@ -283,30 +294,32 @@ class GcodeParser(object):
         return args
 
     def command_coords(self, gcode, args, newargs):
-        if gcode in ('G0', 'G00', 'G1', 'G01'):  # move
-            coords = (self.offset['X'] + args['X'],
-                      self.offset['Y'] + args['Y'],
-                      self.offset['Z'] + args['Z'])
+        if gcode in ("G0", "G00", "G1", "G01"):  # move
+            coords = (
+                self.offset["X"] + args["X"],
+                self.offset["Y"] + args["Y"],
+                self.offset["Z"] + args["Z"],
+            )
             return coords
-        elif gcode == 'G28':  # move to origin
-            if newargs['X'] is None and newargs['Y'] is None and newargs['Z'] is None:
+        elif gcode == "G28":  # move to origin
+            if newargs["X"] is None and newargs["Y"] is None and newargs["Z"] is None:
                 # if no coordinates specified, move all axes to origin
-                return (self.offset['X'], self.offset['Y'], self.offset['Z'])
+                return (self.offset["X"], self.offset["Y"], self.offset["Z"])
             else:
                 # if any coordinates are specified, reset just the axes
                 # specified; the actual coordinate values are ignored
-                x = self.offset['X'] if newargs['X'] is not None else args['X']
-                y = self.offset['Y'] if newargs['Y'] is not None else args['Y']
-                z = self.offset['Z'] if newargs['Z'] is not None else args['Z']
+                x = self.offset["X"] if newargs["X"] is not None else args["X"]
+                y = self.offset["Y"] if newargs["Y"] is not None else args["Y"]
+                z = self.offset["Z"] if newargs["Z"] is not None else args["Z"]
                 return (x, y, z)
-        elif gcode == 'G90':  # set to absolute positioning
+        elif gcode == "G90":  # set to absolute positioning
             self.relative = False
-        elif gcode == 'G91':  # set to relative positioning
+        elif gcode == "G91":  # set to relative positioning
             self.relative = True
-        elif gcode == 'G92':  # set position
+        elif gcode == "G92":  # set position
             # G92 without coordinates resets all axes to zero
             if len(newargs) < 1:
-                newargs = ArgsDict({'X': 0, 'Y': 0, 'Z': 0, 'E': 0})
+                newargs = ArgsDict({"X": 0, "Y": 0, "Z": 0, "E": 0})
 
             for axis in list(newargs.keys()):
                 if axis in self.offset:
@@ -330,12 +343,11 @@ class GcodeParser(object):
 
         elif self.marker_perimeter_start in comment:
             self.flags |= Movement.FLAG_PERIMETER
-            if 'outer' in comment:
+            if "outer" in comment:
                 self.flags |= Movement.FLAG_PERIMETER_OUTER
 
         elif self.marker_perimeter_end in comment:
-            self.flags &= ~(Movement.FLAG_PERIMETER |
-                            Movement.FLAG_PERIMETER_OUTER)
+            self.flags &= ~(Movement.FLAG_PERIMETER | Movement.FLAG_PERIMETER_OUTER)
 
         elif self.marker_surrounding_loop_start in comment:
             self.flags |= Movement.FLAG_SURROUND_LOOP
@@ -343,16 +355,16 @@ class GcodeParser(object):
         elif self.marker_surrounding_loop_end in comment:
             self.flags &= ~Movement.FLAG_SURROUND_LOOP
 
-        elif gcode in ('M101', 'M3', 'M03', 'M4', 'M04'):  # turn on extruder/spindle
+        elif gcode in ("M101", "M3", "M03", "M4", "M04"):  # turn on extruder/spindle
             self.flags |= Movement.FLAG_EXTRUDER_ON
 
-        elif gcode in ('M103', 'M5', 'M05'):  # turn off extruder/spindle
+        elif gcode in ("M103", "M5", "M05"):  # turn off extruder/spindle
             self.flags &= ~Movement.FLAG_EXTRUDER_ON
 
-        elif gcode == 'G20':
+        elif gcode == "G20":
             self.flags |= Movement.FLAG_INCHES
 
-        elif gcode == 'G21':
+        elif gcode == "G21":
             self.flags &= ~Movement.FLAG_INCHES
 
     def set_flags_slic3r(self, command):
@@ -362,18 +374,18 @@ class GcodeParser(object):
         """
         gcode, args, comment = command
 
-        if 'perimeter' in comment:
-            self.flags |= (Movement.FLAG_PERIMETER |
-                           Movement.FLAG_PERIMETER_OUTER)
-        elif 'skirt' in comment:
+        if "perimeter" in comment:
+            self.flags |= Movement.FLAG_PERIMETER | Movement.FLAG_PERIMETER_OUTER
+        elif "skirt" in comment:
             self.flags |= Movement.FLAG_LOOP
         else:
             self.flags = 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     p = GcodeLexer()
-    with open(sys.argv[1], 'r') as f:
+    with open(sys.argv[1], "r") as f:
         p.load(f)
     p.scan()
