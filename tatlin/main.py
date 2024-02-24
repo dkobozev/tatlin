@@ -38,6 +38,7 @@ except:
 
 from tatlin.lib.gl.platform import Platform
 from tatlin.lib.gl.scene import Scene
+
 from tatlin.lib.ui.app import BaseApp
 from tatlin.lib.ui.window import MainWindow
 from tatlin.lib.ui.dialogs import (
@@ -52,25 +53,8 @@ from tatlin.lib.ui.gcode import GcodePanel
 from tatlin.lib.ui.stl import StlPanel
 
 from tatlin.lib.storage import ModelFile, ModelFileError
+from tatlin.lib.util import format_status, resolve_path
 from tatlin.conf.config import Config
-
-
-def format_float(f):
-    return "%.2f" % f
-
-
-def resolve_path(fpath):
-    if os.path.isabs(fpath):
-        return fpath
-
-    if getattr(sys, "frozen", False):
-        # we are running in a PyInstaller bundle
-        basedir = os.path.join(sys._MEIPASS, "tatlin")  # type:ignore
-    else:
-        # we are running in a normal Python environment
-        basedir = os.path.dirname(__file__)
-
-    return os.path.join(basedir, fpath)
 
 
 class App(BaseApp):
@@ -139,59 +123,8 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         self.scene: Any = None
         self.model_file: Any = None
 
-        # dict of properties that other components can read from the app
-        self._app_properties = {
-            "layers_range_max": lambda: self.scene.get_property("max_layers"),
-            "layers_value": lambda: self.scene.get_property("max_layers"),
-            "scaling-factor": self.model_scaling_factor,
-            "width": self.model_width,
-            "depth": self.model_depth,
-            "height": self.model_height,
-            "rotation-x": self.model_rotation_x,
-            "rotation-y": self.model_rotation_y,
-            "rotation-z": self.model_rotation_z,
-        }
-
     def show_window(self):
         self.window.show_all()
-
-    # -------------------------------------------------------------------------
-    # PROPERTIES
-    # -------------------------------------------------------------------------
-
-    def get_property(self, name):
-        """
-        Return a property of the application.
-        """
-        return self._app_properties[name]()
-
-    def model_scaling_factor(self):
-        factor = self.scene.get_property("scaling-factor")
-        return format_float(factor)
-
-    def model_width(self):
-        width = self.scene.get_property("width")
-        return format_float(width)
-
-    def model_depth(self):
-        depth = self.scene.get_property("depth")
-        return format_float(depth)
-
-    def model_height(self):
-        height = self.scene.get_property("height")
-        return format_float(height)
-
-    def model_rotation_x(self):
-        angle = self.scene.get_property("rotation-x")
-        return format_float(angle)
-
-    def model_rotation_y(self):
-        angle = self.scene.get_property("rotation-y")
-        return format_float(angle)
-
-    def model_rotation_z(self):
-        angle = self.scene.get_property("rotation-z")
-        return format_float(angle)
 
     @property
     def current_dir(self):
@@ -369,11 +302,11 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.panel = self.create_panel()
             # update panel to reflect new model properties
             self.panel.set_initial_values(
-                self.get_property("layers_range_max"),
-                self.get_property("layers_value"),
-                self.get_property("width"),
-                self.get_property("height"),
-                self.get_property("depth"),
+                getattr(model, "max_layers", 0),
+                getattr(model, "max_layers", 0),
+                model.width,
+                model.height,
+                model.depth,
             )
             self.panel.connect_handlers()
 
@@ -392,29 +325,9 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
             self.window.file_modified = False
             self.window.menu_enable_file_items(self.model_file.filetype != "gcode")
 
-            if self.model_file.size > 2**30:
-                size = self.model_file.size / 2**30
-                units = "GB"
-            elif self.model_file.size > 2**20:
-                size = self.model_file.size / 2**20
-                units = "MB"
-            elif self.model_file.size > 2**10:
-                size = self.model_file.size / 2**10
-                units = "KB"
-            else:
-                size = self.model_file.size
-                units = "B"
-            vertex_plural = (
-                "vertex" if int(str(model.vertex_count)[-1]) == 1 else "vertices"
-            )
             self.window.update_status(
-                " %s (%.1f%s, %d %s)"
-                % (
-                    self.model_file.basename,
-                    size,
-                    units,
-                    model.vertex_count,
-                    vertex_plural,
+                format_status(
+                    self.model_file.basename, self.model_file.size, model.vertex_count
                 )
             )
         except IOError as e:

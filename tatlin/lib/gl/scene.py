@@ -54,20 +54,6 @@ class Scene(BaseScene):
         self.view_perspective = View3D()
         self.current_view = self.view_perspective
 
-        # dict of scene properties
-        self._scene_properties = {
-            "max_layers": lambda: getattr(
-                self.model, "max_layers", 0
-            ),  # TODO: stl models don't have layers
-            "scaling-factor": lambda: round(self.model.scaling_factor, 2),
-            "width": lambda: self.model.width,
-            "depth": lambda: self.model.depth,
-            "height": lambda: self.model.height,
-            "rotation-x": lambda: self.model.rotation_angle[self.model.AXIS_X],
-            "rotation-y": lambda: self.model.rotation_angle[self.model.AXIS_Y],
-            "rotation-z": lambda: self.model.rotation_angle[self.model.AXIS_Z],
-        }
-
     def add_model(self, model):
         self.model = model
         self.actors.append(self.model)
@@ -332,12 +318,6 @@ class Scene(BaseScene):
         axis = Model.letter_axis_map[axis_name]
         self.model.rotate_abs(angle, axis)
         self.model.init()
-
-    def get_property(self, name):
-        """
-        Return a property of the scene, e.g number of layers in the current model.
-        """
-        return self._scene_properties[name]()
 
     def show_arrows(self, show):
         self.model.arrows_enabled = show

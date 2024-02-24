@@ -1,5 +1,8 @@
 import wx
 
+from tatlin.lib.gl.model import Model
+from tatlin.lib.util import format_float
+
 from .view import ViewButtons
 
 
@@ -203,8 +206,10 @@ class StlPanel(wx.Panel):
 
     def rotation_changed(self, axis, angle):
         try:
-            self.scene.rotate_model(float(angle), axis)
+            self.scene.model.rotate_abs(float(angle), axis)
+            self.scene.model.init()
             self.scene.invalidate()
+
             self.GetParent().file_modified = self.scene.model_modified
         except ValueError:
             pass  # ignore invalid values
@@ -226,31 +231,31 @@ class StlPanel(wx.Panel):
         event.Skip()
 
     def on_entry_rotate_x_focus_out(self, event):
-        self.rotation_changed("x", self.entry_rotate_x.GetValue())
+        self.rotation_changed(Model.AXIS_X, self.entry_rotate_x.GetValue())
         self.model_angle_changed()
         event.Skip()
 
     def on_entry_rotate_y_focus_out(self, event):
-        self.rotation_changed("y", self.entry_rotate_y.GetValue())
+        self.rotation_changed(Model.AXIS_Y, self.entry_rotate_y.GetValue())
         self.model_angle_changed()
         event.Skip()
 
     def on_entry_rotate_z_focus_out(self, event):
-        self.rotation_changed("z", self.entry_rotate_z.GetValue())
+        self.rotation_changed(Model.AXIS_Z, self.entry_rotate_z.GetValue())
         self.model_angle_changed()
         event.Skip()
 
     def on_x_90_clicked(self, event):
-        self.rotate_relative("x", 90)
+        self.rotate_relative(Model.AXIS_X, 90)
 
     def on_y_90_clicked(self, event):
-        self.rotate_relative("y", 90)
+        self.rotate_relative(Model.AXIS_Y, 90)
 
     def on_z_90_clicked(self, event):
-        self.rotate_relative("z", 90)
+        self.rotate_relative(Model.AXIS_Z, 90)
 
     def rotate_relative(self, axis, angle):
-        current_angle = float(self.app.get_property("rotation-" + axis))
+        current_angle = self.scene.model.rotation_angle[axis]
         angle = current_angle + angle
         self.rotation_changed(axis, angle)
         self.model_angle_changed()
@@ -260,15 +265,23 @@ class StlPanel(wx.Panel):
         self._set_rotation_properties()
 
     def _set_size_properties(self):
-        self.entry_x.SetValue(self.app.get_property("width"))
-        self.entry_y.SetValue(self.app.get_property("depth"))
-        self.entry_z.SetValue(self.app.get_property("height"))
-        self.entry_factor.SetValue(self.app.get_property("scaling-factor"))
+        self.entry_x.SetValue(format_float(self.scene.model.width))
+        self.entry_y.SetValue(format_float(self.scene.model.depth))
+        self.entry_z.SetValue(format_float(self.scene.model.height))
+        self.entry_factor.SetValue(
+            format_float(round(self.scene.model.scaling_factor, 2))
+        )
 
     def _set_rotation_properties(self):
-        self.entry_rotate_x.SetValue(self.app.get_property("rotation-x"))
-        self.entry_rotate_y.SetValue(self.app.get_property("rotation-y"))
-        self.entry_rotate_z.SetValue(self.app.get_property("rotation-z"))
+        self.entry_rotate_x.SetValue(
+            format_float(self.scene.model.rotation_angle[Model.AXIS_X])
+        )
+        self.entry_rotate_y.SetValue(
+            format_float(self.scene.model.rotation_angle[Model.AXIS_Y])
+        )
+        self.entry_rotate_z.SetValue(
+            format_float(self.scene.model.rotation_angle[Model.AXIS_Z])
+        )
 
     def model_size_changed(self):
         self._set_size_properties()
