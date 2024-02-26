@@ -1,6 +1,9 @@
 import os
 import os.path
 import sys
+from tatlin.lib.constants import RECENT_FILE_LIMIT
+
+from tatlin.lib.ui.dialogs import OpenDialog
 
 
 def format_float(f):
@@ -44,3 +47,21 @@ def format_status(name, size_bytes, vertex_count):
         vertex_count,
         vertex_plural,
     )
+
+
+def get_recent_files(config):
+    recent_files = []
+
+    conf_files = config.read("ui.recent_files")
+    if conf_files:
+        for f in conf_files.split(os.path.pathsep):
+            if f[-1] in ["0", "1", "2"]:
+                fpath, ftype = f[:-1], OpenDialog.ftypes[int(f[-1])]
+            else:
+                fpath, ftype = f, None
+
+            if os.path.exists(fpath):
+                recent_files.append((os.path.basename(fpath), fpath, ftype))
+        recent_files = recent_files[:RECENT_FILE_LIMIT]
+
+    return recent_files

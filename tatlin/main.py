@@ -53,7 +53,7 @@ from tatlin.lib.ui.gcode import GcodePanel
 from tatlin.lib.ui.stl import StlPanel
 
 from tatlin.lib.storage import ModelFile, ModelFileError
-from tatlin.lib.util import format_status, resolve_path
+from tatlin.lib.util import format_status, get_recent_files, resolve_path
 from tatlin.lib.constants import RECENT_FILE_LIMIT, TATLIN_LICENSE, TATLIN_VERSION
 from tatlin.conf.config import Config
 
@@ -72,27 +72,15 @@ class App(BaseApp):
         # ---------------------------------------------------------------------
 
         self.init_config()
-        recent_files = self.config.read("ui.recent_files")
-        if recent_files:
-            self.recent_files = []
-            for f in recent_files.split(os.path.pathsep):
-                if f[-1] in ["0", "1", "2"]:
-                    fpath, ftype = f[:-1], OpenDialog.ftypes[int(f[-1])]
-                else:
-                    fpath, ftype = f, None
 
-                if os.path.exists(fpath):
-                    self.recent_files.append((os.path.basename(fpath), fpath, ftype))
-            self.recent_files = self.recent_files[:RECENT_FILE_LIMIT]
-        else:
-            self.recent_files = []
-
+        self.recent_files = get_recent_files(self.config)
         self.window.update_recent_files_menu(self.recent_files)
 
         window_w = self.config.read("ui.window_w", int)
         window_h = self.config.read("ui.window_h", int)
         self.window.set_size((window_w, window_h))
         self.init_scene()
+        progress_dialog_read = ProgressDialog("Reading file...")
 
     def init_config(self):
         fname = os.path.expanduser(os.path.join("~", ".tatlin"))

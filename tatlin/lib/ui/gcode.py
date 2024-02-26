@@ -1,5 +1,7 @@
 import wx
 
+from tatlin.lib.util import format_float
+
 from .view import ViewButtons
 
 
@@ -123,9 +125,9 @@ class GcodePanel(wx.Panel):
         self.check_arrows.SetValue(True)  # check the box
         self.check_3d.SetValue(True)
 
-        self.label_width_value.SetLabel(width)
-        self.label_height_value.SetLabel(height)
-        self.label_depth_value.SetLabel(depth)
+        self.label_width_value.SetLabel(format_float(width))
+        self.label_height_value.SetLabel(format_float(height))
+        self.label_depth_value.SetLabel(format_float(depth))
 
     def set_3d_view(self, value):
         self.check_3d.SetValue(value)
