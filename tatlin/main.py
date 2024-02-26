@@ -54,34 +54,14 @@ from tatlin.lib.ui.stl import StlPanel
 
 from tatlin.lib.storage import ModelFile, ModelFileError
 from tatlin.lib.util import format_status, resolve_path
+from tatlin.lib.constants import RECENT_FILE_LIMIT, TATLIN_LICENSE, TATLIN_VERSION
 from tatlin.conf.config import Config
 
 
 class App(BaseApp):
 
-    TATLIN_VERSION = "0.3.1"
-    TATLIN_LICENSE = """This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software Foundation,
-Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-"""
-    RECENT_FILE_LIMIT = 10
-
     def __init__(self):
         super(App, self).__init__()
-
-        # ---------------------------------------------------------------------
-        # WINDOW SETUP
-        # ---------------------------------------------------------------------
 
         self.window = MainWindow(self)
         self.icon = wx.Icon(resolve_path("tatlin.png"), wx.BITMAP_TYPE_PNG)
@@ -103,7 +83,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
                 if os.path.exists(fpath):
                     self.recent_files.append((os.path.basename(fpath), fpath, ftype))
-            self.recent_files = self.recent_files[: self.RECENT_FILE_LIMIT]
+            self.recent_files = self.recent_files[:RECENT_FILE_LIMIT]
         else:
             self.recent_files = []
 
@@ -234,15 +214,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
         return proceed
 
     def on_about(self, event=None):
-        AboutDialog(self.TATLIN_VERSION, self.icon, self.TATLIN_LICENSE)
-
-    def on_center_model(self):
-        """
-        Center model on platform.
-        """
-        self.scene.center_model()
-        self.scene.invalidate()
-        self.window.file_modified = self.scene.model_modified
+        AboutDialog(TATLIN_VERSION, self.icon, TATLIN_LICENSE)
 
     # -------------------------------------------------------------------------
     # FILE OPERATIONS
@@ -251,7 +223,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
     def update_recent_files(self, fpath, ftype=None):
         self.recent_files = [f for f in self.recent_files if f[1] != fpath]
         self.recent_files.insert(0, (os.path.basename(fpath), fpath, ftype))
-        self.recent_files = self.recent_files[: self.RECENT_FILE_LIMIT]
+        self.recent_files = self.recent_files[:RECENT_FILE_LIMIT]
         self.window.update_recent_files_menu(self.recent_files)
 
     def open_and_display_file(self, fpath, ftype=None):

@@ -290,7 +290,9 @@ class StlPanel(wx.Panel):
         self._set_rotation_properties()
 
     def on_center_clicked(self, event):
-        self.app.on_center_model()
+        self.scene.center_model()
+        self.scene.invalidate()
+        self.GetParent().file_modified = self.scene.model_modified
 
     def on_reset_clicked(self, event):
         self.scene.reset_view()
