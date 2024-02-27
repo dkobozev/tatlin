@@ -102,10 +102,14 @@ class QuitDialog(wx.Dialog):
 
 
 class ProgressDialog(wx.ProgressDialog):
-    def __init__(self, text):
-        super(ProgressDialog, self).__init__("Loading", text, 100)
+    def __init__(self):
+        super(ProgressDialog, self).__init__("Loading", "", 100)
 
         self.value = -1
+
+    def stage(self, message):
+        self.Show()
+        self.Update(0, message)
 
     def step(self, count, limit):
         self.value = max(-1, min(int(count / limit * 100), 100))

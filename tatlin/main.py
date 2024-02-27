@@ -36,6 +36,8 @@ try:
 except:
     pass
 
+from tatlin.lib.model.loader import ModelFileError, ModelLoader
+
 from tatlin.lib.gl.platform import Platform
 from tatlin.lib.gl.scene import Scene
 
@@ -49,10 +51,7 @@ from tatlin.lib.ui.dialogs import (
     ProgressDialog,
     OpenErrorAlert,
 )
-from tatlin.lib.ui.gcode import GcodePanel
-from tatlin.lib.ui.stl import StlPanel
 
-from tatlin.lib.storage import ModelFile, ModelFileError
 from tatlin.lib.util import format_status, get_recent_files, resolve_path
 from tatlin.lib.constants import RECENT_FILE_LIMIT, TATLIN_LICENSE, TATLIN_VERSION
 from tatlin.conf.config import Config
@@ -80,7 +79,6 @@ class App(BaseApp):
         window_h = self.config.read("ui.window_h", int)
         self.window.set_size((window_w, window_h))
         self.init_scene()
-        progress_dialog_read = ProgressDialog("Reading file...")
 
     def init_config(self):
         fname = os.path.expanduser(os.path.join("~", ".tatlin"))
@@ -142,7 +140,7 @@ class App(BaseApp):
         dialog = SaveDialog(self.window, self.current_dir)
         fpath = dialog.get_path()
         if fpath:
-            stl_file = ModelFile(fpath)
+            stl_file = ModelLoader(fpath)
             self.scene.export_to_file(stl_file)
             self.model_file = stl_file
             self.window.filename = stl_file.basename
@@ -216,42 +214,19 @@ class App(BaseApp):
 
     def open_and_display_file(self, fpath, ftype=None):
         self.set_wait_cursor()
-        progress_dialog_read = None
-        progress_dialog_load = None
+        progress_dialog = ProgressDialog()
         success = True
+
         try:
             self.update_recent_files(fpath, ftype)
-            self.model_file = ModelFile(fpath, ftype)
-
             self.scene = Scene(self.window)
-
-            progress_dialog_read = ProgressDialog("Reading file...")
-            model, model_data = self.model_file.read(progress_dialog_read.step)
-
-            progress_dialog_load = ProgressDialog("Loading model...")
-            model.load_data(model_data, progress_dialog_load.step)
-
             self.scene.clear()
-            self.scene.add_model(model)
 
-            if self.model_file.filetype == "gcode":
-                offset_x = self.config.read("machine.platform_offset_x", float)
-                offset_y = self.config.read("machine.platform_offset_y", float)
-                offset_z = self.config.read("machine.platform_offset_z", float)
+            self.model_file = ModelLoader(fpath)
 
-                if offset_x is None and offset_y is None and offset_z is None:
-                    self.scene.view_model_center()
-                    logging.info(
-                        "Platform offsets not set, showing model in the center"
-                    )
-                else:
-                    model.offset_x = offset_x if offset_x is not None else 0
-                    model.offset_y = offset_y if offset_y is not None else 0
-                    model.offset_z = offset_z if offset_z is not None else 0
-                    logging.info(
-                        "Using platform offsets: (%s, %s, %s)"
-                        % (model.offset_x, model.offset_y, model.offset_z)
-                    )
+            model, Panel = self.model_file.load(
+                self.config, self.scene, progress_dialog
+            )
 
             # platform needs to be added last to be translucent
             platform_w = self.config.read("machine.platform_w", float)
@@ -259,8 +234,8 @@ class App(BaseApp):
             platform = Platform(platform_w, platform_d)
             self.scene.add_supporting_actor(platform)
 
-            self.panel = self.create_panel()
             # update panel to reflect new model properties
+            self.panel = Panel(self.window, self.scene, self.panel, self)
             self.panel.set_initial_values(
                 getattr(model, "max_layers", 0),
                 getattr(model, "max_layers", 0),
@@ -270,15 +245,11 @@ class App(BaseApp):
             )
             self.panel.connect_handlers()
 
-            # always start with the same view on the scene
-            self.scene.reset_view(True)
-            if self.model_file.filetype == "gcode":
-                self.scene.mode_2d = bool(self.config.read("ui.gcode_2d", int))
-            else:
-                self.scene.mode_2d = False
-
             if hasattr(self.panel, "set_3d_view"):
                 self.panel.set_3d_view(not self.scene.mode_2d)  # type:ignore
+
+            # always start with the same view on the scene
+            self.scene.reset_view(True)
 
             self.window.set_file_widgets(self.scene, self.panel)
             self.window.filename = self.model_file.basename
@@ -290,34 +261,15 @@ class App(BaseApp):
                     self.model_file.basename, self.model_file.size, model.vertex_count
                 )
             )
-        except IOError as e:
-            self.set_normal_cursor()
-            error_dialog = OpenErrorAlert(fpath, e)
-            error_dialog.show()
-            success = False
-        except ModelFileError as e:
+        except (IOError, ModelFileError) as e:
             self.set_normal_cursor()
             error_dialog = OpenErrorAlert(fpath, e)
             error_dialog.show()
             success = False
         finally:
-            if progress_dialog_read:
-                progress_dialog_read.destroy()
-            if progress_dialog_load:
-                progress_dialog_load.destroy()
+            progress_dialog.destroy()
             self.set_normal_cursor()
         return success
-
-    def create_panel(self):
-        if self.model_file.filetype == "gcode":
-            Panel = GcodePanel
-        elif self.model_file.filetype == "stl":
-            Panel = StlPanel
-        return Panel(self.window, self.scene, self.panel, self)
-
-    def panel_matches_file(self):
-        matches = self.model_file.filetype in self.panel.supported_types
-        return matches
 
 
 def run():
