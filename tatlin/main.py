@@ -36,7 +36,7 @@ try:
 except:
     pass
 
-from tatlin.lib.model.loader import ModelFileError, ModelLoader
+from tatlin.lib.model import ModelFileError, ModelLoader
 
 from tatlin.lib.gl.platform import Platform
 from tatlin.lib.gl.scene import Scene
