@@ -16,15 +16,16 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
+from OpenGL.GL import *  # type:ignore
+from OpenGL.GLU import *  # type:ignore
+from OpenGL.GLUT import *  # type:ignore
 
 
 class ViewMode(object):
     """
     Base class for projection transformations.
     """
+
     ZOOM_MIN = 0.1
     ZOOM_MAX = 800
 
@@ -59,13 +60,13 @@ class ViewMode(object):
         """
         Set up projection transformations.
         """
-        raise NotImplementedError('method not implemented')
+        raise NotImplementedError("method not implemented")
 
     def end(self):
         """
         Tear down projection transformations.
         """
-        raise NotImplementedError('method not implemented')
+        raise NotImplementedError("method not implemented")
 
     def zoom(self, delta_x, delta_y):
         if delta_y > 0:
@@ -78,6 +79,7 @@ class View2D(ViewMode):
     """
     Orthographic projection transformations (2D mode).
     """
+
     NEAR = -100.0
     FAR = 100.0
     PAN_FACTOR = 4
@@ -90,7 +92,7 @@ class View2D(ViewMode):
         self.elevation = -90.0  # for compatibility with 3d view
         self.azimuth = 0.0
 
-        self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth'])
+        self._save_vars.extend(["x", "y", "z", "zoom_factor", "azimuth"])
         self.push_state()
 
         self.w, self.h = None, None
@@ -129,7 +131,7 @@ class View2D(ViewMode):
         """
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        x, y = self.w / 2, self.h / 2
+        x, y = self.w / 2, self.h / 2  # type:ignore
         glOrtho(-x, x, -y, y, self.NEAR, self.FAR)
         glMatrixMode(GL_MODELVIEW)
 
@@ -157,6 +159,7 @@ class View3D(ViewMode):
     """
     Perspective projection transformations (3D mode).
     """
+
     FOVY = 80.0
     ZOOM_ORTHO_ADJ = 4.5
     NEAR = 1
@@ -174,8 +177,18 @@ class View3D(ViewMode):
         self.supports_ortho = True
         self.ortho = False
 
-        self._save_vars.extend(['x', 'y', 'z', 'zoom_factor', 'azimuth',
-                                'elevation', 'offset_x', 'offset_y'])
+        self._save_vars.extend(
+            [
+                "x",
+                "y",
+                "z",
+                "zoom_factor",
+                "azimuth",
+                "elevation",
+                "offset_x",
+                "offset_y",
+            ]
+        )
         self.push_state()
 
     def begin(self, w, h):

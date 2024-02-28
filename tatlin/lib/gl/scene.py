@@ -16,30 +16,18 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-
 import math
+from typing import Any
 
-from .ui import BaseScene
-from .actors import Model
+from OpenGL.GL import *  # type:ignore
+from OpenGL.GLU import *  # type:ignore
+from OpenGL.GLUT import *  # type:ignore
+
+from tatlin.lib.ui.basescene import BaseScene
+
+from .model import Model
 from .views import View2D, View3D
-
-
-def paginate(sequence, n):
-    """
-    Yield n-sized pieces of sequence.
-    """
-    for i in range(0, len(sequence), n):
-        yield sequence[i:i + n]
-
-
-def html_color(color):
-    if color.startswith('#'):
-        color = color[1:]
-    parsed = [int(c, 16) / 255 for c in paginate(color, 2)]
-    return parsed
+from .util import html_color
 
 
 class Scene(BaseScene):
@@ -50,13 +38,14 @@ class Scene(BaseScene):
     responsible for viewing transformations such as zooming, panning and
     rotation, as well as being the interface for the actors.
     """
+
     PAN_SPEED = 25
     ROTATE_SPEED = 25
 
     def __init__(self, parent):
         super(Scene, self).__init__(parent)
 
-        self.model = None
+        self.model: Any = None
         self.actors = []
         self.cursor_x = 0
         self.cursor_y = 0
@@ -65,28 +54,9 @@ class Scene(BaseScene):
         self.view_perspective = View3D()
         self.current_view = self.view_perspective
 
-        # dict of scene properties
-        self._scene_properties = {
-            'max_layers': lambda: self.model.max_layers,
-            'scaling-factor': lambda: round(self.model.scaling_factor, 2),
-            'width': lambda: self.model.width,
-            'depth': lambda: self.model.depth,
-            'height': lambda: self.model.height,
-            'rotation-x': lambda: self.model.rotation_angle[self.model.AXIS_X],
-            'rotation-y': lambda: self.model.rotation_angle[self.model.AXIS_Y],
-            'rotation-z': lambda: self.model.rotation_angle[self.model.AXIS_Z],
-        }
-
     def add_model(self, model):
         self.model = model
         self.actors.append(self.model)
-
-    def export_to_file(self, model_file):
-        """
-        Write model to file.
-        """
-        model_file.write_stl(self.model)
-        self.model.modified = False
 
     def add_supporting_actor(self, actor):
         self.actors.append(actor)
@@ -121,7 +91,7 @@ class Scene(BaseScene):
 
     def display(self, w, h):
         # clear the color and depth buffers from any leftover junk
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # type:ignore
 
         # discard back-facing polygons
         glCullFace(GL_BACK)
@@ -129,6 +99,8 @@ class Scene(BaseScene):
         # fix normals after scaling to prevent problems with lighting
         # see: http://www.opengl.org/resources/faq/technical/lights.htm#ligh0090
         glEnable(GL_RESCALE_NORMAL)
+
+        glutInit()
 
         self.view_ortho.begin(w, h)
         self.draw_axes()
@@ -139,9 +111,11 @@ class Scene(BaseScene):
 
         if self.mode_ortho:
             for actor in self.actors:
-                actor.display(elevation=-self.current_view.elevation,
-                              mode_ortho=self.mode_ortho,
-                              mode_2d=self.mode_2d)
+                actor.display(
+                    elevation=-self.current_view.elevation,
+                    mode_ortho=self.mode_ortho,
+                    mode_2d=self.mode_2d,
+                )
         else:
             # actors may use eye height to perform rendering optimizations; in
             # the simplest terms, in the most convenient definitions, eye
@@ -153,7 +127,7 @@ class Scene(BaseScene):
             eye_height = math.sqrt(y**2 + z**2) * math.sin(math.radians(angle))
 
             # draw line of sight plane
-            '''
+            """
             #plane_size = 200
             #glBegin(GL_LINES)
             #glColor(1.0, 0.0, 0.0)
@@ -169,12 +143,14 @@ class Scene(BaseScene):
             #glVertex(-plane_size/2, -plane_size/2, eye_height)
             #glVertex(-plane_size/2, plane_size/2, eye_height)
             #glEnd()
-            '''
+            """
 
             for actor in self.actors:
-                actor.display(eye_height=eye_height,
-                              mode_ortho=self.mode_ortho,
-                              mode_2d=self.mode_2d)
+                actor.display(
+                    eye_height=eye_height,
+                    mode_ortho=self.mode_ortho,
+                    mode_2d=self.mode_2d,
+                )
 
         self.current_view.end()
 
@@ -190,12 +166,8 @@ class Scene(BaseScene):
             (0.0, -length, 0.0),
             (0.0, 0.0, length),
         ]
-        colors = [
-            (1.0, 0.0, 0.0),
-            (0.0, 1.0, 0.0),
-            html_color('008aff')
-        ]
-        labels = ['x', 'y', 'z']
+        colors = [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), html_color("008aff")]
+        labels = ["x", "y", "z"]
 
         glBegin(GL_LINES)
 
@@ -207,13 +179,11 @@ class Scene(BaseScene):
         glEnd()
 
         # draw axis labels
-        glutInit()
-
         for label, axis, color in zip(labels, axes, colors):
             glColor(*color)
             # add padding to labels
             glRasterPos(axis[0] + 2, axis[1] + 2, axis[2] + 2)
-            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(label))
+            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(label))  # type:ignore
 
         glPopMatrix()
 
@@ -230,15 +200,18 @@ class Scene(BaseScene):
         delta_y = y - self.cursor_y
 
         if left:
-            self.current_view.rotate(delta_x * self.ROTATE_SPEED / 100,
-                                     delta_y * self.ROTATE_SPEED / 100)
+            self.current_view.rotate(
+                delta_x * self.ROTATE_SPEED / 100, delta_y * self.ROTATE_SPEED / 100
+            )
         elif middle:
-            if hasattr(self.current_view, 'offset'):
-                self.current_view.offset(delta_x * self.PAN_SPEED / 100,
-                                         delta_y * self.PAN_SPEED / 100)
+            if hasattr(self.current_view, "offset"):
+                self.current_view.offset(  # type:ignore
+                    delta_x * self.PAN_SPEED / 100, delta_y * self.PAN_SPEED / 100
+                )
         elif right:
-            self.current_view.pan(delta_x * self.PAN_SPEED / 100,
-                                  delta_y * self.PAN_SPEED / 100)
+            self.current_view.pan(
+                delta_x * self.PAN_SPEED / 100, delta_y * self.PAN_SPEED / 100
+            )
 
         self.cursor_x = x
         self.cursor_y = y
@@ -273,12 +246,14 @@ class Scene(BaseScene):
 
     @property
     def mode_ortho(self):
-        return self.current_view.supports_ortho and self.current_view.ortho
+        return (
+            self.current_view.supports_ortho and self.current_view.ortho  # type:ignore
+        )
 
     @mode_ortho.setter
     def mode_ortho(self, value):
         if self.current_view.supports_ortho:
-            self.current_view.ortho = value
+            self.current_view.ortho = value  # type:ignore
 
     def rotate_view(self, azimuth, elevation):
         if not self.mode_2d:
@@ -308,7 +283,7 @@ class Scene(BaseScene):
         self.model.num_layers_to_draw = number
 
     def scale_model(self, factor):
-        print('--- scaling model by factor of:', factor)
+        print("--- scaling model by factor of:", factor)
         self.model.scale(factor)
         self.model.init()
 
@@ -336,12 +311,6 @@ class Scene(BaseScene):
         axis = Model.letter_axis_map[axis_name]
         self.model.rotate_abs(angle, axis)
         self.model.init()
-
-    def get_property(self, name):
-        """
-        Return a property of the scene, e.g number of layers in the current model.
-        """
-        return self._scene_properties[name]()
 
     def show_arrows(self, show):
         self.model.arrows_enabled = show
