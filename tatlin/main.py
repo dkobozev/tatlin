@@ -37,6 +37,7 @@ except:
     pass
 
 from tatlin.lib.model import ModelFileError, ModelLoader
+from tatlin.lib.model.stl.writer import STLModelWriter
 
 from tatlin.lib.gl.platform import Platform
 from tatlin.lib.gl.scene import Scene
@@ -130,7 +131,8 @@ class App(BaseApp):
         """
         Save changes to the same file.
         """
-        self.scene.export_to_file(self.model_file)
+        writer = STLModelWriter(self.model_file.path, self.model_file.filetype)
+        writer.write(self.scene.model)
         self.window.file_modified = False
 
     def on_file_save_as(self, event=None):
@@ -140,10 +142,12 @@ class App(BaseApp):
         dialog = SaveDialog(self.window, self.current_dir)
         fpath = dialog.get_path()
         if fpath:
-            stl_file = ModelLoader(fpath)
-            self.scene.export_to_file(stl_file)
-            self.model_file = stl_file
-            self.window.filename = stl_file.basename
+            self.model_file = ModelLoader(fpath)
+
+            writer = STLModelWriter(fpath, self.model_file.filetype)
+            writer.write(self.scene.model)
+
+            self.window.filename = self.model_file.basename
             self.window.file_modified = False
 
     def on_quit(self, event=None):

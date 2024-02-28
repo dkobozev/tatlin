@@ -58,13 +58,6 @@ class Scene(BaseScene):
         self.model = model
         self.actors.append(self.model)
 
-    def export_to_file(self, model_file):
-        """
-        Write model to file.
-        """
-        model_file.write_stl(self.model)
-        self.model.modified = False
-
     def add_supporting_actor(self, actor):
         self.actors.append(actor)
 
