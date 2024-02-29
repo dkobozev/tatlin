@@ -88,7 +88,7 @@ class App(BaseApp):
     def init_scene(self):
         self.panel: Any = None
         self.scene: Any = None
-        self.model_file: Any = None
+        self.model_loader: Any = None
 
     def show_window(self):
         self.window.show_all()
@@ -98,8 +98,8 @@ class App(BaseApp):
         """
         Return path where a file should be saved to.
         """
-        if self.model_file is not None:
-            dur = self.model_file.dirname
+        if self.model_loader is not None:
+            dur = self.model_loader.dirname
         elif len(self.recent_files) > 0:
             dur = os.path.dirname(self.recent_files[0][1])
         else:
@@ -131,7 +131,7 @@ class App(BaseApp):
         """
         Save changes to the same file.
         """
-        writer = STLModelWriter(self.model_file.path, self.model_file.filetype)
+        writer = STLModelWriter(self.model_loader.path, self.model_loader.filetype)
         writer.write(self.scene.model)
         self.window.file_modified = False
 
@@ -142,12 +142,12 @@ class App(BaseApp):
         dialog = SaveDialog(self.window, self.current_dir)
         fpath = dialog.get_path()
         if fpath:
-            self.model_file = ModelLoader(fpath)
+            self.model_loader = ModelLoader(fpath)
 
-            writer = STLModelWriter(fpath, self.model_file.filetype)
+            writer = STLModelWriter(fpath, self.model_loader.filetype)
             writer.write(self.scene.model)
 
-            self.window.filename = self.model_file.basename
+            self.window.filename = self.model_loader.basename
             self.window.file_modified = False
 
     def on_quit(self, event=None):
@@ -226,9 +226,9 @@ class App(BaseApp):
             self.scene = Scene(self.window)
             self.scene.clear()
 
-            self.model_file = ModelLoader(fpath)
+            self.model_loader = ModelLoader(fpath)
 
-            model, Panel = self.model_file.load(
+            model, Panel = self.model_loader.load(
                 self.config, self.scene, progress_dialog
             )
 
@@ -239,7 +239,7 @@ class App(BaseApp):
             self.scene.add_supporting_actor(platform)
 
             # update panel to reflect new model properties
-            self.panel = Panel(self.window, self.scene, self.panel, self)
+            self.panel = Panel(self.window, self.scene)
             self.panel.set_initial_values(
                 getattr(model, "max_layers", 0),
                 getattr(model, "max_layers", 0),
@@ -256,13 +256,15 @@ class App(BaseApp):
             self.scene.reset_view(True)
 
             self.window.set_file_widgets(self.scene, self.panel)
-            self.window.filename = self.model_file.basename
+            self.window.filename = self.model_loader.basename
             self.window.file_modified = False
-            self.window.menu_enable_file_items(self.model_file.filetype != "gcode")
+            self.window.menu_enable_file_items(self.model_loader.filetype != "gcode")
 
             self.window.update_status(
                 format_status(
-                    self.model_file.basename, self.model_file.size, model.vertex_count
+                    self.model_loader.basename,
+                    self.model_loader.size,
+                    model.vertex_count,
                 )
             )
         except (IOError, ModelFileError) as e:
@@ -278,7 +280,9 @@ class App(BaseApp):
 
 def run():
     # configure logging
-    logging.basicConfig(format="--- [%(levelname)s] %(message)s", level=logging.DEBUG)
+    logging.basicConfig(
+        format="--- [%(levelname)s] %(message)s", level=logging.DEBUG, force=True
+    )
 
     app = App()
     app.show_window()

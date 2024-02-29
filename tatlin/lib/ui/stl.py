@@ -18,22 +18,16 @@
 import wx
 
 from tatlin.lib.gl.model import Model
+from tatlin.lib.gl.scene import Scene
+from tatlin.lib.ui.panel import Panel
 from tatlin.lib.util import format_float
 
 from .view import ViewButtons
 
 
-class StlPanel(wx.Panel):
-    supported_types = ["stl"]
-
-    def __init__(self, parent, scene, panel, app):
-        super(StlPanel, self).__init__(parent)
-
-        self._handlers_connected = False
-
-        self.scene = scene
-        self.panel = panel
-        self.app = app
+class StlPanel(Panel):
+    def __init__(self, parent, scene: Scene):
+        super(StlPanel, self).__init__(parent, scene)
 
         # ----------------------------------------------------------------------
         # DIMENSIONS
@@ -207,7 +201,7 @@ class StlPanel(wx.Panel):
             self.scene.scale_model(float(factor))
             self.scene.invalidate()
             # tell all the widgets that care about model size that it has changed
-            self.panel.model_size_changed()
+            self.model_size_changed()
             self.GetParent().file_modified = self.scene.model_modified
         except ValueError:
             pass  # ignore invalid values
@@ -216,7 +210,7 @@ class StlPanel(wx.Panel):
         try:
             self.scene.change_model_dimension(dimension, float(value))
             self.scene.invalidate()
-            self.panel.model_size_changed()
+            self.model_size_changed()
             self.GetParent().file_modified = self.scene.model_modified
         except ValueError:
             pass  # ignore invalid values

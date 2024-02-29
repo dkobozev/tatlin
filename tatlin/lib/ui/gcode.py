@@ -18,19 +18,16 @@
 
 import wx
 
+from tatlin.lib.gl.scene import Scene
+from tatlin.lib.ui.panel import Panel
 from tatlin.lib.util import format_float
 
 from .view import ViewButtons
 
 
-class GcodePanel(wx.Panel):
-    supported_types = ["gcode"]
-
-    def __init__(self, parent, scene, panel, app):
-        super(GcodePanel, self).__init__(parent)
-
-        self.scene = scene
-        self._handlers_connected = False
+class GcodePanel(Panel):
+    def __init__(self, parent, scene: Scene):
+        super(GcodePanel, self).__init__(parent, scene)
 
         # ----------------------------------------------------------------------
         # DIMENSIONS

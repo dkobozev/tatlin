@@ -18,6 +18,7 @@
 
 import math
 from typing import Any
+import logging
 
 from OpenGL.GL import *  # type:ignore
 from OpenGL.GLU import *  # type:ignore
@@ -283,7 +284,7 @@ class Scene(BaseScene):
         self.model.num_layers_to_draw = number
 
     def scale_model(self, factor):
-        print("--- scaling model by factor of:", factor)
+        logging.info("--- scaling model by factor of:", factor)
         self.model.scale(factor)
         self.model.init()
 
