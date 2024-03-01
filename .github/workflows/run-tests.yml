@@ -21,6 +21,22 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Create virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            libfuse2 \
+            libsdl2-2.0-0 \
+            xdg-desktop-portal-gtk \
+            xdg-user-dirs-gtk \
+            freeglut3 \
+            libglu1-mesa
+
       - name: Install Tatlin dependencies
         run: |
           # use prebuilt wxPython wheel to make the installation faster
