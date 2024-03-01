@@ -35,7 +35,8 @@ jobs:
             xdg-desktop-portal-gtk \
             xdg-user-dirs-gtk \
             freeglut3 \
-            libglu1-mesa
+            libglu1-mesa \
+            libnotify-dev
 
       - name: Install Tatlin dependencies
         run: |
