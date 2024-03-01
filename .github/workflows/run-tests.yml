@@ -1,0 +1,26 @@
+name: Run tests
+
+# should run on every push to any branch except for tags
+on:
+  push:
+    tags-ignore:
+      - "*"
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies using pip
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m unittest discover -s tests

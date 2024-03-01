@@ -279,9 +279,15 @@ class App(BaseApp):
 
 
 def run():
-    # configure logging
     logging.basicConfig(
-        format="--- [%(levelname)s] %(message)s", level=logging.DEBUG, force=True
+        format="--- [%(levelname)s] %(message)s",
+        level=logging.DEBUG,
+        # From the docs: "This function does nothing if the root logger already
+        # has handlers configured, unless the keyword argument force is set to
+        # True." This has the unfortunate side effect that if any of the
+        # dependencies configure the logger first, we lose control over logging.
+        # @see https://docs.python.org/3/howto/logging.html
+        force=True,
     )
 
     app = App()

@@ -53,16 +53,16 @@ class GcodeLexerTest(unittest.TestCase):
         self.compare_output(line, expected)
 
     def test_slic3r_file(self):
-        fname = "tests/data/gcode/slic3r.gcode"
+        fname = "tests/fixtures/gcode/slic3r.gcode"
         with open(fname, "r") as f:
             self.lexer.load(f)
-        result = list(self.lexer.scan())
+            result = list(self.lexer.scan())
 
     def test_skeinforge_file(self):
-        fname = "tests/data/gcode/top.gcode"
+        fname = "tests/fixtures/gcode/top.gcode"
         with open(fname, "r") as f:
             self.lexer.load(f)
-        result = list(self.lexer.scan())
+            result = list(self.lexer.scan())
 
     def test_string_input(self):
         s = """

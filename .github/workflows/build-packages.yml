@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+        uses: actions/checkout@v4 # the repo is checked out to /home/runner/work/tatlin/tatlin
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build RPM package
         run: |
-          VERSION=$(rpm -q --specfile tatlin.spec --qf %{VERSION})
+          VERSION=$(rpm -q --specfile tatlin.spec --qf %{})
           mkdir -p /github/home/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
           cp tatlin.spec /github/home/rpmbuild/SPECS/
           mkdir /github/home/tatlin-$VERSION
@@ -245,7 +245,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
+        uses: actions/checkout@v4 # the repo is checked out to /home/runner/work/tatlin/tatlin
         with:
           fetch-depth: 0 # fetch all history so that we can get the commit messages
 
