@@ -3,6 +3,8 @@ name: Run tests
 # should run on every push to any branch except for tags
 on:
   push:
+    branches:
+      - "*"
     tags-ignore:
       - "*"
 
