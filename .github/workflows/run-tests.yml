@@ -10,7 +10,7 @@ on:
 
 jobs:
   run-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
@@ -21,8 +21,28 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies using pip
-        run: pip install -r requirements.txt
+      - name: Create virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            libfuse2 \
+            libsdl2-2.0-0 \
+            xdg-desktop-portal-gtk \
+            xdg-user-dirs-gtk \
+            freeglut3 \
+            libglu1-mesa \
+            libnotify-dev \
+            libgles2-mesa-dev
+
+      - name: Install Tatlin dependencies
+        run: |
+          # use prebuilt wxPython wheel to make the installation faster
+          pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 -r requirements.txt
 
       - name: Run tests
         run: python -m unittest discover -s tests
