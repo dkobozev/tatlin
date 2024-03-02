@@ -33,6 +33,7 @@ Desktop.ini
 *.log
 *.tmp
 *.prof
+.coverage
 
 # distutils
 MANIFEST

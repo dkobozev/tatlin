@@ -44,5 +44,27 @@ jobs:
           # use prebuilt wxPython wheel to make the installation faster
           pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 -r requirements.txt
 
+      - name: Install Coverage.py
+        run: |
+          pip install coverage
+
       - name: Run tests
-        run: python -m unittest discover -s tests
+        run: coverage run -m unittest discover -s tests
+
+      - name: Report coverage
+        run: coverage html
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html_report
+          path: htmlcov
+
+      - name: Get total
+        id: total
+        run: |
+          echo "total=$(coverage report --format=total)" >> $GITHUB_ENV
+
+      - name: Output total coverage
+        run: |
+          echo '### Total coverage: ${{ env.total }}%' >> $GITHUB_STEP_SUMMARY
