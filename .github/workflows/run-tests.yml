@@ -85,6 +85,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           publish_dir: ./htmlcov
-          destination_dir: tatlin
           external_repository: dkobozev/coverage-reports
           deploy_key: ${{ secrets.COVERAGE_DEPLOY_KEY }}
