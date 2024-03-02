@@ -82,6 +82,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: html_report
+          path: htmlcov
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
