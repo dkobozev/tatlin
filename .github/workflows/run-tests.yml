@@ -68,3 +68,25 @@ jobs:
       - name: Output total coverage
         run: |
           echo '### Total coverage: ${{ env.total }}%' >> $GITHUB_STEP_SUMMARY
+
+  # in a separate job, take the uploaded HTML report and upload it as a GitHub Pages site to a coverage-reports repository
+  upload-coverage:
+    needs: run-tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download HTML report
+        uses: actions/download-artifact@v4
+        with:
+          name: html_report
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./htmlcov
+          destination_dir: tatlin
+          external_repository: dkobozev/coverage-reports
+          deploy_key: ${{ secrets.COVERAGE_DEPLOY_KEY }}
