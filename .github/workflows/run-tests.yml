@@ -69,7 +69,6 @@ jobs:
         run: |
           echo '### Total coverage: ${{ env.total }}%' >> $GITHUB_STEP_SUMMARY
 
-  # in a separate job, take the uploaded HTML report and upload it as a GitHub Pages site to a coverage-reports repository
   upload-coverage:
     needs: run-tests
     runs-on: ubuntu-22.04
@@ -82,6 +81,7 @@ jobs:
           path: htmlcov
 
       - name: Terminate the .gitignore with extreme prejudice
+        # otherwise the report won't be uploaded
         run: |
           rm -f htmlcov/.gitignore
 
@@ -92,3 +92,16 @@ jobs:
           destination_dir: tatlin
           external_repository: dkobozev/coverage-reports
           deploy_key: ${{ secrets.COVERAGE_DEPLOY_KEY }}
+
+      - name: Make badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          # GIST_TOKEN is a GitHub personal access token with scope "gist".
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: bc701128d91bcfb41d3f1496f4e74bcc
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ env.total }}%
+          minColorRange: 50
+          maxColorRange: 90
+          valColorRange: ${{ env.total }}
