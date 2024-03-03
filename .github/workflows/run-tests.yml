@@ -81,9 +81,9 @@ jobs:
           name: html_report
           path: htmlcov
 
-      - name: Debug
+      - name: Terminate the .gitignore with extreme prejudice
         run: |
-          ls -l htmlcov
+          rm -f htmlcov/.gitignore
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
