@@ -48,10 +48,11 @@ jobs:
 
       - name: Install Coverage.py
         run: |
-          pip install coverage
+          pip install pytest pytest-xvfb coverage
 
       - name: Run tests
-        run: coverage run -m unittest discover -s tests
+        #run: coverage run -m unittest discover -s tests
+        run: coverage run -m pytest
 
       - name: Report coverage
         run: coverage html

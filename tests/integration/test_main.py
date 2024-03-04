@@ -13,7 +13,6 @@ class MainTest(unittest.TestCase):
     # def setUp(self):
     #    self.app = App()
 
-    @unittest.skip("needs an X Display to run")
     def test_gcode(self):
         app = App()
         window = MainWindow(app)
@@ -25,7 +24,6 @@ class MainTest(unittest.TestCase):
         progress_dialog = ProgressDialog()
         model_loader.load(config, scene, progress_dialog)
 
-    @unittest.skip("needs an X Display to run")
     def test_stl(self):
         app = App()
         window = MainWindow(app)
