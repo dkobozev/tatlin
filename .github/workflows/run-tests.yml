@@ -51,7 +51,6 @@ jobs:
           pip install pytest pytest-xvfb coverage
 
       - name: Run tests
-        #run: coverage run -m unittest discover -s tests
         run: coverage run -m pytest
 
       - name: Report coverage

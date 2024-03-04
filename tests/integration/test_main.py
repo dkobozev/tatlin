@@ -10,30 +10,23 @@ from tatlin.main import App
 
 
 class MainTest(unittest.TestCase):
-    # def setUp(self):
-    #    self.app = App()
+    def setUp(self):
+        self.app = App()
+        self.window = MainWindow(self.app)
+        self.scene = Scene(self.window)
+        self.scene.clear()
+
+        self.config = Config(".asdf")
 
     def test_gcode(self):
-        app = App()
-        window = MainWindow(app)
-        scene = Scene(window)
-        scene.clear()
-
-        config = Config(".asdf")
         model_loader = ModelLoader("tests/fixtures/gcode/top.gcode")
         progress_dialog = ProgressDialog()
-        model_loader.load(config, scene, progress_dialog)
+        model_loader.load(self.config, self.scene, progress_dialog)
 
     def test_stl(self):
-        app = App()
-        window = MainWindow(app)
-        scene = Scene(window)
-        scene.clear()
-
-        config = Config(".asdf")
         model_loader = ModelLoader("tests/fixtures/stl/top.stl")
         progress_dialog = ProgressDialog()
-        model_loader.load(config, scene, progress_dialog)
+        model_loader.load(self.config, self.scene, progress_dialog)
 
 
 if __name__ == "__main__":
