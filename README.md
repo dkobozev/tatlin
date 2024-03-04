@@ -1,7 +1,7 @@
-# TATLIN
+# Tatlin
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dkobozev/tatlin/build-packages.yml)
-![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dkobozev/bc701128d91bcfb41d3f1496f4e74bcc/raw/covbadge.json)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dkobozev/tatlin/build-packages.yml)](https://github.com/dkobozev/tatlin/actions/workflows/build-packages.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dkobozev/bc701128d91bcfb41d3f1496f4e74bcc/raw/covbadge.json)](https://dkobozev.github.io/coverage-reports/tatlin/)
 
 ## Overview
 
