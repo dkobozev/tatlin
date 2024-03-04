@@ -1,7 +1,9 @@
-# TATLIN
+# Tatlin
 
-Overview
---------
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dkobozev/tatlin/build-packages.yml)](https://github.com/dkobozev/tatlin/actions/workflows/build-packages.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dkobozev/bc701128d91bcfb41d3f1496f4e74bcc/raw/covbadge.json)](https://dkobozev.github.io/coverage-reports/tatlin/)
+
+## Overview
 
 Tatlin is an open-source 3D G-code and STL viewer for 3D printers. In addition
 to viewing, Tatlin also supports rotation and scaling of STL files. The app
@@ -9,8 +11,7 @@ takes advantage of hardware acceleration for efficient rendering even for
 complex models. The aim of the project is to provide a fast, portable and
 intuitive way to view and examine models with a minimal learning curve.
 
-Installation
-------------
+## Installation
 
 Prebuilt packages for Linux, Windows and MacOS are available on the [Releases
 page](https://github.com/dkobozev/tatlin/releases).
@@ -19,8 +20,7 @@ page](https://github.com/dkobozev/tatlin/releases).
 
 Tatlin is also available in the [AUR](https://aur.archlinux.org/packages/tatlin/).
 
-Running from Source
--------------------
+## Running from Source
 
 For those wishing to forego the prebuilt packages (e.g. for development
 purposes), the preferred way to run the application from source is by using
@@ -35,8 +35,7 @@ You can then run Tatlin with:
 
     $ python tatlin.py
 
-Usage
------
+## Usage
 
 You can provide an optional filename to load:
 
@@ -57,8 +56,7 @@ the platform in millimeters:
     platform_w = 300
     platform_d = 300
 
-Feedback and Issues
--------------------
+## Feedback and Issues
 
 To request features or report bugs, please use the
 [GitHub Issues page](https://github.com/dkobozev/tatlin/issues).

@@ -11,6 +11,8 @@ on:
 jobs:
   run-tests:
     runs-on: ubuntu-22.04
+    outputs:
+      total: ${{ steps.total.outputs.total }}
 
     steps:
       - name: Checkout code
@@ -44,5 +46,69 @@ jobs:
           # use prebuilt wxPython wheel to make the installation faster
           pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 -r requirements.txt
 
+      - name: Install Coverage.py
+        run: |
+          pip install pytest pytest-xvfb coverage
+
       - name: Run tests
-        run: python -m unittest discover -s tests
+        run: coverage run -m pytest
+
+      - name: Report coverage
+        run: coverage html
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html_report
+          path: htmlcov
+
+      - name: Get total
+        id: total
+        run: |
+          echo "total=$(coverage report --format=total)" >> $GITHUB_OUTPUT
+
+      - name: Output total coverage
+        run: |
+          echo '### Total coverage: ${{ steps.total.outputs.total }}%' >> $GITHUB_STEP_SUMMARY
+
+  upload-coverage:
+    needs: run-tests
+    runs-on: ubuntu-22.04
+    if: github.repository == 'dkobozev/tatlin' && github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Set environment variables
+        run: |
+          echo "total=${{ needs.run-tests.outputs.total }}" >> $GITHUB_ENV
+
+      - name: Download HTML report
+        uses: actions/download-artifact@v4
+        with:
+          name: html_report
+          path: htmlcov
+
+      - name: Terminate the .gitignore with extreme prejudice
+        # otherwise the report won't be uploaded
+        run: |
+          rm -f htmlcov/.gitignore
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./htmlcov
+          destination_dir: tatlin
+          external_repository: dkobozev/coverage-reports
+          deploy_key: ${{ secrets.COVERAGE_DEPLOY_KEY }}
+
+      - name: Make badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          # GIST_TOKEN is a GitHub personal access token with scope "gist".
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: bc701128d91bcfb41d3f1496f4e74bcc
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ env.total }}%
+          minColorRange: 50
+          maxColorRange: 90
+          valColorRange: ${{ env.total }}
