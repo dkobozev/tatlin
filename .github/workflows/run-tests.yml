@@ -74,6 +74,7 @@ jobs:
   upload-coverage:
     needs: run-tests
     runs-on: ubuntu-22.04
+    if: github.repository == 'dkobozev/tatlin' && github.ref == 'refs/heads/master'
 
     steps:
       - name: Set environment variables
