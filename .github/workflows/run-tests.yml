@@ -11,6 +11,8 @@ on:
 jobs:
   run-tests:
     runs-on: ubuntu-22.04
+    outputs:
+      total: ${{ steps.total.outputs.total }}
 
     steps:
       - name: Checkout code
@@ -63,17 +65,21 @@ jobs:
       - name: Get total
         id: total
         run: |
-          echo "total=$(coverage report --format=total)" >> $GITHUB_ENV
+          echo "total=$(coverage report --format=total)" >> $GITHUB_OUTPUT
 
       - name: Output total coverage
         run: |
-          echo '### Total coverage: ${{ env.total }}%' >> $GITHUB_STEP_SUMMARY
+          echo '### Total coverage: ${{ steps.total.outputs.total }}%' >> $GITHUB_STEP_SUMMARY
 
   upload-coverage:
     needs: run-tests
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Set environment variables
+        run: |
+          echo "total=${{ needs.run-tests.outputs.total }}" >> $GITHUB_ENV
+
       - name: Download HTML report
         uses: actions/download-artifact@v4
         with:
