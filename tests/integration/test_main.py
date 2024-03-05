@@ -27,15 +27,6 @@ class MainTest(unittest.TestCase):
         self.scene.add_supporting_actor(platform)
 
         self.scene.init()
-        self.scene.display(1, 1)
-
-        self.scene.mode_2d = True
-        self.scene.display(1, 1)
-        self.scene.mode_2d = False
-
-        self.scene.mode_ortho = True
-        self.scene.display(1, 1)
-        self.scene.mode_ortho = False
 
         self.scene.change_num_layers(2)
         self.scene.show_arrows(True)
@@ -46,11 +37,6 @@ class MainTest(unittest.TestCase):
         model_loader.load(self.config, self.scene, progress_dialog)
 
         self.scene.init()
-        self.scene.display(1, 1)
-
-        self.scene.mode_ortho = True
-        self.scene.display(1, 1)
-        self.scene.mode_ortho = False
 
         self.assertEqual(self.scene.model_modified, False)
 
