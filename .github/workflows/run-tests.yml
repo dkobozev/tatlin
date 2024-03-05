@@ -14,6 +14,10 @@ jobs:
     outputs:
       total: ${{ steps.total.outputs.total }}
 
+    env:
+      PYOPENGL_PLATFORM: x11
+      GDK_BACKEND: x11
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
@@ -51,7 +55,7 @@ jobs:
           pip install pytest pytest-xvfb coverage
 
       - name: Run tests
-        run: PYOPENGL_PLATFORM=x11 coverage run -m pytest
+        run: coverage run -m pytest
 
       - name: Report coverage
         run: coverage html
