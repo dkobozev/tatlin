@@ -14,9 +14,6 @@ jobs:
     outputs:
       total: ${{ steps.total.outputs.total }}
 
-    env:
-      PYOPENGL_PLATFORM: egl
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4 # the repo is checkout out to /home/runner/work/tatlin/tatlin
