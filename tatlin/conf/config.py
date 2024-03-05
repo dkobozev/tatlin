@@ -5,18 +5,19 @@ class Config(object):
     """
     Read and write Tatlin configuration.
     """
+
     def __init__(self, fname):
         self.defaults = {
             # makerbot thing-o-matic platform size
-            'machine.platform_w': 120,
-            'machine.platform_d': 100,
-            'machine.platform_offset_x': None,
-            'machine.platform_offset_y': None,
-            'machine.platform_offset_z': None,
-            'ui.recent_files': None,
-            'ui.window_w': 640,
-            'ui.window_h': 700,
-            'ui.gcode_2d': False,
+            "machine.platform_w": 120,
+            "machine.platform_d": 100,
+            "machine.platform_offset_x": None,
+            "machine.platform_offset_y": None,
+            "machine.platform_offset_z": None,
+            "ui.recent_files": None,
+            "ui.window_w": 640,
+            "ui.window_h": 700,
+            "ui.gcode_2d": False,
         }
 
         self.fname = fname
@@ -50,22 +51,13 @@ class Config(object):
         self.config.set(section, option, val)
 
     def commit(self):
-        with open(self.fname, 'w') as conf_file:
+        with open(self.fname, "w") as conf_file:
             self.config.write(conf_file)
 
     def _parse_specifier(self, spec):
-        parts = spec.split('.', 1)
+        parts = spec.split(".", 1)
         if len(parts) < 2:
-            section, option = 'general', parts[0]
+            section, option = "general", parts[0]
         else:
             section, option = parts
         return (section, option)
-
-
-if __name__ == '__main__':
-    c = Config('.tatlin')
-    c.write('foo', 'bar')
-    c.write('machine.toolhead', 0)
-    print(c.read('foo'))
-    print(c.read('general.foo'))
-    print(c.read('machine.platform_w'))

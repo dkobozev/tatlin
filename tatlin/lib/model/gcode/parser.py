@@ -380,12 +380,3 @@ class GcodeParser(object):
             self.flags |= Movement.FLAG_LOOP
         else:
             self.flags = 0
-
-
-if __name__ == "__main__":
-    import sys
-
-    p = GcodeLexer()
-    with open(sys.argv[1], "r") as f:
-        p.load(f)
-    p.scan()

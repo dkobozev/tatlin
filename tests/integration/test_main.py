@@ -23,10 +23,55 @@ class MainTest(unittest.TestCase):
         progress_dialog = ProgressDialog()
         model_loader.load(self.config, self.scene, progress_dialog)
 
+        platform = Platform(100, 100)
+        self.scene.add_supporting_actor(platform)
+
+        self.scene.init()
+        self.scene.display(1, 1)
+
+        self.scene.mode_2d = True
+        self.scene.display(1, 1)
+        self.scene.mode_2d = False
+
+        self.scene.mode_ortho = True
+        self.scene.display(1, 1)
+        self.scene.mode_ortho = False
+
+        self.scene.change_num_layers(2)
+        self.scene.show_arrows(True)
+
     def test_stl(self):
         model_loader = ModelLoader("tests/fixtures/stl/top.stl")
         progress_dialog = ProgressDialog()
         model_loader.load(self.config, self.scene, progress_dialog)
+
+        self.scene.init()
+        self.scene.display(1, 1)
+
+        self.scene.mode_ortho = True
+        self.scene.display(1, 1)
+        self.scene.mode_ortho = False
+
+        self.assertEqual(self.scene.model_modified, False)
+
+        self.scene.center_model()
+        self.scene.scale_model(1)
+        self.scene.rotate_model(90, "x")
+        self.scene.change_model_dimension("width", 1)
+
+        self.assertEqual(self.scene.model_modified, True)
+
+    def test_scene(self):
+        self.scene.init()
+
+        self.scene.button_press(0, 0)
+        self.scene.button_motion(0, 0, 1, 0, 0)
+        self.scene.button_motion(0, 1, 0, 1, 0)
+        self.scene.button_motion(1, 1, 0, 0, 1)
+        self.scene.wheel_scroll(-1)
+        self.scene.reset_view()
+        self.scene.reset_view(True)
+        self.scene.rotate_view(0, 0)
 
 
 if __name__ == "__main__":
