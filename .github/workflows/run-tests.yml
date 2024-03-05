@@ -51,7 +51,7 @@ jobs:
           pip install pytest pytest-xvfb coverage
 
       - name: Run tests
-        run: coverage run -m pytest
+        run: PYOPENGL_PLATFORM=x11 coverage run -m pytest
 
       - name: Report coverage
         run: coverage html
