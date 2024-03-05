@@ -15,8 +15,7 @@ jobs:
       total: ${{ steps.total.outputs.total }}
 
     env:
-      PYOPENGL_PLATFORM: x11
-      GDK_BACKEND: x11
+      PYOPENGL_PLATFORM: egl
 
     steps:
       - name: Checkout code
