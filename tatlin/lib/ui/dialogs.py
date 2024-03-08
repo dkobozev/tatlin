@@ -157,4 +157,4 @@ class AboutDialog(object):
         info.AddDeveloper("Denis Kobozev <d.v.kobozev@gmail.com>")
         info.SetLicence(license)
 
-        dialog = wx.adv.AboutBox(info)
+        wx.adv.AboutBox(info)
