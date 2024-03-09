@@ -42,13 +42,13 @@ def resolve_path(fpath):
 
 
 def format_status(name, size_bytes, vertex_count):
-    if size_bytes > 2**30:
+    if size_bytes >= 2**30:
         size = size_bytes / 2**30
         units = "GB"
-    elif size_bytes > 2**20:
+    elif size_bytes >= 2**20:
         size = size_bytes / 2**20
         units = "MB"
-    elif size_bytes > 2**10:
+    elif size_bytes >= 2**10:
         size = size_bytes / 2**10
         units = "KB"
     else:

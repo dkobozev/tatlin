@@ -20,6 +20,10 @@ class ModelLoaderTest(unittest.TestCase):
         model_loader = ModelLoader("tests/fixtures/stl/top.stl")
         model_loader.load(self.config, Mock(), Mock())
 
+    def test_binary_stl(self):
+        model_loader = ModelLoader("tests/fixtures/stl/cube-bin.stl")
+        model_loader.load(self.config, Mock(), Mock())
+
 
 if __name__ == "__main__":
     unittest.main()
