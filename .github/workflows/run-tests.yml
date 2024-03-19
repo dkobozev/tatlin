@@ -50,6 +50,11 @@ jobs:
         run: |
           pip install pytest pytest-xvfb coverage
 
+      - name: Set environment variables
+        run: |
+          export PYOPENGL_PLATFORM=egl
+          export GDK_BACKEND=x11
+
       - name: Run tests
         run: coverage run -m pytest
 
