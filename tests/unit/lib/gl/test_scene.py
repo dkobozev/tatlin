@@ -1,3 +1,4 @@
+import wx
 from unittest.mock import Mock
 from tatlin.lib.gl.boundingbox import BoundingBox
 from tatlin.lib.gl.scene import Scene
@@ -8,6 +9,27 @@ class SceneTest(GUITestCase):
     def setUp(self):
         super().setUp()
         self.scene = Scene(self.frame)
+
+    def test_display(self):
+        model = Mock()
+        model.initialized = False
+
+        self.scene.add_model(model)
+        self.scene.add_supporting_actor(Mock())
+
+        self.add_to_frame(self.scene)
+
+    def test_display_ortho(self):
+        model = Mock()
+        model.initialized = False
+
+        self.scene.add_model(model)
+        self.scene.mode_ortho = True
+
+        self.add_to_frame(self.scene)
+
+    def test_clear(self):
+        self.scene.clear()
 
     def test_button_press(self):
         self.scene.button_press(1, 1)

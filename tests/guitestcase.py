@@ -31,3 +31,11 @@ class GUITestCase(unittest.TestCase):
         timer.Start(100)
         self.app.MainLoop()
         del self.app
+
+    def add_to_frame(self, widget):
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(widget, 1, wx.EXPAND)
+        sizer.ShowItems(True)
+
+        self.frame.SetSizer(sizer)
+        self.frame.Layout()
