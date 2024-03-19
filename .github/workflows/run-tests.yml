@@ -48,7 +48,7 @@ jobs:
 
       - name: Install Coverage.py
         run: |
-          pip install pytest pytest-xvfb coverage
+          pip install pytest coverage
 
       - name: Set environment variables
         run: |
@@ -56,7 +56,7 @@ jobs:
           export GDK_BACKEND=x11
 
       - name: Run tests
-        run: coverage run -m pytest
+        run: xvfb-run coverage run -m pytest
 
       - name: Report coverage
         run: coverage html
