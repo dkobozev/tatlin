@@ -1,10 +1,8 @@
 import numpy
+
 from tatlin.lib.gl.model import Model
 from tatlin.lib.gl.scene import Scene
 from tatlin.lib.gl.stlmodel import StlModel
-
-
-import unittest
 
 from tests.guitestcase import GUITestCase
 
