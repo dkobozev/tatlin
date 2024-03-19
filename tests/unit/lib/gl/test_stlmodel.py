@@ -1,13 +1,16 @@
 import numpy
+
 from tatlin.lib.gl.model import Model
+from tatlin.lib.gl.scene import Scene
 from tatlin.lib.gl.stlmodel import StlModel
 
+from tests.guitestcase import GUITestCase
 
-import unittest
 
-
-class StlModelTest(unittest.TestCase):
+class StlModelTest(GUITestCase):
     def setUp(self):
+        super().setUp()
+
         self.model = StlModel()
         self.model.load_data(
             [
@@ -29,6 +32,11 @@ class StlModelTest(unittest.TestCase):
     def test_init(self):
         self.model.init()
         self.assertTrue(self.model.initialized)
+
+    def test_display(self):
+        scene = Scene(self.frame)
+        scene.add_model(self.model)
+        self.add_to_frame(scene)
 
     def test_scale(self):
         self.assertFalse(self.model.modified)
