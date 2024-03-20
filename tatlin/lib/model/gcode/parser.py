@@ -29,10 +29,6 @@ class GcodeParserError(Exception):
     pass
 
 
-class GcodeArgumentError(GcodeParserError):
-    pass
-
-
 class ArgsDict(dict):
     """
     Dictionary that returns None on missing keys instead of throwing a
@@ -79,23 +75,14 @@ class GcodeLexer(object):
         """
         Return a generator for commands split into tokens.
         """
-        try:
-            self.line_no = 0
-            for line in self.getlines():
-                self.line_no += 1
-                self.current_line = line
-                tokens = self.scan_line(line)
+        self.line_no = 0
+        for line in self.getlines():
+            self.line_no += 1
+            self.current_line = line
+            tokens = self.scan_line(line)
 
-                if not self.is_blank(tokens):
-                    yield tokens
-        except GcodeArgumentError as e:
-            error_msg = str(e).strip()
-            if error_msg.endswith(":"):
-                error_msg = error_msg[:-1]
-
-            raise GcodeParserError(
-                "Error parsing arguments: %s on line %d\n" % (error_msg, self.line_no)
-            )
+            if not self.is_blank(tokens):
+                yield tokens
 
     def scan_line(self, line):
         """
