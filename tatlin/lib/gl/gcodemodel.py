@@ -564,16 +564,21 @@ class GcodeModel(Model):
         """
         Render movements with unique colors for picking.
         Each movement gets a unique RGB color based on its index.
+        Only renders visible movements (respecting num_layers_to_draw).
         """
         cylinder_sides = 8
         vertices_per_movement = cylinder_sides * 6
+
+        # Only pick within visible layers
+        max_visible_vertex = self.layer_stops[self.num_layers_to_draw]
+        max_visible_movement = max_visible_vertex // vertices_per_movement
 
         glEnableClientState(GL_VERTEX_ARRAY)
         self.vertex_buffer.bind()
         glVertexPointer(3, GL_FLOAT, 0, None)
 
-        # Draw each movement with a unique color
-        for movement_idx in range(len(self.movement_line_numbers)):
+        # Draw each visible movement with a unique color
+        for movement_idx in range(max_visible_movement):
             # Encode movement index as RGB color (1-based to avoid black)
             color_id = movement_idx + 1
             r = ((color_id >> 16) & 0xFF) / 255.0
@@ -582,10 +587,8 @@ class GcodeModel(Model):
 
             glColor3f(r, g, b)
 
-            # Draw this movement
             start_vertex = movement_idx * vertices_per_movement
-            count = vertices_per_movement
-            glDrawArrays(GL_TRIANGLES, start_vertex, count)
+            glDrawArrays(GL_TRIANGLES, start_vertex, vertices_per_movement)
 
         self.vertex_buffer.unbind()
         glDisableClientState(GL_VERTEX_ARRAY)
